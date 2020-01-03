@@ -164,3 +164,14 @@ Bash script dependencies
 * ftps_zephir_send
 
 
+Setup
+=====
+Fill out the config/.env and config/.netrc files.
+
+wget https://cpan.metacpan.org/authors/id/H/HA/HAARG/local-lib-2.000024.tar.gz
+tar -xzf local-lib-2.000024.tar.gz
+cd local-lib-2.000024
+perl Makefile.PL --bootstrap=/l1/govdocs/zcode/local
+make test && make install
+curl -L http://cpanmin.us | perl - App::cpanminus
+cpanm --install-deps .
