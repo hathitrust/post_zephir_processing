@@ -1,0 +1,19 @@
+#!/bin/sh 
+
+# because curl needs the .netrc
+r=`dirname $0`
+rootdir=`cd $r && pwd`
+dir=$1
+
+conf=$rootdir/../config/.netrc
+SERVER=ftps.cdlib.org
+#set SERVER=ftps-stg.cdlib.org
+
+echo "server: ${SERVER}, dir: ${dir}"
+#curl -k -n --ftp-ssl-control --ftp-pasv --list-only --ftp-method nocwd ftp://${SERVER}/${dir}
+#curl -k -n --ftp-ssl-control --ftp-pasv --ftp-method nocwd ftp://${SERVER}/${dir}
+#/l/local/bin/curl -k -n --ftp-ssl --ftp-pasv --list-only --ftp-method nocwd ftp://${SERVER}//${dir}
+#/l/local/bin/curl -k -n --ftp-ssl-control --ftp-pasv --ftp-method nocwd ftp://${SERVER}/${dir}
+
+
+curl --netrc-file $conf --ssl-reqd --ftp-pasv --ftp-method nocwd "ftp://${SERVER}/${dir}/"

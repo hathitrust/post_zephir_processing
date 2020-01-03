@@ -1,0 +1,9 @@
+def_local_env
+prof_library
+*_env
+data/*/*
+config/.env
+config/config.pl
+config/.netrc
+*.txt
+zephir_full_daily_a*

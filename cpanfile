@@ -1,0 +1,13 @@
+requires 'Exporter';
+requires 'Sys::Hostname';
+requires 'DBI';
+requires 'Data::Dumper';
+requires 'MARC';
+requires 'MARC::Record';
+requires 'MARC::Batch';
+requires 'MARC::Record::MiJ';
+requires 'MARC::File::XML';
+requires 'DB_File';
+requires 'YAML';
+requires 'JSON::XS';
+requires 'LWP::Simple';

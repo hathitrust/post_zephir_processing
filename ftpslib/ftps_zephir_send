@@ -1,0 +1,30 @@
+#!/bin/sh
+
+# because curl -n finds the .netrc in the HOME directory
+r=`dirname $0`
+rootdir=`cd $r && pwd`
+echo "ftps_zephir_send's rootdir: $rootdir"
+conf=$rootdir/../config/.netrc
+
+if [ "$#" -eq "1" ]; then 
+  infile=$1
+  outfile=$1
+elif [ "$#" -eq "2" ]; then 
+  infile=$1
+  outfile=$2
+else
+  echo "usage: $0 infile [outfile]"
+  exit
+fi
+
+dir='submissions/'
+
+server=ftps.cdlib.org
+#set server=ftps-stg.cdlib.org
+
+echo "server is $server, dir is: ${dir}, sending $infile as $outfile"
+
+#/l/local/bin/curl -k -n -T $infile --ftp-ssl --ftp-pasv ftp://$server/submissions/$outfile
+
+# todo: uncomment this
+# curl --netrc-file $conf -T $infile --ssl-reqd --ftp-pasv ftp://$server/submissions/$outfile
