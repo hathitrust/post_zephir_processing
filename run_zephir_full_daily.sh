@@ -156,7 +156,7 @@ mv zephir_ingested_items.txt.gz $DATA_ROOT
 
 DAY=`date +%d`
 # todo: day should be '01' but changed for "testing"
-if [ $DAY == "03" ]; then
+if [ $DAY == "01" ]; then
   echo "First day of month--prepare and deliver monthly output"
   echo "First day of month--prepare and deliver monthly output" >> $REPORT_FILE
 
@@ -169,7 +169,7 @@ if [ $DAY == "03" ]; then
     echo "error, message is $message"
     echo "$message" | mailx -s"error in $SCRIPTNAME" jstever@umich.edu
   fi
-  cp zephir_full_${YESTERDAY}_vufind.json.gz $ZEPHIR_DATA/full/
+  cp zephir_full_${YESTERDAY}_vufind.json.gz $ZEPHIR_DATA/full/zephir_full_${YESTERDAY}_vufind.json.gz
   echo "`date`: sending full file to hathi trust catalog solr server" >> $REPORT_FILE
   # todo: we need a fix for this
   # scp -i /exlibris/aleph/.ssh/id_dsa_libadm_beeftea-2 ${ZEPHIR_DATA}/full/zephir_full_${YESTERDAY}_vufind.json.gz libadm@beeftea-2:/htsolr/catalog/prep
@@ -182,7 +182,7 @@ if [ $DAY == "03" ]; then
   fi
   echo "`date`: copy full file to value storage govdocs folder" >> $REPORT_FILE
   cp zephir_full_${YESTERDAY}_vufind.json.gz  /htdata/govdocs/zephir/
-  cp zephir_full_${YESTERDAY}_vufind.json.gz  $ZEPHIR_ARCHIVE 
+  cp zephir_full_${YESTERDAY}_vufind.json.gz  $ZEPHIR_ARCHIVE/
   #todo: uncomment
   # cp zephir_full_${YESTERDAY}_vufind.json.gz /htapps/archive/catalog/
 
@@ -195,8 +195,8 @@ if [ $DAY == "03" ]; then
     echo "error, message is $message"
     echo "$message" | mailx -s"error in $SCRIPTNAME" jstever@umich.edu
   fi
-  cp zephir_full_${YESTERDAY}.rights $ZEPHIR_DATA/full
-  cp zephir_full_${YESTERDAY}.rights $DATA_ROOT/zephir
+  cp zephir_full_${YESTERDAY}.rights $ZEPHIR_DATA/full/
+  cp zephir_full_${YESTERDAY}.rights $DATA_ROOT/zephir/
   
   echo "`date`: all files processed, concatenate rights debug files to zephir_full_${YESTERDAY}.rights.debug"
   echo "`date`: all files processed, concatenate rights debug files to zephir_full_${YESTERDAY}.rights.debug" >> $REPORT_FILE
@@ -218,7 +218,7 @@ if [ $DAY == "03" ]; then
     echo "error, message is $message"
     echo "$message" | mailx -s"error in $SCRIPTNAME" jstever@umich.edu
   fi
-  cp zephir_full_${YESTERDAY}.rights.tsv $ZEPHIR_DATA/full 
+  cp zephir_full_${YESTERDAY}.rights.tsv $ZEPHIR_DATA/full/
 
   echo "`date`: all files processed, concatenate and compress hathi txt files to hathi_full_${TODAY}.txt.gz" 
   echo "`date`: all files processed, concatenate and compress hathi txt files to hathi_full_${TODAY}.txt.gz" >> $REPORT_FILE
@@ -229,7 +229,7 @@ if [ $DAY == "03" ]; then
     echo "error, message is $message"
     echo "$message" | mailx -s"error in $SCRIPTNAME" jstever@umich.edu
   fi
-  cp hathi_full_${TODAY}.txt.gz $ZEPHIR_DATA/full 
+  cp hathi_full_${TODAY}.txt.gz $ZEPHIR_DATA/full/
   # todo: uncomment
   # cp hathi_full_${TODAY}.txt.gz /htapps/archive/hathifiles/ 
 
@@ -247,7 +247,7 @@ if [ $DAY == "03" ]; then
   #scp -i ${HT_WEB_ID} hathi_field_list.txt ${HT_WEB_HOST}:${HT_WEB_DIR}/
 
   echo "`date`: deleting old hathifiles" >> $REPORT_FILE
-  CUTOFF_YEAR_MONTH=`ym -2M`
+  CUTOFF_YEAR_MONTH=`date --date="2 months ago" +%Y%m`
   FULL_PATTERN="hathi_full_${CUTOFF_YEAR_MONTH}*"
   UPD_PATTERN="hathi_upd_${CUTOFF_YEAR_MONTH}*"
   

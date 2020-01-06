@@ -20,8 +20,8 @@ Why?
 This appears to take the barcodes from Aaron (GRIN?) and sends them to Zephir. Why does Zephir need the barcodes?
 
 Data In
--------
-* barcodes_<year>-<mm>-<dd>_* (previously: /exlibris/aleph/uprod/miu50/local/mdp/return/
+--------
+* barcodes_<year>-<mm>-<dd>_ (previously: /exlibris/aleph/uprod/miu50/local/mdp/return/
 
 Data Out
 --------
