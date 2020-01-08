@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/bin/perl
 
 use open qw( :encoding(UTF-8) :std );
 use strict;

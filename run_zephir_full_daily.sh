@@ -25,38 +25,14 @@ echo "fed pub exception file set in environment: $us_fed_pub_exception_file"
 
 # File from zephir contains 6060217 record (2013-10-21)
 SPLITCOUNT=1000000
-# $ROOTDIR should work for this
-# set PROGDIR=$data_root/local/mdp_batch/zephir
 
-# set DATADIR=/aleph-prep/zephir-data
-#DATADIR=$ZEPHIR_DATA
-#ARCHIVE=/htapps/archive
-
-# /exlibris/aleph/uprod/miu50/local/mdp/return/zephir
-#set MDP_RETURN=$data_root/local/mdp/return/zephir
-# we'll just stick it in data/zephir/mdp_return instead
-
-#MDP_RETURN=$DATADIR/mdp_return
 ZEPHIR_VUFIND_EXPORT=ht_bib_export_full_${zephir_date}.json.gz
-#ZEPHIR_VUFIND_DOLL_D=vufind_export_${zephir_date}_dollar_dup.txt
 ZEPHIR_GROOVE_EXPORT=groove_export_${zephir_date}.tsv.gz
 REPORT_FILE=$ZEPHIR_DATA/zephir_full_daily_report.txt
-
-#SAVEDIR=$DATADIR/full
-#OUTFILE_VUFIND=zephir_full_${YESTERDAY}_vufind.json
-#OUTFILE_HATHI=hathi_full_${TODAY}.txt
-#OUTFILE_RIGHTS=zephir_full_${YESTERDAY}.rights
-#OUTFILE_RIGHTS_DEBUG=zephir_full_${YESTERDAY}.rights.debug
-#OUTFILE_RIGHTS_RPT=zephir_full_${YESTERDAY}.rights.tsv
-
-#OUTFILE_REPORT=zephir_full_daily_rpt.txt
-#OUTFILE_ZIA=zephir_ingested_items.txt.gz
 
 echo "basename is zephir_full_daily"
 
 RIGHTS_DBM=/tmp/rights_dbm
-
-#cd $DATADIR
 
 echo "`date`: zephir full extract started" > $REPORT_FILE
 echo "`date`: zephir full extract started" 
@@ -64,7 +40,6 @@ echo "`date`: zephir full extract started"
 echo "`date`: retrieve zephir files: groove_export_${zephir_date}.tsv.gz" >> $REPORT_FILE
 echo "`date`: retrieve zephir files: $ZEPHIR_GROOVE_EXPORT"
 
-# todo: uncomment the following
 ftpslib/ftps_zephir_get exports/$ZEPHIR_GROOVE_EXPORT $ZEPHIR_GROOVE_EXPORT
 if [ ! -e $ZEPHIR_GROOVE_EXPORT ]; then
   echo "***"
@@ -78,7 +53,6 @@ mv $ZEPHIR_GROOVE_EXPORT $DATA_ROOT/groove_full.tsv.gz
 echo "*** retrieve full zephir vufind extract" >> $REPORT_FILE
 echo "*** retrieve full zephir vufind extract"
 
-# todo: uncomment the following
 ftpslib/ftps_zephir_get exports/$ZEPHIR_VUFIND_EXPORT $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT
 if [ ! -e $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT ]; then
   echo "***"

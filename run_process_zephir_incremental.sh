@@ -31,7 +31,7 @@ echo "fed pub exception file set in environment: $us_fed_pub_exception_file"
 
 #set DATADIR=/aleph-prep/zephir-data
 DATADIR=$ROOTDIR/data/zephir
-DATADIR_OAI=$ROOTDIR/zephir/oai_data
+DATADIR_OAI=$ROOTDIR/data/oai_data
 # todo: make sure we have access
 ARCHIVE=/htapps/archive
 #set ZEPHIR_VUFIND_EXPORT=vufind_incremental_${zephir_date}.json.gz 
@@ -52,7 +52,7 @@ echo "`date`: zephir incremental extract started"
 
 echo "`date`: retrieve $ZEPHIR_VUFIND_EXPORT"
 echo "`date`: retrieve $ZEPHIR_VUFIND_EXPORT" >> $REPORT_FILE
-# todo: uncomment
+
 ftpslib/ftps_zephir_get exports/$ZEPHIR_VUFIND_EXPORT $ZEPHIR_VUFIND_EXPORT
 
 cmdstatus=$?
@@ -103,8 +103,8 @@ ftpslib/ftps_zephir_get exports/$ZEPHIR_GROOVE_INCREMENTAL $ZEPHIR_GROOVE_INCREM
 
 cmdstatus=$?
 if [ $cmdstatus == "0" ]; then
-  echo "`date`: copy $ZEPHIR_GROOVE_INCREMENTAL to mdp/return/zephir"
-  echo "`date`: copy $ZEPHIR_GROOVE_INCREMENTAL to mdp/return/zephir" >> $REPORT_FILE
+  echo "`date`: copy $ZEPHIR_GROOVE_INCREMENTAL to rootdir/data/zephir"
+  echo "`date`: copy $ZEPHIR_GROOVE_INCREMENTAL to rootdir/data/zephir" >> $REPORT_FILE
   # todo: where should this actually go?
   cp $ZEPHIR_GROOVE_INCREMENTAL $ROOTDIR/data/zephir/
 else
@@ -161,7 +161,6 @@ if [ $cmdstatus != "0" ]; then
   exit
 fi
 
-echo "`date`: copy json file to value storage govdocs folder"
 echo "`date`: copy json file to value storage govdocs folder" >> $REPORT_FILE
 cp ${BASENAME}.json.gz  /htdata/govdocs/zephir/
 
