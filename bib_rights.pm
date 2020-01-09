@@ -6,7 +6,7 @@ package bib_rights;
     my $br = bib_rights->new();
 
     my $bib;		# MARC::Record structure
-    my $bib_key;	# MARC::Record structure
+    my $bib_key;	# system number for $bib
     my $hathi_id;	# full hathi object id
     my $description;	# item-level enum/chron
 
@@ -14,7 +14,7 @@ package bib_rights;
     my $bri = $br->get_bib_rights_info($hathi_id, $bib_info, $description);
     
 Rights info structure:
-  my $ri = {
+  my $bri = {
     'bib_key' => $bib_key,
     'id' => $barcode_ns,
     'attr' => 'und',
@@ -65,21 +65,17 @@ sub new {
   $self->{us_pd_cutoff_year} = $year - 95;
   $self->{non_us_pd_cutoff_year} = $year - 140;
   $self->{can_aus_pd_cutoff_year} = $year - 120;
-  
+
   foreach my $cutoff ("us_pd_cutoff_year", "non_us_pd_cutoff_year", "can_aus_pd_cutoff_year", "ntis_cutoff_year") {
     print STDERR "$cutoff: $self->{$cutoff}\n";
   }
 
   #  db file of us cities--used for checking imprint field with multiple subfield
-  my $us_cities_db = dirname(__FILE__) . '/data/us_cities.db';
+  my $us_cities_db = dirname(__FILE__) . "/data/us_cities.db";
   my %US_CITIES;
   tie %US_CITIES, "DB_File", $us_cities_db, O_RDONLY, 0644, $DB_BTREE or die "can't open db file $us_cities_db: $!";
   $self->{US_CITIES} = \%US_CITIES;
 
-  # load namespace map file for namespace validation
-  my $nsmap_file = dirname(__FILE__) . '/data/namespacemap.yaml';
-  my $nsmap = LoadFile("$nsmap_file") or die "can't load nsmap file ($nsmap_file): $!\n";
-  
   my $us_fed_pub_exceptions = {};
   $ENV{'us_fed_pub_exception_file'} and do { # us fed pub exception file (file of oclc number of records that shouldn't be considered us fed docs, regardless of 008 coding)
     my $us_fed_pub_exception_file = $ENV{'us_fed_pub_exception_file'};
@@ -132,12 +128,8 @@ sub get_bib_rights_info {
     'pub_place' => $bib_info->{"pub_place"},
     'pub_country' => substr($bib_info->{"pub_place"},2,1),
     'us_fed_doc' => $bib_info->{"us_fed_doc"},
-    'ns_scan_source' => 'null',
   };
   
-  my ($ns) = split(/\./,$barcode_ns,2);
-  $self->{nsmap}->{$ns}->{scan_source} and $ri->{ns_scan_source} = $self->{nsmap}->{$ns}->{scan_source};
-
   $self->set_date($ri) or do {
     $ri->{'reason'} = $ri->{'date_desc'};
     return $ri;
@@ -152,15 +144,15 @@ sub get_bib_rights_info {
       # us gov pub exceptions--check pub date
       # set date cutoff for exceptions
       my $date_cutoff = $self->{us_pd_cutoff_year}; 	#default
-      $bib_info->{"us_fed_pub_exception"} eq "NTIS" and $date_cutoff = $self->{ntis_cutoff_year} - 1; # rolling cutoff for NTIS
+      $bib_info->{"us_fed_pub_exception"} eq "NTIS" and $date_cutoff = $self->{ntis_cutoff_year}; # rolling cutoff for NTIS
       if ($ri->{'date_used'} >= $date_cutoff) {
         $ri->{'attr'} = "ic";
         $ri->{'date_munged'} = 0;			# don't care about date munging
-        $ri->{'reason'} = "US fed doc--$bib_info->{'us_fed_pub_exception'}: pubdate > " . $date_cutoff;
+        $ri->{'reason'} = "US fed doc--$bib_info->{'us_fed_pub_exception'}: pubdate >= " . $date_cutoff;
       } else {
         $ri->{'attr'} = "pd";
         $ri->{'date_munged'} = 0;			# don't care about date munging
-        $ri->{'reason'} = "US fed doc--$bib_info->{'us_fed_pub_exception'}: pubdate <= " . $date_cutoff;
+        $ri->{'reason'} = "US fed doc--$bib_info->{'us_fed_pub_exception'}: pubdate < " . $date_cutoff;
       } 
       last SET_RIGHTS;
     };
@@ -343,10 +335,6 @@ sub get_bib_info {
   my $bib = shift;		# MARC record structure
   my $bib_key = shift;		# bib key
 
-  $bib->{aleph_deleted} and do {	# aleph-specific code
-    print STDERR "get_bib_info: deleted record $bib_key\n";
-    return {};
-  };
   my $field; 
   
   my  $bi = {};
@@ -395,19 +383,6 @@ sub get_bib_info {
 
   $bi->{bib_status} = '';
 
-#  # aleph-specific checks
-#  F500:foreach my $field ($bib->field('500')) {
-#    $field->as_string() =~ /(provisional circ) record/i and do {
-#      $bi->{bib_status} = $1;
-#      last F500;
-#    }; 
-#  }
-#  my $field = $bib->field('STA') and do {	# aleph-specific
-#    ($bib->field('STA')->as_string() =~ /(notis unlinked)/i) and do {
-#      $bi->{bib_status} = $1;
-#    }; 
-#  }; 
-
   #check us records for mulitple subfield a in imprint field
   CHECK_IMPRINT: {
     $bi->{pub_place} !~ /u$/ and last CHECK_IMPRINT; #non-us, skip check
@@ -451,8 +426,8 @@ sub get_bib_info {
           last CHECK_GOV;
         };
       }
-      foreach $field ($bib->field(400|410|411|440|490|800|810|811|830)) {
-        $field->as_string() =~ /nsrds|national standard reference data series/i and do {
+      foreach $field ($bib->field('400|410|411|440|490|800|810|811|830')) {
+        $field->as_string() =~ /(nsrds|national standard reference data series)/i and do {
           $bi->{us_fed_pub_exception} = "NIST-NSRDS";
           last CHECK_GOV; 
         };
@@ -461,6 +436,20 @@ sub get_bib_info {
         $bi->{us_fed_pub_exception} = "NTIS";
         last CHECK_GOV; 
       };
+      foreach my $field ($bib->field('260|264|110|710')) {
+        $field->as_string() =~ /armed forces communications (association|communications and electronics association)/i and do {
+          $bi->{us_fed_pub_exception} = "armed forces comm assoc";
+          last CHECK_GOV; 
+        };
+      }
+      foreach my $field ($bib->field('260|264|110|710')) {
+        my $field_string = $field->as_string();
+        #$field_string =~ /national research council \(u\.s\.\)/i and do {
+        $field_string =~ /national research council/i and $field_string !~ /canada/i and do {
+          $bi->{us_fed_pub_exception} = "national research council";
+          last CHECK_GOV; 
+        };
+      }
       foreach my $field ($bib->field('260|264|110|130|710')) {
         $field->as_string() =~ /smithsonian/i and do {
           $bi->{us_fed_pub_exception} = "smithsonian";
@@ -566,7 +555,7 @@ sub clean_date {
   $date eq '0000' and return '';
   $date =~ /^\d{4}$/ and return $date;  # 4 digits, just return it
   $date =~ s/\|\|\|\|//;                # 4 fill characters, translate to null
-  $date =~ s/\^\^\^\^//;                # 4 aleph blanks, translate to null
+  $date =~ s/\^\^\^\^//;                # 4 fill characters, translate to null
   $date =~ s/\?\?\?\?//;                # 4 question marks, translate to null
   $date =~ s/\s{4}//;                   # 4 whitespace characters, translate to null
   $date =~ tr/u^|/9/;                   # translate "u" to "9"
@@ -588,8 +577,6 @@ sub getDate {
 sub getBibFmt {
   my $bib_key = shift;
   my $record = shift;
-  # tlp--don't use aleph FMT field--not always current (2013-10-02)
-  # $record->{aleph_rec_fmt} and return $record->{aleph_rec_fmt}; 	# aleph-specific code
   my $ldr = $record->leader();
   my $recTyp = substr($ldr,6,1);
   my $bibLev = substr($ldr,7,1);
