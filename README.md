@@ -91,7 +91,7 @@ Data In
 -------
 * `ht_bib_export_incr_YYYY-MM-DD.json.gz` (incremental updates from Zephir, `ftps_zephir_get`)
 * `vufind_removed_cids_YYYY-MM-DD.txt.gz` (CIDs that have gone away, `ftps_zephir_get`)
-* `groove_incremental_YYYY-MM-DD.tsv.gz`  (from Zephir, candidates for ingest?)
+* `groove_incremental_YYYY-MM-DD.tsv.gz`  (from Zephir - new items added to Zephir?)
 * `/tmp/rights_dbm`  (taken from `ht_rights.rights_current` table in the rights database)
 * `us_cities.db` (dependency for `bib_rights.pm`)
 * `us_fed_pub_exception_file` (dependency for `bib_rights.pm`, `/htdata/govdocs/feddocs_oclc_filter/`) 
