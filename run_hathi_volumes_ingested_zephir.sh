@@ -7,6 +7,7 @@ source $ROOTDIR/config/.env
 echo "home is $HOME"
 
 today=`date +%Y%m%d`
+today_std=`date +%Y-%m-%d`
 script_name=`basename $0`
 echo $script_name
 
@@ -20,8 +21,8 @@ echo "${script_name}:  started at `date`" > $RPT_FILE
 
 
 # check for existence of dest file
-if [ -e $BARCODES_DIR/$DEST_FILE ]; then
-  MESSAGE="$BARCODES_DIR/$DEST_FILE already exists--exitting"
+if [ -e $LOCAL_BARCODES_DIR/$DEST_FILE ]; then
+  MESSAGE="$LOCAL_BARCODES_DIR/$DEST_FILE already exists--exitting"
   echo $MESSAGE
   echo $MESSAGE >> $RPT_FILE
   cat $RPT_FILE | mailx -s"$script_name" $EMAIL 
@@ -29,10 +30,10 @@ if [ -e $BARCODES_DIR/$DEST_FILE ]; then
 fi
 
 # create empty file for today
-touch $BARCODES_DIR/$DEST_FILE
+touch $LOCAL_BARCODES_DIR/$DEST_FILE
 
-files=`ls $BARCODES_DIR/barcodes*`
-file_list=( `ls $BARCODES_DIR/barcodes*` )
+files=`ls $BARCODES_DIR/barcodes_${today_std}*`
+file_list=( `ls $BARCODES_DIR/barcodes_${today_std}*` )
 if [ ${#file_list[@]} == 0 ]; then
   echo "*** No files to process today, sending empty file"
   echo "*** No files to process today, sending empty file" >> $RPT_FILE
@@ -60,28 +61,28 @@ do
     echo "*** file $file is empty--skipped" >> $RPT_FILE
     continue
   fi
-  cat $file >> $BARCODES_DIR/$DEST_FILE
+  cat $file >> $LOCAL_BARCODES_DIR/$DEST_FILE
   echo "*** adding file $file to $DEST_FILE"
   echo "*** adding file $file to $DEST_FILE" >> $RPT_FILE
 done
 
-wc -l $BARCODES_DIR/$DEST_FILE
-wc -l $BARCODES_DIR/$DEST_FILE >> $RPT_FILE
+wc -l $LOCAL_BARCODES_DIR/$DEST_FILE
+wc -l $LOCAL_BARCODES_DIR/$DEST_FILE >> $RPT_FILE
 
 echo "*** sending file $DEST_FILE to zephir"
 
 # todo: uncomment 
-# $ROOTDIR/ftpslib/ftps_zephir_send $BARCODES_DIR/$DEST_FILE
+# $ROOTDIR/ftpslib/ftps_zephir_send $LOCAL_BARCODES_DIR/$DEST_FILE
 # cmdstatus=$?
 #if [ $cmdstatus != "0" ]; then
-#  MESSAGE="Problem sending file $BARCODES_DIR/$DEST_FILE to zephir: rc is $cmdstatus"
+#  MESSAGE="Problem sending file $LOCAL_BARCODES_DIR/$DEST_FILE to zephir: rc is $cmdstatus"
 #  echo $MESSAGE >> $RPT_FILE
 #  cat $RPT_FILE | mailx -s"$script_name" $EMAIL 
 #  exit
 #fi
 
 echo "*** moving file $DEST_FILE to $BARCODE_ARCHIVE"
-mv $BARCODES_DIR/$DEST_FILE $BARCODE_ARCHIVE
+mv $LOCAL_BARCODES_DIR/$DEST_FILE $BARCODE_ARCHIVE
 if [ "$file_list" == "" ]; then
   echo "*** no barcode filesto move"
 else
