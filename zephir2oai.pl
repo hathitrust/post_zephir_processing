@@ -2,7 +2,11 @@
 
 use open qw( :encoding(UTF-8) :std );
 use strict;
+use local::lib "$FindBin::Bin";
+use lib "$FindBin::Bin/lib";
+BEGIN {push @INC, '.'}
 use File::Basename;
+BEGIN {push @INC, dirname(__FILE__)}
 use Getopt::Std;
 use MARC::Record;
 use MARC::Batch;
@@ -88,8 +92,8 @@ sub close_current_xml_file {
 
 my $infile_open = $infile;
 $infile =~ /\.gz$/ and do {
-  $infile_open = "unpigz -c $infile |";
-  print "infile $infile is compressed, using pigz to process: $infile_open\n";
+  $infile_open = "gunzip -c $infile |";
+  print "infile $infile is compressed, using gunzip to process: $infile_open\n";
   $infile =~ s/\.gz$//;
 };
 open(IN,"$infile_open") or die "can't open $infile for input: $!\n";
@@ -97,8 +101,8 @@ binmode(IN);
 
 my $delete_file_open = $delete_file;
 $delete_file =~ /\.gz$/ and do {
-  $delete_file_open = "unpigz -c $delete_file |";
-  print "delete file $delete_file is compressed, using pigz to process: $delete_file_open\n";
+  $delete_file_open = "gunzip -c $delete_file |";
+  print "delete file $delete_file is compressed, using gunzip to process: $delete_file_open\n";
   $delete_file =~ s/\.gz$//;
 };
 open(DELETE,"$delete_file_open") or die "can't open $delete_file_open for input: $!\n";

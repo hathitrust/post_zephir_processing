@@ -9,3 +9,9 @@ config/.netrc
 zephir_full_daily_a*
 *.gz
 local
+*_stderr
+*.debug
+*rights_rpt.tsv
+*.bad
+*.change
+*.rights

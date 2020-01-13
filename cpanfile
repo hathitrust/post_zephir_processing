@@ -11,3 +11,5 @@ requires 'DB_File';
 requires 'YAML';
 requires 'JSON::XS';
 requires 'LWP::Simple';
+requires 'XML::LibXML';
+requires 'XML::LibXSLT';
