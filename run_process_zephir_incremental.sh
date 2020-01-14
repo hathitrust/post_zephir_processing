@@ -24,15 +24,11 @@ export us_fed_pub_exception_file="/htdata/govdocs/feddocs_oclc_filter/oclcs_remo
 echo "fed pub exception file set in environment: $us_fed_pub_exception_file"
 
 #moved to the configs
-# todo: this still needs to be determined. 
-# set HT_WEB_ID='/exlibris/aleph/.ssh/id_rsa_libadm_macc-ht-web-000'
-# set HT_WEB_HOST='libadm@macc-ht-web-001.umdl.umich.edu'
-# set HT_WEB_DIR='/htapps/www/sites/www.hathitrust.org/files/hathifiles'
+# HT_WEB_DIR='/htapps/www/sites/www.hathitrust.org/files/hathifiles'
 
 #set DATADIR=/aleph-prep/zephir-data
 DATADIR=$ROOTDIR/data/zephir
 DATADIR_OAI=$ROOTDIR/data/oai_data
-# todo: make sure we have access
 ARCHIVE=/htapps/archive
 #set ZEPHIR_VUFIND_EXPORT=vufind_incremental_${zephir_date}.json.gz 
 ZEPHIR_VUFIND_EXPORT=ht_bib_export_incr_${zephir_date}.json.gz 
@@ -122,10 +118,11 @@ ftpslib/ftps_zephir_get exports/$ZEPHIR_DAILY_TOUCHED $ZEPHIR_DAILY_TOUCHED
 
 cmdstatus=$?
 if [ $cmdstatus == "0" ]; then
-  echo "`date`: copy $ZEPHIR_DAILY_TOUCHED to data/zephir"
-  echo "`date`: copy $ZEPHIR_DAILY_TOUCHED to data/zephir" >> $REPORT_FILE
+  echo "`date`: copy $ZEPHIR_DAILY_TOUCHED to /htdata/return"
+  echo "`date`: copy $ZEPHIR_DAILY_TOUCHED to /htdata/return" >> $REPORT_FILE
   #cp $ZEPHIR_DAILY_TOUCHED $data_root/local/mdp/return/zephir/daily_touched.tsv.gz
-  # todo: where should this actually go?
+  # todo: uncomment, make sure /htdata/return actually exists
+  # cp $ZEPHIR_DAILY_TOUCHED /htdata/return 
   cp $ZEPHIR_DAILY_TOUCHED $ROOTDIR/data/zephir/
 else 
   echo "***" >> $REPORT_FILE
@@ -191,7 +188,7 @@ mv ${BASENAME}_hathi.txt $HATHIFILE
 $zipcommand -f $HATHIFILE
 
 # todo: uncomment
-# cp ${HATHIFILE}.gz /htapps/www/sites/www.hathitrust.org/files/hathifiles/
+# cp ${HATHIFILE}.gz ${HT_WEB_DIR}/
 cmdstatus=$?
 if [ $cmdstatus != "0" ]; then
   message="Problem transferring hathifile to $HT_WEB_HOST: rc is $cmdstatus"
