@@ -208,10 +208,7 @@ if [ $DAY == "01" ]; then
   # cp hathi_full_${TODAY}.txt.gz /htapps/archive/hathifiles/ 
 
   #moved to the configs
-  # todo: this still needs to be determined. 
-  #set HT_WEB_ID='/exlibris/aleph/.ssh/id_rsa_libadm_macc-ht-web-000'
-  #set HT_WEB_HOST='libadm@macc-ht-web-000.umdl.umich.edu'
-  HT_WEB_DIR='/htapps/www/sites/www.hathitrust.org/files/hathifiles'
+  #HT_WEB_DIR='/htapps/www/sites/www.hathitrust.org/files/hathifiles'
 
   echo "`date`: sending full hathifile to hathi server hathifiles directory" >> $REPORT_FILE
   #todo: uncomment
