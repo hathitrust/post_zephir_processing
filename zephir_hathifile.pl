@@ -101,7 +101,7 @@ my $infile_open = $infile;
 $infile =~ /\.gz$/ and do {
   # $infile_open = "unpigz -c $infile |";
   $infile_open = "gunzip -c $infile |";
-  print "infile $infile is compressed, using pigz to process: $infile_open\n";
+  print "infile $infile is compressed, using gunzip to process: $infile_open\n";
   $infile =~ s/\.gz$//;
 };
 open(IN,"$infile_open") or die "can't open $infile for input: $!\n";

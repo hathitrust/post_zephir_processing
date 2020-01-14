@@ -74,7 +74,7 @@ fi
 
 echo "`date`: retrieve $ZEPHIR_VUFIND_DELETE"
 echo "`date`: retrieve $ZEPHIR_VUFIND_DELETE" >> $REPORT_FILE
-# todo: uncomment
+
 ftpslib/ftps_zephir_get exports/$ZEPHIR_VUFIND_DELETE $ZEPHIR_VUFIND_DELETE
 
 cmdstatus=$?
@@ -98,15 +98,17 @@ fi
 
 echo "`date`: retrieve $ZEPHIR_GROOVE_INCREMENTAL"
 echo "`date`: retrieve $ZEPHIR_GROOVE_INCREMENTAL" >> $REPORT_FILE
-# todo: uncomment
+
 ftpslib/ftps_zephir_get exports/$ZEPHIR_GROOVE_INCREMENTAL $ZEPHIR_GROOVE_INCREMENTAL
 
 cmdstatus=$?
 if [ $cmdstatus == "0" ]; then
   echo "`date`: copy $ZEPHIR_GROOVE_INCREMENTAL to rootdir/data/zephir"
   echo "`date`: copy $ZEPHIR_GROOVE_INCREMENTAL to rootdir/data/zephir" >> $REPORT_FILE
-  # todo: where should this actually go?
-  cp $ZEPHIR_GROOVE_INCREMENTAL $ROOTDIR/data/zephir/
+  # todo: switch
+  # should go here:
+  # mv $ZEPHIR_GROOVE_INCREMENTAL /htapps/babel/feed/var/bibrecords/
+  mv $ZEPHIR_GROOVE_INCREMENTAL $ROOTDIR/data/zephir/
 else
   echo "***" >> $REPORT_FILE
   echo "Problem getting file ${ZEPHIR_GROOVE_INCREMENTAL} from zephir: rc is $cmdstatus" >> $REPORT_FILE
@@ -115,14 +117,15 @@ fi
 
 echo "`date`: retrieve $ZEPHIR_DAILY_TOUCHED"
 echo "`date`: retrieve $ZEPHIR_DAILY_TOUCHED" >> $REPORT_FILE
-# todo: uncomment
+
 ftpslib/ftps_zephir_get exports/$ZEPHIR_DAILY_TOUCHED $ZEPHIR_DAILY_TOUCHED
 
 cmdstatus=$?
 if [ $cmdstatus == "0" ]; then
-  echo "`date`: copy $ZEPHIR_DAILY_TOUCHED to mdp/return/zephir"
-  echo "`date`: copy $ZEPHIR_DAILY_TOUCHED to mdp/return/zephir" >> $REPORT_FILE
+  echo "`date`: copy $ZEPHIR_DAILY_TOUCHED to data/zephir"
+  echo "`date`: copy $ZEPHIR_DAILY_TOUCHED to data/zephir" >> $REPORT_FILE
   #cp $ZEPHIR_DAILY_TOUCHED $data_root/local/mdp/return/zephir/daily_touched.tsv.gz
+  # todo: where should this actually go?
   cp $ZEPHIR_DAILY_TOUCHED $ROOTDIR/data/zephir/
 else 
   echo "***" >> $REPORT_FILE
@@ -145,15 +148,16 @@ $zipcommand ${BASENAME}_all_delete.txt
 
 echo "`date`: copy rights file ${BASENAME}.rights to data/return/zephir"
 echo "`date`: copy rights file ${BASENAME}.rights to data/return/zephir" >> $REPORT_FILE
-# todo: where should this actually go?
+# todo: change
 cp ${BASENAME}.rights $ROOTDIR/data/return/zephir/
+#cp ${BASENAME}.rights /htprep/babel/feed/var/rights 
 
 echo "`date`: compress json file and send to hathitrust solr server"
 echo "`date`: compress json file and send to hathitrust solr server" >> $REPORT_FILE
 $zipcommand -n -f ${BASENAME}.json
 
-# todo: uncomment, need the .ssh
-# scp -i /exlibris/aleph/.ssh/id_dsa_libadm_beeftea-2 ${BASENAME}.json.gz libadm@beeftea-2:/htsolr/catalog/prep
+# todo: uncomment
+# cp ${BASENAME}.json.gz /htsolr/catalog/prep
 cmdstatus=$?
 if [ $cmdstatus != "0" ]; then
   message="Problem transferring file ${BASENAME}.json.gz to beeftea-2: rc is $cmdstatus"
@@ -171,8 +175,8 @@ cp ${BASENAME}.json.gz  /htdata/govdocs/zephir/
 echo "`date`: send combined delete file to hathitrust solr server as ${BASENAME}_delete.txt.gz"
 echo "`date`: send combined delete file to hathitrust solr server as ${BASENAME}_delete.txt.gz" >> $REPORT_FILE
 
-# todo: uncomment, need the .ssh 
-# scp -i /exlibris/aleph/.ssh/id_dsa_libadm_beeftea-2 ${BASENAME}_all_delete.txt.gz libadm@beeftea-2:/htsolr/catalog/prep/${BASENAME}_delete.txt.gz
+# todo: uncomment 
+# cp ${BASENAME}_all_delete.txt.gz /htsolr/catalog/prep/${BASENAME}_delete.txt.gz
 cmdstatus=$?
 if [ $cmdstatus != "0" ]; then
   message="Problem transferring file $ZEPHIR_VUFIND_DELETE to beeftea-2: rc is $cmdstatus"
@@ -186,8 +190,8 @@ HATHIFILE=hathi_upd_${YESTERDAY}.txt
 mv ${BASENAME}_hathi.txt $HATHIFILE
 $zipcommand -f $HATHIFILE
 
-# todo: we need the web id and host information, uncomment
-# scp -i ${HT_WEB_ID} ${HATHIFILE}.gz ${HT_WEB_HOST}:${HT_WEB_DIR}/
+# todo: uncomment
+# cp ${HATHIFILE}.gz /htapps/www/sites/www.hathitrust.org/files/hathifiles/
 cmdstatus=$?
 if [ $cmdstatus != "0" ]; then
   message="Problem transferring hathifile to $HT_WEB_HOST: rc is $cmdstatus"
@@ -196,8 +200,8 @@ if [ $cmdstatus != "0" ]; then
 fi
 
 echo "`date`: generate json hathifile list" >> $REPORT_FILE
-# todo: again, need the id and host information, uncomment
-# ssh -i ${HT_WEB_ID} ${HT_WEB_HOST} /htapps/www/sites/www.hathitrust.org/extra_perl/json_filelist.pl >> $REPORT_FILE
+# todo: uncomment
+# `/htapps/www/sites/www.hathitrust.org/extra_perl/json_filelist.pl >> $REPORT_FILE`
 
 # copy hathifile to ht archive directory
 # todo: uncomment
@@ -245,8 +249,11 @@ $ROOTDIR/run_zephir_full_daily.sh
 #  echo "not first day of month, not starting run_process_zephir_full" >> $REPORT_FILE
 #endif
 
+`bundle exec ruby compare_zephrec_updates.rb >> zephrec_comparison_results.tmp.txt`
+`ruby compare_hathifile_updates.rb >> hathifile_comparison_results.tmp.txt`
+`ruby compare_zgi.rb >> zgi_comparison_results.tmp.txt`
+`ruby compare_daily_touched.rb >> daily_touched_comparison_results.tmp.txt`
 exit
-
 # this has been transcribe where it is needed
 #error_exit:
 #echo "error, message is $message"

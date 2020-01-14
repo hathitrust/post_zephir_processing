@@ -145,8 +145,8 @@ if [ $DAY == "01" ]; then
   fi
   cp zephir_full_${YESTERDAY}_vufind.json.gz $ZEPHIR_DATA/full/zephir_full_${YESTERDAY}_vufind.json.gz
   echo "`date`: sending full file to hathi trust catalog solr server" >> $REPORT_FILE
-  # todo: we need a fix for this
-  # scp -i /exlibris/aleph/.ssh/id_dsa_libadm_beeftea-2 ${ZEPHIR_DATA}/full/zephir_full_${YESTERDAY}_vufind.json.gz libadm@beeftea-2:/htsolr/catalog/prep
+  # todo: uncomment
+  # cp ${ZEPHIR_DATA}/full/zephir_full_${YESTERDAY}_vufind.json.gz /htsolr/catalog/prep 
   cmdstatus=$?
   if [ $cmdstatus != "0" ]; then
     message="Problem transferring file to beeftea-2: rc is $cmdstatus"
@@ -211,14 +211,14 @@ if [ $DAY == "01" ]; then
   # todo: this still needs to be determined. 
   #set HT_WEB_ID='/exlibris/aleph/.ssh/id_rsa_libadm_macc-ht-web-000'
   #set HT_WEB_HOST='libadm@macc-ht-web-000.umdl.umich.edu'
-  #set HT_WEB_DIR='/htapps/www/sites/www.hathitrust.org/files/hathifiles'
+  HT_WEB_DIR='/htapps/www/sites/www.hathitrust.org/files/hathifiles'
 
   echo "`date`: sending full hathifile to hathi server hathifiles directory" >> $REPORT_FILE
-  #todo: uncomment once id/host/dir are sorted
-  #scp -i ${HT_WEB_ID} $ZEPHIR_DATA/full/hathi_full_${TODAY}.txt.gz ${HT_WEB_HOST}:${HT_WEB_DIR}/hathi_full_${TODAY}.txt.gz
+  #todo: uncomment
+  # cp $ZEPHIR_DATA/full/hathi_full_${TODAY}.txt.gz ${HT_WEB_DIR}/hathi_full_${TODAY}.txt.gz
   echo "`date`: sending hathifile field list header file to hathi server hathifiles directory" >> $REPORT_FILE
-  # todo: uncomment once everything is sorted
-  #scp -i ${HT_WEB_ID} hathi_field_list.txt ${HT_WEB_HOST}:${HT_WEB_DIR}/
+  # todo: uncomment
+  # cp hathi_field_list.txt ${HT_WEB_DIR}/ 
 
   echo "`date`: deleting old hathifiles" >> $REPORT_FILE
   CUTOFF_YEAR_MONTH=`date --date="2 months ago" +%Y%m`
@@ -230,14 +230,14 @@ if [ $DAY == "01" ]; then
   echo "UPD_PATTERN: $UPD_PATTERN" >> $REPORT_FILE
   echo >> $REPORT_FILE
 
-  #todo: uncomment all these ssh operations
-  #ssh -i ${HT_WEB_ID} ${HT_WEB_HOST} rm "${HT_WEB_DIR}/${UPD_PATTERN}"
-  #ssh -i ${HT_WEB_ID} ${HT_WEB_HOST} rm "${HT_WEB_DIR}/${FULL_PATTERN}"
-  #ssh -i ${HT_WEB_ID} ${HT_WEB_HOST} ls -l "${HT_WEB_DIR}"
+  #todo: uncomment all these operations
+  #rm "${HT_WEB_DIR}/${UPD_PATTERN}"
+  #rm "${HT_WEB_DIR}/${FULL_PATTERN}"
+  #ls -l "${HT_WEB_DIR}"
 
   echo "`date`: generate json hathifile list" >> $REPORT_FILE
-  # todo: same here
-  #ssh -i ${HT_WEB_ID} ${HT_WEB_HOST} /htapps/www/sites/www.hathitrust.org/extra_perl/json_filelist.pl >> $REPORT_FILE
+  # todo: uncomment 
+  # `/htapps/www/sites/www.hathitrust.org/extra_perl/json_filelist.pl >> $REPORT_FILE`
 fi
 
 echo "`date`: all files processed, concatenate report files to zephir_full_daily_rpt.txt" 
