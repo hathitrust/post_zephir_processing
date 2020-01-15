@@ -28,6 +28,7 @@ old.each do |line|
   new_rec = newrecs[old_rec[0]]
   fields.each_with_index do |f, index|
     if new_rec[index] != old_rec[index]
+      puts [old_rec[0], old_rec[index], new_rec[index]].join("\t")
       field_diff_counts[index] += 1
     end
   end  
@@ -51,6 +52,7 @@ puts "Num old missing from new: #{num_old_missing}"
 num_new_missing = 0
 newrecs.keys.each do |k|
   num_new_missing += 1 unless old_ids.include? k
+  puts newrecs[k].join("\t") unless old_ids.include? k
 end
 puts "Num new missing from old: #{num_new_missing}"
 

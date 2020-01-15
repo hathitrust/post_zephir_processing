@@ -118,11 +118,11 @@ ftpslib/ftps_zephir_get exports/$ZEPHIR_DAILY_TOUCHED $ZEPHIR_DAILY_TOUCHED
 
 cmdstatus=$?
 if [ $cmdstatus == "0" ]; then
-  echo "`date`: copy $ZEPHIR_DAILY_TOUCHED to /htdata/return"
-  echo "`date`: copy $ZEPHIR_DAILY_TOUCHED to /htdata/return" >> $REPORT_FILE
+  echo "`date`: copy $ZEPHIR_DAILY_TOUCHED to /htapps/babel/feed/var/bibrecords"
+  echo "`date`: copy $ZEPHIR_DAILY_TOUCHED to /htapps/babel/feed/var/bibrecords" >> $REPORT_FILE
   #cp $ZEPHIR_DAILY_TOUCHED $data_root/local/mdp/return/zephir/daily_touched.tsv.gz
-  # todo: uncomment, make sure /htdata/return actually exists
-  # cp $ZEPHIR_DAILY_TOUCHED /htdata/return 
+  # todo: uncomment
+  # cp $ZEPHIR_DAILY_TOUCHED /htapps/babel/feed/var/bibrecords
   mv $ZEPHIR_DAILY_TOUCHED $ROOTDIR/data/zephir/
 else 
   echo "***" >> $REPORT_FILE
