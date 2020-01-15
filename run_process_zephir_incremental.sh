@@ -123,7 +123,7 @@ if [ $cmdstatus == "0" ]; then
   #cp $ZEPHIR_DAILY_TOUCHED $data_root/local/mdp/return/zephir/daily_touched.tsv.gz
   # todo: uncomment, make sure /htdata/return actually exists
   # cp $ZEPHIR_DAILY_TOUCHED /htdata/return 
-  cp $ZEPHIR_DAILY_TOUCHED $ROOTDIR/data/zephir/
+  mv $ZEPHIR_DAILY_TOUCHED $ROOTDIR/data/zephir/
 else 
   echo "***" >> $REPORT_FILE
   echo "Problem getting file ${ZEPHIR_DAILY_TOUCHED} from zephir: rc is $cmdstatus" >> $REPORT_FILE
@@ -145,9 +145,9 @@ $zipcommand ${BASENAME}_all_delete.txt
 
 echo "`date`: copy rights file ${BASENAME}.rights to data/return/zephir"
 echo "`date`: copy rights file ${BASENAME}.rights to data/return/zephir" >> $REPORT_FILE
-# todo: change
-cp ${BASENAME}.rights $ROOTDIR/data/return/zephir/
-#cp ${BASENAME}.rights /htprep/babel/feed/var/rights 
+# todo: uncomment
+#cp ${BASENAME}.rights /htapps/babel/feed/var/rights 
+mv ${BASENAME}.rights $ROOTDIR/data/return/zephir/
 
 echo "`date`: compress json file and send to hathitrust solr server"
 echo "`date`: compress json file and send to hathitrust solr server" >> $REPORT_FILE

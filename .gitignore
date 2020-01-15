@@ -16,3 +16,7 @@ local
 *.change
 *.rights
 .bundle
+*.tmp
+*.tsv
+test_*
+compare_*
