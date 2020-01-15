@@ -113,6 +113,8 @@ done
 for type in "${types[@]}" 
 do
   echo "move combined $type file to transfer directory"
+  # todo: change to the following
+  # mv meta_${type}_${TODAY}.jsonl.gz /htdata/return/transfer
   mv meta_${type}_${TODAY}.jsonl.gz ${ZEPHIR_DATA}/
 done
 
@@ -126,6 +128,8 @@ if [ $cmdstatus != "0" ]; then
   echo "$message" | mailx -s"error in $SCRIPTNAME" jstever@umich.edu
 fi
 echo "`zcat zephir_ingested_items.txt.gz | wc -l` lines in zephir ingested items file" >> $REPORT_FILE
+# todo: change to the following
+# zephir_ingested_items.txt.gz /htapps/babel/feed/var/bibrecords
 mv zephir_ingested_items.txt.gz $DATA_ROOT 
 
 DAY=`date +%d`
