@@ -26,9 +26,7 @@ echo "fed pub exception file set in environment: $us_fed_pub_exception_file"
 #moved to the configs
 # HT_WEB_DIR='/htapps/www/sites/www.hathitrust.org/files/hathifiles'
 
-#set DATADIR=/aleph-prep/zephir-data
 DATADIR=$ROOTDIR/data/zephir
-DATADIR_OAI=$ROOTDIR/data/oai_data
 ARCHIVE=/htapps/archive
 #set ZEPHIR_VUFIND_EXPORT=vufind_incremental_${zephir_date}.json.gz 
 ZEPHIR_VUFIND_EXPORT=ht_bib_export_incr_${zephir_date}.json.gz 
@@ -41,7 +39,7 @@ BASENAME=zephir_upd_${YESTERDAY}
 REPORT_FILE=${BASENAME}_report.txt
 echo "basename is $BASENAME"
 
-RIGHTS_DBM=/tmp/rights_dbm
+RIGHTS_DBM=$ROOTDIR/tmp/rights_dbm
 
 echo "`date`: zephir incremental extract started" > $REPORT_FILE
 echo "`date`: zephir incremental extract started" 
