@@ -32,7 +32,7 @@ REPORT_FILE=$ZEPHIR_DATA/zephir_full_daily_report.txt
 
 echo "basename is zephir_full_daily"
 
-RIGHTS_DBM=/tmp/rights_dbm
+RIGHTS_DBM=$ROOTDIR/tmp/rights_dbm
 
 echo "`date`: zephir full extract started" > $REPORT_FILE
 echo "`date`: zephir full extract started" 
@@ -101,7 +101,6 @@ do
   fi
 done
 
-#set META_DIR=$data_root/local/mdp_batch/mdp_meta/transfer
 echo "`date`: all files processed, concatenate htrc files" 
 echo "`date`: all files processed, concatenate htrc files" >> $REPORT_FILE
 types=(ic pd_google pd_open_access restricted)
@@ -113,9 +112,7 @@ done
 for type in "${types[@]}" 
 do
   echo "move combined $type file to transfer directory"
-  # todo: change to the following
-  # mv meta_${type}_${TODAY}.jsonl.gz /htdata/return/transfer
-  mv meta_${type}_${TODAY}.jsonl.gz ${ZEPHIR_DATA}/
+  mv meta_${type}_${TODAY}.jsonl.gz ${META_DIR}/
 done
 
 echo "`date`: all files processed, concatenate and compress files to zephir_ingested_items.txt.gz" 
