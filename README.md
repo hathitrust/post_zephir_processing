@@ -21,7 +21,7 @@ This takes the new barcodes from ingest (feed) and sends them to Zephir. Zephir 
 
 Data In
 --------
-* barcodes_YYY-MM-DD_ (previously: /exlibris/aleph/uprod/miu50/local/mdp/return/) New preferred directory: /htdata/return/ ?
+* barcodes_YYY-MM-DD_ (previously: /exlibris/aleph/uprod/miu50/local/mdp/return/) Now picked up directly at /htapps/babel/feed/var/rights/archive ?
 
 Data Out
 --------

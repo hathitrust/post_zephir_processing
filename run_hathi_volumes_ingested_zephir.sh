@@ -71,7 +71,7 @@ wc -l $LOCAL_BARCODES_DIR/$DEST_FILE >> $RPT_FILE
 
 echo "*** sending file $DEST_FILE to zephir"
 
-# todo: uncomment 
+# todo: uncomment, sending barcodes to Zephir
 # $ROOTDIR/ftpslib/ftps_zephir_send $LOCAL_BARCODES_DIR/$DEST_FILE
 # cmdstatus=$?
 #if [ $cmdstatus != "0" ]; then
