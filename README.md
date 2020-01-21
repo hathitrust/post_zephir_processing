@@ -145,13 +145,12 @@ Data In
 
 Data Out
 --------
-* `groove_export_YYYY-MM-DD.tsv.gz` gets moved to return/groove_full.tsv.gz (why?)
-* `hathi_full_YYYYMMDD.txt`
-* `meta_(ic, pd_google, pd_open_Access, restricted)_YYYYMMDD.jsonl.gz`
-* `zephir_full_${YESTERDAY}_vufind.json.gz`
-* `zephir_full_${YESTERDAY}.rights`
-* `zephir_full_${YESTERDAY}.rights.tsv`
-* `zephir_full_${YESTERDAY}.rights.debug`
+* `groove_export_YYYY-MM-DD.tsv.gz` will be moved to /htapps/babel/feed/var/bibrecords/groove_full.tsv.gz  
+* `hathi_full_YYYYMMDD.txt` hathifile, moved to /htapps/www/sites/www.hathitrust.org/files/hathifiles
+* `meta_(ic, pd_google, pd_open_Access, restricted)_YYYYMMDD.jsonl.gz` put at /htdev/htdata/oai
+* `zephir_full_${YESTERDAY}_vufind.json.gz`, copied to /htdata/govdocs/zephir, and the zephir archive
+* `zephir_full_${YESTERDAY}.rights`, will be moved to /htapps/babel/feed/var/rights/
+* `zephir_full_${YESTERDAY}.rights.debug`, doesn't appear to be used
 * `zephir_full_daily_rpt.txt`
 
 Perl script dependencies

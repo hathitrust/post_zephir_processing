@@ -48,6 +48,8 @@ if [ ! -e $ZEPHIR_GROOVE_EXPORT ]; then
   exit
 fi
 
+#todo: change to /htapps
+# mv $ZEPHIR_GROOVE_EXPORT /htapps/babel/feed/var/bibrecords/groove_full.tsv
 mv $ZEPHIR_GROOVE_EXPORT $DATA_ROOT/groove_full.tsv.gz
 
 echo "*** retrieve full zephir vufind extract" >> $REPORT_FILE
@@ -170,6 +172,8 @@ if [ $DAY == "01" ]; then
     echo "error, message is $message"
     echo "$message" | mailx -s"error in $SCRIPTNAME" jstever@umich.edu
   fi
+  #todo: uncomment
+  # cp zephir_full_${YESTERDAY}.rights /htapps/babel/feed/var/rights/
   cp zephir_full_${YESTERDAY}.rights $ZEPHIR_DATA/full/
   cp zephir_full_${YESTERDAY}.rights $DATA_ROOT/zephir/
   
@@ -261,6 +265,7 @@ echo >> $REPORT_FILE
 
 echo "`date`: cleanup--remove intermediate files" 
 echo "`date`: cleanup--remove intermediate files" >> $REPORT_FILE
+cat zephir_full_daily_*stderr > stderr.tmp.txt
 rm zephir_full_daily_??
 rm zephir_full_daily_??_*
 rm zephir_full_daily_??.*
