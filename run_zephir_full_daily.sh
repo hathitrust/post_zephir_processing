@@ -128,11 +128,10 @@ if [ $cmdstatus != "0" ]; then
 fi
 echo "`zcat zephir_ingested_items.txt.gz | wc -l` lines in zephir ingested items file" >> $REPORT_FILE
 # todo: change to the following
-# zephir_ingested_items.txt.gz /htapps/babel/feed/var/bibrecords
+# cp zephir_ingested_items.txt.gz /htapps/babel/feed/var/bibrecords
 mv zephir_ingested_items.txt.gz $DATA_ROOT 
 
 DAY=`date +%d`
-# todo: day should be '01' but changed for "testing"
 if [ $DAY == "01" ]; then
   echo "First day of month--prepare and deliver monthly output"
   echo "First day of month--prepare and deliver monthly output" >> $REPORT_FILE
@@ -148,8 +147,7 @@ if [ $DAY == "01" ]; then
   fi
   cp zephir_full_${YESTERDAY}_vufind.json.gz $ZEPHIR_DATA/full/zephir_full_${YESTERDAY}_vufind.json.gz
   echo "`date`: sending full file to hathi trust catalog solr server" >> $REPORT_FILE
-  # todo: uncomment
-  # cp ${ZEPHIR_DATA}/full/zephir_full_${YESTERDAY}_vufind.json.gz /htsolr/catalog/prep 
+  cp ${ZEPHIR_DATA}/full/zephir_full_${YESTERDAY}_vufind.json.gz /htsolr/catalog/prep 
   cmdstatus=$?
   if [ $cmdstatus != "0" ]; then
     message="Problem transferring file to beeftea-2: rc is $cmdstatus"
@@ -160,8 +158,7 @@ if [ $DAY == "01" ]; then
   echo "`date`: copy full file to value storage govdocs folder" >> $REPORT_FILE
   cp zephir_full_${YESTERDAY}_vufind.json.gz  /htdata/govdocs/zephir/
   cp zephir_full_${YESTERDAY}_vufind.json.gz  $ZEPHIR_ARCHIVE/
-  #todo: uncomment
-  # cp zephir_full_${YESTERDAY}_vufind.json.gz /htapps/archive/catalog/
+  cp zephir_full_${YESTERDAY}_vufind.json.gz /htapps/archive/catalog/
 
   echo "`date`: all files processed, concatenate rights files to zephir_full_${YESTERDAY}.rights"
   echo "`date`: all files processed, concatenate rights files to zephir_full_${YESTERDAY}.rights" >> $REPORT_FILE

@@ -141,8 +141,8 @@ zcat $ZEPHIR_VUFIND_DELETE > ${BASENAME}_zephir_delete.txt
 sort -u ${BASENAME}_zephir_delete.txt ${BASENAME}_delete.txt -o ${BASENAME}_all_delete.txt
 $zipcommand ${BASENAME}_all_delete.txt
 
-echo "`date`: copy rights file ${BASENAME}.rights to data/return/zephir"
-echo "`date`: copy rights file ${BASENAME}.rights to data/return/zephir" >> $REPORT_FILE
+echo "`date`: copy rights file ${BASENAME}.rights to /htapps/babel/feed/var/rights"
+echo "`date`: copy rights file ${BASENAME}.rights to /htapps/babel/feed/var/rights" >> $REPORT_FILE
 # todo: uncomment
 #cp ${BASENAME}.rights /htapps/babel/feed/var/rights 
 mv ${BASENAME}.rights $ROOTDIR/data/return/zephir/
@@ -151,8 +151,7 @@ echo "`date`: compress json file and send to hathitrust solr server"
 echo "`date`: compress json file and send to hathitrust solr server" >> $REPORT_FILE
 $zipcommand -n -f ${BASENAME}.json
 
-# todo: uncomment
-# cp ${BASENAME}.json.gz /htsolr/catalog/prep
+cp ${BASENAME}.json.gz /htsolr/catalog/prep
 cmdstatus=$?
 if [ $cmdstatus != "0" ]; then
   message="Problem transferring file ${BASENAME}.json.gz to beeftea-2: rc is $cmdstatus"
@@ -163,15 +162,13 @@ fi
 echo "`date`: copy json file to value storage govdocs folder" >> $REPORT_FILE
 cp ${BASENAME}.json.gz  /htdata/govdocs/zephir/
 
-# todo: uncomment
 # copy to ht archive directory
-# cp ${BASENAME}.json.gz  ${ARCHIVE}/catalog/
+cp ${BASENAME}.json.gz  ${ARCHIVE}/catalog/
 
 echo "`date`: send combined delete file to hathitrust solr server as ${BASENAME}_delete.txt.gz"
 echo "`date`: send combined delete file to hathitrust solr server as ${BASENAME}_delete.txt.gz" >> $REPORT_FILE
 
-# todo: uncomment 
-# cp ${BASENAME}_all_delete.txt.gz /htsolr/catalog/prep/${BASENAME}_delete.txt.gz
+cp ${BASENAME}_all_delete.txt.gz /htsolr/catalog/prep/${BASENAME}_delete.txt.gz
 cmdstatus=$?
 if [ $cmdstatus != "0" ]; then
   message="Problem transferring file $ZEPHIR_VUFIND_DELETE to beeftea-2: rc is $cmdstatus"
@@ -215,10 +212,6 @@ if [ $cmdstatus != "0" ]; then
   echo $message >> $REPORT_FILE
   exit
 fi
-
-#echo "`date`: copy aleph json file to add_zephir_holdings data directory"
-#echo "`date`: copy aleph json file to add_zephir_holdings data directory" >> $REPORT_FILE
-#cp ${BASENAME}_aleph.json $alephe_dev/miu01/local/add_zephir_holdings/data/
 
 echo "`date`: run oai process" >> $REPORT_FILE
 $ROOTDIR/zephir2oai.pl -f $YESTERDAY -i ${BASENAME}.json.gz -d $ZEPHIR_VUFIND_DELETE -o ${DATADIR_OAI}/zephir_oai_upd_${TODAY} -s 200000000
