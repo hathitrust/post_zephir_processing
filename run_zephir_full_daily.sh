@@ -48,9 +48,7 @@ if [ ! -e $ZEPHIR_GROOVE_EXPORT ]; then
   exit
 fi
 
-#todo: change to /htapps
-# mv $ZEPHIR_GROOVE_EXPORT /htapps/babel/feed/var/bibrecords/groove_full.tsv
-mv $ZEPHIR_GROOVE_EXPORT $DATA_ROOT/groove_full.tsv.gz
+mv $ZEPHIR_GROOVE_EXPORT /htapps/babel/feed/var/bibrecords/groove_full.tsv.gz
 
 echo "*** retrieve full zephir vufind extract" >> $REPORT_FILE
 echo "*** retrieve full zephir vufind extract"
@@ -127,8 +125,7 @@ if [ $cmdstatus != "0" ]; then
   echo "$message" | mailx -s"error in $SCRIPTNAME" jstever@umich.edu
 fi
 echo "`zcat zephir_ingested_items.txt.gz | wc -l` lines in zephir ingested items file" >> $REPORT_FILE
-# todo: change to the following
-# cp zephir_ingested_items.txt.gz /htapps/babel/feed/var/bibrecords
+cp zephir_ingested_items.txt.gz /htapps/babel/feed/var/bibrecords
 mv zephir_ingested_items.txt.gz $DATA_ROOT 
 
 DAY=`date +%d`

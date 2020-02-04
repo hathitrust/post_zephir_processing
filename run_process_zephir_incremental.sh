@@ -99,10 +99,9 @@ cmdstatus=$?
 if [ $cmdstatus == "0" ]; then
   echo "`date`: copy $ZEPHIR_GROOVE_INCREMENTAL to rootdir/data/zephir"
   echo "`date`: copy $ZEPHIR_GROOVE_INCREMENTAL to rootdir/data/zephir" >> $REPORT_FILE
-  # todo: switch
   # should go here:
-  # mv $ZEPHIR_GROOVE_INCREMENTAL /htapps/babel/feed/var/bibrecords/
-  mv $ZEPHIR_GROOVE_INCREMENTAL $ROOTDIR/data/zephir/
+  mv $ZEPHIR_GROOVE_INCREMENTAL /htapps/babel/feed/var/bibrecords/
+  #mv $ZEPHIR_GROOVE_INCREMENTAL $ROOTDIR/data/zephir/
 else
   echo "***" >> $REPORT_FILE
   echo "Problem getting file ${ZEPHIR_GROOVE_INCREMENTAL} from zephir: rc is $cmdstatus" >> $REPORT_FILE
@@ -119,8 +118,7 @@ if [ $cmdstatus == "0" ]; then
   echo "`date`: copy $ZEPHIR_DAILY_TOUCHED to /htapps/babel/feed/var/bibrecords"
   echo "`date`: copy $ZEPHIR_DAILY_TOUCHED to /htapps/babel/feed/var/bibrecords" >> $REPORT_FILE
   #cp $ZEPHIR_DAILY_TOUCHED $data_root/local/mdp/return/zephir/daily_touched.tsv.gz
-  # todo: uncomment
-  # cp $ZEPHIR_DAILY_TOUCHED /htapps/babel/feed/var/bibrecords
+  cp $ZEPHIR_DAILY_TOUCHED /htapps/babel/feed/var/bibrecords
   mv $ZEPHIR_DAILY_TOUCHED $ROOTDIR/data/zephir/
 else 
   echo "***" >> $REPORT_FILE
