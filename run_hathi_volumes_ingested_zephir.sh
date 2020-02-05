@@ -71,15 +71,14 @@ wc -l $LOCAL_BARCODES_DIR/$DEST_FILE >> $RPT_FILE
 
 echo "*** sending file $DEST_FILE to zephir"
 
-# todo: uncomment, sending barcodes to Zephir
-# $ROOTDIR/ftpslib/ftps_zephir_send $LOCAL_BARCODES_DIR/$DEST_FILE
-# cmdstatus=$?
-#if [ $cmdstatus != "0" ]; then
-#  MESSAGE="Problem sending file $LOCAL_BARCODES_DIR/$DEST_FILE to zephir: rc is $cmdstatus"
-#  echo $MESSAGE >> $RPT_FILE
-#  cat $RPT_FILE | mailx -s"$script_name" $EMAIL 
-#  exit
-#fi
+$ROOTDIR/ftpslib/ftps_zephir_send $LOCAL_BARCODES_DIR/$DEST_FILE
+cmdstatus=$?
+if [ $cmdstatus != "0" ]; then
+  MESSAGE="Problem sending file $LOCAL_BARCODES_DIR/$DEST_FILE to zephir: rc is $cmdstatus"
+  echo $MESSAGE >> $RPT_FILE
+  cat $RPT_FILE | mailx -s"$script_name" $EMAIL 
+  exit
+fi
 
 echo "*** moving file $DEST_FILE to $BARCODE_ARCHIVE"
 mv $LOCAL_BARCODES_DIR/$DEST_FILE $BARCODE_ARCHIVE
