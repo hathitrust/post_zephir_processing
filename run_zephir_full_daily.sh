@@ -166,8 +166,7 @@ if [ $DAY == "01" ]; then
     echo "error, message is $message"
     echo "$message" | mailx -s"error in $SCRIPTNAME" jstever@umich.edu
   fi
-  #todo: uncomment
-  # cp zephir_full_${YESTERDAY}.rights /htapps/babel/feed/var/rights/
+  cp zephir_full_${YESTERDAY}.rights /htapps/babel/feed/var/rights/
   cp zephir_full_${YESTERDAY}.rights $ZEPHIR_DATA/full/
   cp zephir_full_${YESTERDAY}.rights $DATA_ROOT/zephir/
   
