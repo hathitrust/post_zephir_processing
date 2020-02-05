@@ -141,8 +141,7 @@ $zipcommand ${BASENAME}_all_delete.txt
 
 echo "`date`: copy rights file ${BASENAME}.rights to /htapps/babel/feed/var/rights"
 echo "`date`: copy rights file ${BASENAME}.rights to /htapps/babel/feed/var/rights" >> $REPORT_FILE
-# todo: uncomment
-#cp ${BASENAME}.rights /htapps/babel/feed/var/rights 
+cp ${BASENAME}.rights /htapps/babel/feed/var/rights 
 mv ${BASENAME}.rights $ROOTDIR/data/return/zephir/
 
 echo "`date`: compress json file and send to hathitrust solr server"
@@ -201,8 +200,7 @@ echo "`date`: compress dollar dup files and send to zephir"
 echo "`date`: compress dollar dup files and send to zephir" >> $REPORT_FILE
 mv ${BASENAME}_dollar_dup.txt $ZEPHIR_VUFIND_DOLL_D
 $zipcommand -n -f $ZEPHIR_VUFIND_DOLL_D
-# todo: uncomment
-# ftpslib/ftps_zephir_send ${ZEPHIR_VUFIND_DOLL_D}.gz 
+ftpslib/ftps_zephir_send ${ZEPHIR_VUFIND_DOLL_D}.gz 
 
 cmdstatus=$?
 if [ $cmdstatus != "0" ]; then
