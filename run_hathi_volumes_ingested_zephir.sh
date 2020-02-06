@@ -33,7 +33,7 @@ fi
 touch $LOCAL_BARCODES_DIR/$DEST_FILE
 
 files=`ls $BARCODES_DIR/barcodes_${today_std}*`
-file_list=( `ls $BARCODES_DIR/barcodes_${today_std}*` )
+file_list=( `ls $BARCODES_DIR/barcodes_*_feed` )
 if [ ${#file_list[@]} == 0 ]; then
   echo "*** No files to process today, sending empty file"
   echo "*** No files to process today, sending empty file" >> $RPT_FILE
