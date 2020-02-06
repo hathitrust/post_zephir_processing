@@ -1017,7 +1017,7 @@ sub getCollectionTable {
   my $table_name = "ht_collections";
   my $hash = {};
   my $ref;
-  $ref = $rightsdb->{sdr_dbh}->selectall_arrayref( "SELECT collection, name, inst_id FROM ht_collections, ht_institutions where content_provider_cluster = inst_id");
+  $ref = $rightsdb->{sdr_dbh}->selectall_arrayref( "SELECT collection, name, inst_id FROM ht_repository.ht_collections, ht_repository.ht_institutions where content_provider_cluster = inst_id");
   foreach my $row ( @{$ref} ) {
     my $collection = $$row[0];
     my $content_provider = $$row[1];
@@ -1029,7 +1029,7 @@ sub getCollectionTable {
       'content_provider_code' => $content_provider_code,
     };
   }
-  $ref = $rightsdb->{sdr_dbh}->selectall_arrayref( "SELECT collection, name, inst_id FROM ht_collections, ht_institutions where responsible_entity = inst_id");
+  $ref = $rightsdb->{sdr_dbh}->selectall_arrayref( "SELECT collection, name, inst_id FROM ht_repository.ht_collections, ht_repository.ht_institutions where responsible_entity = inst_id");
   foreach my $row ( @{$ref} ) {
     my $collection = $$row[0];
     my $responsible_entity = $$row[1];
