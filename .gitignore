@@ -20,3 +20,4 @@ local
 *.tsv
 test_*
 compare_*
+*.jsonl

@@ -202,18 +202,15 @@ if [ $DAY == "01" ]; then
     echo "$message" | mailx -s"error in $SCRIPTNAME" jstever@umich.edu
   fi
   cp hathi_full_${TODAY}.txt.gz $ZEPHIR_DATA/full/
-  # todo: uncomment
-  # cp hathi_full_${TODAY}.txt.gz /htapps/archive/hathifiles/ 
+  cp hathi_full_${TODAY}.txt.gz /htapps/archive/hathifiles/ 
 
   #moved to the configs
   #HT_WEB_DIR='/htapps/www/sites/www.hathitrust.org/files/hathifiles'
 
   echo "`date`: sending full hathifile to hathi server hathifiles directory" >> $REPORT_FILE
-  #todo: uncomment
-  # cp $ZEPHIR_DATA/full/hathi_full_${TODAY}.txt.gz ${HT_WEB_DIR}/hathi_full_${TODAY}.txt.gz
+  cp $ZEPHIR_DATA/full/hathi_full_${TODAY}.txt.gz ${HT_WEB_DIR}/hathi_full_${TODAY}.txt.gz
   echo "`date`: sending hathifile field list header file to hathi server hathifiles directory" >> $REPORT_FILE
-  # todo: uncomment
-  # cp hathi_field_list.txt ${HT_WEB_DIR}/ 
+  cp hathi_field_list.txt ${HT_WEB_DIR}/ 
 
   echo "`date`: deleting old hathifiles" >> $REPORT_FILE
   CUTOFF_YEAR_MONTH=`date --date="2 months ago" +%Y%m`
@@ -231,8 +228,7 @@ if [ $DAY == "01" ]; then
   #ls -l "${HT_WEB_DIR}"
 
   echo "`date`: generate json hathifile list" >> $REPORT_FILE
-  # todo: uncomment 
-  # `/htapps/www/sites/www.hathitrust.org/extra_perl/json_filelist.pl >> $REPORT_FILE`
+  `/htapps/www/sites/www.hathitrust.org/extra_perl/json_filelist.pl >> $REPORT_FILE`
 fi
 
 echo "`date`: all files processed, concatenate report files to zephir_full_daily_rpt.txt" 
