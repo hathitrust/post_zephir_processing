@@ -122,7 +122,7 @@ cmdstatus=$?
 if [ $cmdstatus != "0" ]; then
   message="Problem concatenating files: rc is $cmdstatus"
   echo "error, message is $message"
-  echo "$message" | mailx -s"error in $SCRIPTNAME" jstever@umich.edu
+  echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
 fi
 echo "`zcat zephir_ingested_items.txt.gz | wc -l` lines in zephir ingested items file" >> $REPORT_FILE
 cp zephir_ingested_items.txt.gz /htapps/babel/feed/var/bibrecords
@@ -140,7 +140,7 @@ if [ $DAY == "01" ]; then
   if [ $cmdstatus != "0" ]; then
     message="Problem concatenating vufind json files: rc is $cmdstatus"
     echo "error, message is $message"
-    echo "$message" | mailx -s"error in $SCRIPTNAME" jstever@umich.edu
+    echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
   fi
   cp zephir_full_${YESTERDAY}_vufind.json.gz $ZEPHIR_DATA/full/zephir_full_${YESTERDAY}_vufind.json.gz
   echo "`date`: sending full file to hathi trust catalog solr server" >> $REPORT_FILE
@@ -150,7 +150,7 @@ if [ $DAY == "01" ]; then
     message="Problem transferring file to beeftea-2: rc is $cmdstatus"
     #goto error_exit
     echo "error, message is $message"
-    echo "$message" | mailx -s"error in $SCRIPTNAME" jstever@umich.edu
+    echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
   fi
   echo "`date`: copy full file to value storage govdocs folder" >> $REPORT_FILE
   cp zephir_full_${YESTERDAY}_vufind.json.gz  /htdata/govdocs/zephir/
@@ -164,7 +164,7 @@ if [ $DAY == "01" ]; then
   if [ $cmdstatus != "0" ]; then
     message="Problem concatenating rights files: rc is $cmdstatus"
     echo "error, message is $message"
-    echo "$message" | mailx -s"error in $SCRIPTNAME" jstever@umich.edu
+    echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
   fi
   cp zephir_full_${YESTERDAY}.rights /htapps/babel/feed/var/rights/
   cp zephir_full_${YESTERDAY}.rights $ZEPHIR_DATA/full/
@@ -177,7 +177,7 @@ if [ $DAY == "01" ]; then
   if [ $cmdstatus != "0" ]; then
     message="Problem concatenating rights debug files: rc is $cmdstatus"
     echo "error, message is $message"
-    echo "$message" | mailx -s"error in $SCRIPTNAME" jstever@umich.edu
+    echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
   fi
   
   echo "`date`: all files processed, concatenate rights chg files to zephir_full_${YESTERDAY}.rights.tsv" 
@@ -188,7 +188,7 @@ if [ $DAY == "01" ]; then
     message="Problem sorting rights report files: rc is $cmdstatus"
     #goto error_exit
     echo "error, message is $message"
-    echo "$message" | mailx -s"error in $SCRIPTNAME" jstever@umich.edu
+    echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
   fi
   cp zephir_full_${YESTERDAY}.rights.tsv $ZEPHIR_DATA/full/
 
@@ -199,7 +199,7 @@ if [ $DAY == "01" ]; then
   if [ $cmdstatus != "0" ]; then
     message="Problem concatenating hathi files: rc is $cmdstatus"
     echo "error, message is $message"
-    echo "$message" | mailx -s"error in $SCRIPTNAME" jstever@umich.edu
+    echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
   fi
   cp hathi_full_${TODAY}.txt.gz $ZEPHIR_DATA/full/
   cp hathi_full_${TODAY}.txt.gz /htapps/archive/hathifiles/ 
@@ -222,10 +222,9 @@ if [ $DAY == "01" ]; then
   echo "UPD_PATTERN: $UPD_PATTERN" >> $REPORT_FILE
   echo >> $REPORT_FILE
 
-  #todo: uncomment all these operations
-  #rm "${HT_WEB_DIR}/${UPD_PATTERN}"
-  #rm "${HT_WEB_DIR}/${FULL_PATTERN}"
-  #ls -l "${HT_WEB_DIR}"
+  rm "${HT_WEB_DIR}/${UPD_PATTERN}"
+  rm "${HT_WEB_DIR}/${FULL_PATTERN}"
+  ls -l "${HT_WEB_DIR}"
 
   echo "`date`: generate json hathifile list" >> $REPORT_FILE
   `/htapps/www/sites/www.hathitrust.org/extra_perl/json_filelist.pl >> $REPORT_FILE`
@@ -238,7 +237,7 @@ cmdstatus=$?
 if [ $cmdstatus != "0" ]; then
   message="Problem concatenating report files: rc is $cmdstatus"
   echo "error, message is $message"
-  echo "$message" | mailx -s"error in $SCRIPTNAME" jstever@umich.edu
+  echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
 fi
 cp zephir_full_daily_rpt.txt $ZEPHIR_DATA/full/ 
 
@@ -261,10 +260,10 @@ rm zephir_full_daily_??.*
 
 echo "`date`: DONE"
 echo "`date`: DONE" >> $REPORT_FILE
-cat $REPORT_FILE | mailx -s"$SCRIPTNAME report: $TODAY" jstever@umich.edu
+cat $REPORT_FILE | mailx -s"$SCRIPTNAME report: $TODAY" $EMAIL
 exit
 
 # this has been transcribed where it is needed
 #error_exit:
 #echo "error, message is $message"
-#echo "$message" | mailx -s"error in $SCRIPTNAME" jstever@umich.edu
+#echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL

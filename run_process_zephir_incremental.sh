@@ -53,7 +53,7 @@ cmdstatus=$?
 if [ $cmdstatus != "0" ]; then
   message="Problem getting file ${ZEPHIR_VUFIND_EXPORT} from zephir: rc is $cmdstatus"
   echo "error, message is $message"
-  echo $message | mailx -s"error in $SCRIPTNAME" jstever@umich.edu
+  echo $message | mailx -s"error in $SCRIPTNAME" $EMAIL 
 fi
 
 if [ ! -e $ZEPHIR_VUFIND_EXPORT ]; then
@@ -62,7 +62,7 @@ if [ ! -e $ZEPHIR_VUFIND_EXPORT ]; then
   echo "***"
   message="file $ZEPHIR_VUFIND_EXPORT not found, exitting"
   echo "error, message is $message"
-  echo $message | mailx -s"error in $SCRIPTNAME" jstever@umich.edu
+  echo $message | mailx -s"error in $SCRIPTNAME" $EMAIL
   exit
 fi
 
@@ -75,7 +75,7 @@ cmdstatus=$?
 if [ $cmdstatus != "0" ]; then
   message="Problem getting file ${ZEPHIR_VUFIND_DELETE} from zephir: rc is $cmdstatus"
   echo "error, message is $message"
-  echo $message | mailx -s"error in $SCRIPTNAME" jstever@umich.edu
+  echo $message | mailx -s"error in $SCRIPTNAME" $EMAIL
   exit
 fi
 
@@ -85,7 +85,7 @@ if [ ! -e $ZEPHIR_VUFIND_DELETE ]; then
   echo "***"
   message="file $ZEPHIR_VUFIND_DELETE not found, exitting"
   echo "error, message is $message"
-  echo $message | mailx -s"error in $SCRIPTNAME" jstever@umich.edu
+  echo $message | mailx -s"error in $SCRIPTNAME" $EMAIL
   exit
 fi
 
@@ -212,7 +212,7 @@ find $DATADIR_OAI -type f -mtime +30 -exec rm -f {} ';'
 
 echo "DONE `date`"
 echo "DONE `date`" >> $REPORT_FILE
-cat $REPORT_FILE | mailx -s"$SCRIPTNAME report: $TODAY" jstever@umich.edu
+cat $REPORT_FILE | mailx -s"$SCRIPTNAME report: $TODAY" $EMAIL
 
 echo "copy rights debug file to mdp_govdocs directory" >> $REPORT_FILE
 # todo: why? what uses debug_current?
@@ -221,21 +221,8 @@ echo "copy rights debug file to mdp_govdocs directory" >> $REPORT_FILE
 # process full zephir file to create file of ingested items and HTRC datasets metadata
 $ROOTDIR/run_zephir_full_daily.sh
 
-#exit
-#set DAY=`day`
-#if ($DAY == "01") then
-#  echo "starting run_process_zephir_full" >> $REPORT_FILE
-#  $PROGDIR/run_process_zephir_full 
-#else
-#  echo "not first day of month, not starting run_process_zephir_full" >> $REPORT_FILE
-#endif
-
-`bundle exec ruby compare_zephrec_updates.rb >> zephrec_comparison_results.tmp.txt`
-`ruby compare_hathifile_updates.rb >> hathifile_comparison_results.tmp.txt`
-`ruby compare_zgi.rb >> zgi_comparison_results.tmp.txt`
-`ruby compare_daily_touched.rb >> daily_touched_comparison_results.tmp.txt`
 exit
 # this has been transcribe where it is needed
 #error_exit:
 #echo "error, message is $message"
-#echo $message | mailx -s"error in $SCRIPTNAME" jstever@umich.edu
+#echo $message | mailx -s"error in $SCRIPTNAME" $EMAIL
