@@ -5,8 +5,6 @@ A mostly haphazard collection of scripts (Bash, Perl) that take Zephir records, 
 
 Parts of these should likely be extracted into their own repositories, or obviated by a re-architecture. 
 
-#todo: needs to be replaced in multiple files
-
 
 run_hathi_volumes_ingested_zephir.sh (daily)
 ====================================
@@ -21,7 +19,7 @@ This takes the new barcodes from ingest (feed) and sends them to Zephir. Zephir 
 
 Data In
 --------
-* barcodes_YYY-MM-DD_ (previously: /exlibris/aleph/uprod/miu50/local/mdp/return/) Now picked up directly at /htapps/babel/feed/var/rights/archive ?
+* barcodes_YYY-MM-DD_ (previously: /exlibris/aleph/uprod/miu50/local/mdp/return/) Now picked up directly at /htapps/babel/feed/var/rights
 
 Data Out
 --------

@@ -1,7 +1,6 @@
 def_local_env
 prof_library
 *_env
-data/*/*
 config/.env
 config/config.pl
 config/.netrc
@@ -9,6 +8,7 @@ config/.netrc
 zephir_full_daily_a*
 *.gz
 local
+local*
 *_stderr
 *.debug
 *rights_rpt.tsv
@@ -21,3 +21,4 @@ local
 test_*
 compare_*
 *.jsonl
+*.json
