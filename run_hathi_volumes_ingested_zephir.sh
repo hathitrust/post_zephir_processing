@@ -71,7 +71,7 @@ wc -l $LOCAL_BARCODES_DIR/$DEST_FILE >> $RPT_FILE
 
 echo "*** sending file $DEST_FILE to zephir"
 
-$ROOTDIR/ftpslib/ftps_zephir_send $LOCAL_BARCODES_DIR/$DEST_FILE
+$ROOTDIR/ftpslib/ftps_zephir_send $LOCAL_BARCODES_DIR/$DEST_FILE $DEST_FILE
 cmdstatus=$?
 if [ $cmdstatus != "0" ]; then
   MESSAGE="Problem sending file $LOCAL_BARCODES_DIR/$DEST_FILE to zephir: rc is $cmdstatus"
