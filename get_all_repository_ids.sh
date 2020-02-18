@@ -31,6 +31,6 @@ else
   gzip repository_ids.txt
 fi
 
-ftps_zephir_send repository_ids.txt.gz $FILE.gz 
+ftpslib/ftps_zephir_send repository_ids.txt.gz $FILE.gz 
 
 mv repository_ids.txt.gz $REPOSITORY_IDS/repository_ids.txt.gz
