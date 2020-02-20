@@ -53,7 +53,7 @@ my $access_profile_code;
 print "entering fetch loop\n";
 while ( my ($id, $namespace, $attr_num, $reason_num, $source_num, $timestamp, $note, $access_profile_num) = $sdr_sth->fetchrow_array() ) {
   $incnt++;
-  print STDERR "processing $incnt\n" if $incnt % 100000 == 0;
+  # print STDERR "processing $incnt\n" if $incnt % 100000 == 0;
   $id =~ s/\s+$//;
   $attr_code = $attribute_codes->{$attr_num};
   $source_code = $source_codes->{$source_num};

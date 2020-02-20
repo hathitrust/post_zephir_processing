@@ -85,14 +85,14 @@ done
 echo "`date`: wait for zephir_hathifile processes to end" >> $REPORT_FILE
 while :
 do
-  echo "`date` sleeping......"
+  #echo "`date` sleeping......"
   sleep 60
   alldone=true
   for file in $file_list; do
     rpt=${file}_stderr
     last_line=`tail -1 $rpt`
     if [ "$last_line" != "DONE" ]; then
-      echo "last line from $rpt is $last_line"
+      #echo "last line from $rpt is $last_line"
       alldone=false
     fi
   done
