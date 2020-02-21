@@ -28,7 +28,7 @@ wc -l repository_ids.txt
 if [ -x "$(command -v pigz)" ]; then
   pigz repository_ids.txt
 else
-  gzip repository_ids.txt
+  gzip -f repository_ids.txt
 fi
 
 ftps_zephir_send repository_ids.txt.gz $FILE.gz 
