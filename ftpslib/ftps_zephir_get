@@ -15,5 +15,5 @@ SERVER=ftps.cdlib.org
 echo "server: ${SERVER}, remote file: ${remote_file}, local_file: ${local_file}"
 #/l/local/bin/curl -n -k --ftp-ssl --ftp-pasv  ftp://${SERVER}/${remote_file} --out ${local_file}
 
-curl --netrc-file $conf --ssl-reqd --ftp-pasv  ftp://${SERVER}/${remote_file} --out ${local_file}
+curl -s --netrc-file $conf --ssl-reqd --ftp-pasv  ftp://${SERVER}/${remote_file} --out ${local_file}
 
