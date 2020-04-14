@@ -61,7 +61,7 @@ do
     echo "*** file $file is empty--skipped" >> $RPT_FILE
     continue
   fi
-  cat $file >> $LOCAL_BARCODES_DIR/$DEST_FILE && mv $file $BARCODE_DIR/archive
+  cat $file >> $LOCAL_BARCODES_DIR/$DEST_FILE && mv $file $BARCODES_DIR/archive
   echo "*** adding file $file to $DEST_FILE"
   echo "*** adding file $file to $DEST_FILE" >> $RPT_FILE
 done
