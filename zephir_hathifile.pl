@@ -501,7 +501,7 @@ RECORD:while($bib_line = <IN> ) {
     $access_current = rights_map($rights_current);
 
     if ( $reason_current eq 'bib' and ($gfv_override or $rights_current ne $db_rights or $digitization_source ne $db_dig_source) ) {
-      print RIGHTS "$mdp_id\t$rights_current\tbib\ttimothy\t$digitization_source\n";
+      print RIGHTS "$mdp_id\t$rights_current\tbib\tjstever\t$digitization_source\n";
       $rights_out_cnt++;
       $update_date ne $current_date and do {
         print OUT_RPT "$print_id: bib rights update, 974 sub d changed from $update_date to $current_date\n";
@@ -1138,3 +1138,4 @@ sub write_htrc_record {
   $output->{$filename}{'count'}++;
   return 1;
 }
+1;
