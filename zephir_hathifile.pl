@@ -899,7 +899,7 @@ sub clean_json_line {
 
 sub rights_map {
   my $attr = shift;
-  $attr =~ /^(pd|world|ic-world|cc|und-world)/ and return 'allow';
+  $attr =~ /^(pdus$|pd$|world|ic-world|cc|und-world)/ and return 'allow';
   return 'deny';
 }
 
