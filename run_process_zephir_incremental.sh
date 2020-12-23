@@ -206,9 +206,24 @@ if [ $cmdstatus != "0" ]; then
   exit
 fi
 
-echo "`date`: run oai process" >> $REPORT_FILE
-$ROOTDIR/zephir2oai.pl -f $YESTERDAY -i ${BASENAME}.json.gz -d $ZEPHIR_VUFIND_DELETE -o ${DATADIR_OAI}/zephir_oai_upd_${TODAY} -s 200000000
-find $DATADIR_OAI -type f -mtime +30 -exec rm -f {} ';'
+if [ $today_dash == "2021-01-01" ]; then
+  # process full zephir file to create file of ingested items and HTRC datasets metadata
+  $ROOTDIR/run_zephir_full_daily.sh
+
+  ruby get_bib_additional_recs_for_OAI.rb > additional_recs.json
+  gzip -f additional_recs.json
+  zcat ${BASENAME}.json.gz additional_recs.json.gz | sort | uniq > all_recs_for_OAI.json
+  gzip -f all_recs_for_OAI.json
+  $ROOTDIR/zephir2oai.pl -f $YESTERDAY -i all_recs_for_OAI.json.gz -d $ZEPHIR_VUFIND_DELETE -o ${DATADIR_OAI}/zephir_oai_upd_${TODAY} -s 200000000
+else
+  echo "`date`: run oai process" >> $REPORT_FILE
+  $ROOTDIR/zephir2oai.pl -f $YESTERDAY -i ${BASENAME}.json.gz -d $ZEPHIR_VUFIND_DELETE -o ${DATADIR_OAI}/zephir_oai_upd_${TODAY} -s 200000000
+  find $DATADIR_OAI -type f -mtime +30 -exec rm -f {} ';'
+  
+  # process full zephir file to create file of ingested items and HTRC datasets metadata
+  $ROOTDIR/run_zephir_full_daily.sh
+
+fi
 
 echo "DONE `date`"
 echo "DONE `date`" >> $REPORT_FILE
@@ -218,8 +233,6 @@ echo "copy rights debug file to mdp_govdocs directory" >> $REPORT_FILE
 # todo: why? what uses debug_current?
 # cat ${BASENAME}.rights.debug >> $ROOTDIR/data/zephir/debug_current.txt
 
-# process full zephir file to create file of ingested items and HTRC datasets metadata
-$ROOTDIR/run_zephir_full_daily.sh
 
 exit
 # this has been transcribe where it is needed
