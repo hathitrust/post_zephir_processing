@@ -206,7 +206,7 @@ if [ $cmdstatus != "0" ]; then
   exit
 fi
 
-if [ $today_dash == "2021-01-01" ]; then
+if [[ $today_dash =~ ^20...01.01$ ]]; then
   # process full zephir file to create file of ingested items and HTRC datasets metadata
   $ROOTDIR/run_zephir_full_daily.sh
 

@@ -63,7 +63,7 @@ sub new {
 
   # get values for pd cutoff dates
   $self->{us_pd_cutoff_year} = $year - 95;
-  $self->{non_us_pd_cutoff_year} = $year - 140;
+  $self->{non_us_pd_cutoff_year} = $year - 125;
   $self->{can_aus_pd_cutoff_year} = $year - 120;
 
   foreach my $cutoff ("us_pd_cutoff_year", "non_us_pd_cutoff_year", "can_aus_pd_cutoff_year", "ntis_cutoff_year") {
