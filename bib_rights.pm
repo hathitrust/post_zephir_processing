@@ -456,6 +456,12 @@ sub get_bib_info {
           last CHECK_GOV; 
         };
       }
+      foreach my $field ($bib->field('260|264|110|710')) {
+        $field->as_string() =~ /national gallery of art/i and do {
+          $bi->{us_fed_pub_exception} = "national gallery of art";
+          last CHECK_GOV; 
+        };
+      }
       foreach my $field ($bib->field('100|110|111|700|710|711')) {
         $field->as_string() =~ /federal reserve/i and do {
           $bi->{us_fed_pub_exception} = "federal reserve";
