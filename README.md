@@ -5,64 +5,6 @@ A mostly haphazard collection of scripts (Bash, Perl) that take Zephir records, 
 
 Parts of these should likely be extracted into their own repositories, or obviated by a re-architecture. 
 
-
-run_hathi_volumes_ingested_zephir.sh (daily)
-====================================
-* Send file of ingested volumes to Zephir
-* Concatenates all files of the proper name to one file to send
-* File(s) provided by ingest (feed)
-* Gets moved to root_dir/data/barcode_archive 
-
-Why?
----
-This takes the new barcodes from ingest (feed) and sends them to Zephir. Zephir needs to know which records to include in the export so that the item info (974) will be included in the next day's extract, either for the first time if it's newly ingested, or with an updated 974$d so that full-text search will reindex it. This seems like a complex way to perform a table join.
-
-Data In
---------
-* barcodes_YYY-MM-DD_ (previously: /exlibris/aleph/uprod/miu50/local/mdp/return/) Now picked up directly at /htapps/babel/feed/var/rights
-
-Data Out
---------
-* hathi_volumes_ingested_YYYYMMDD.txt sent to ftps.cdlib.org (untested)
-* run_hathi_volumes_ingested_zephir.sh_YYYYMMDD_rpt.txt sent to $EMAIL (jstever@umich.edu)
-* moving barcode input files into an archive directory ($root/data/barcode_archive)
-
-Perl script dependencies
-------------------------
-* None
-
-Bash script dependencies
-------------------------
-* ftps_zephir_send ( shell script, dependent upon .netrc credentials)
-
-
-get_all_repository_ids.sh (weekly)
-=========================
-* Get file of all HTIDs in the repository from the feed_audit table(?) and send to zephir
-* Performs a single query on the mysql database. 
-* Runs weekly. 
-
-Why?
-----
-Auditing. Zephir needs to make sure there wasn't a missed incremental or something that didn't make it into an incremental on HT's end.
-
-Data In
--------
-* feed_audit table in ht_repository database 
-
-Data Out
---------
-* repository_ids.txt.gz get sent to Zephir (or they would, but I can't test that) 
-
-Perl script dependencies
-------------------------
-* None
-
-Bash script dependencies
-------------------------
-* ftps_zephir_send ( shell script, dependent upon .netrc credentials)
-
-
 run_process_zephir_incremental.sh (daily)
 =========================================
 * Process daily file of new/updated/deleted metadata provided by Zephir
