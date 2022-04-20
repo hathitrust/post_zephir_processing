@@ -201,33 +201,36 @@ if [ $DAY == "01" ]; then
     echo "error, message is $message"
     echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
   fi
-  cp hathi_full_${TODAY}.txt.gz $ZEPHIR_DATA/full/
-  cp hathi_full_${TODAY}.txt.gz /htapps/archive/hathifiles/ 
+
+  # TODO: deprecate hathifile generation completely
+  # cp hathi_full_${TODAY}.txt.gz $ZEPHIR_DATA/full/
+  # cp hathi_full_${TODAY}.txt.gz /htapps/archive/hathifiles/ 
 
   #moved to the configs
   #HT_WEB_DIR='/htapps/www/sites/www.hathitrust.org/files/hathifiles'
 
-  echo "`date`: sending full hathifile to hathi server hathifiles directory" >> $REPORT_FILE
-  cp $ZEPHIR_DATA/full/hathi_full_${TODAY}.txt.gz ${HT_WEB_DIR}/hathi_full_${TODAY}.txt.gz
-  echo "`date`: sending hathifile field list header file to hathi server hathifiles directory" >> $REPORT_FILE
-  cp hathi_field_list.txt ${HT_WEB_DIR}/ 
+  # echo "`date`: sending full hathifile to hathi server hathifiles directory" >> $REPORT_FILE
+  # cp $ZEPHIR_DATA/full/hathi_full_${TODAY}.txt.gz ${HT_WEB_DIR}/hathi_full_${TODAY}.txt.gz
+  # echo "`date`: sending hathifile field list header file to hathi server hathifiles directory" >> $REPORT_FILE
+  # cp hathi_field_list.txt ${HT_WEB_DIR}/ 
 
-  echo "`date`: deleting old hathifiles" >> $REPORT_FILE
-  CUTOFF_YEAR_MONTH=`date --date="2 months ago" +%Y%m`
-  FULL_PATTERN="hathi_full_${CUTOFF_YEAR_MONTH}*"
-  UPD_PATTERN="hathi_upd_${CUTOFF_YEAR_MONTH}*"
+  # echo "`date`: deleting old hathifiles" >> $REPORT_FILE
+  # CUTOFF_YEAR_MONTH=`date --date="2 months ago" +%Y%m`
+  # FULL_PATTERN="hathi_full_${CUTOFF_YEAR_MONTH}*"
+  # UPD_PATTERN="hathi_upd_${CUTOFF_YEAR_MONTH}*"
   
-  echo "CUTOFF_YEAR_MONTH: $CUTOFF_YEAR_MONTH" >> $REPORT_FILE
-  echo "FULL_PATTERN: $FULL_PATTERN" >> $REPORT_FILE
-  echo "UPD_PATTERN: $UPD_PATTERN" >> $REPORT_FILE
-  echo >> $REPORT_FILE
+  # echo "CUTOFF_YEAR_MONTH: $CUTOFF_YEAR_MONTH" >> $REPORT_FILE
+  # echo "FULL_PATTERN: $FULL_PATTERN" >> $REPORT_FILE
+  # echo "UPD_PATTERN: $UPD_PATTERN" >> $REPORT_FILE
+  # echo >> $REPORT_FILE
 
-  rm "${HT_WEB_DIR}/${UPD_PATTERN}"
-  rm "${HT_WEB_DIR}/${FULL_PATTERN}"
-  ls -l "${HT_WEB_DIR}"
+  # rm "${HT_WEB_DIR}/${UPD_PATTERN}"
+  # rm "${HT_WEB_DIR}/${FULL_PATTERN}"
+  # ls -l "${HT_WEB_DIR}"
 
-  echo "`date`: generate json hathifile list" >> $REPORT_FILE
-  `/htapps/www/sites/www.hathitrust.org/extra_perl/json_filelist.pl >> $REPORT_FILE`
+  # echo "`date`: generate json hathifile list" >> $REPORT_FILE
+  # `/htapps/www/sites/www.hathitrust.org/extra_perl/json_filelist.pl >> $REPORT_FILE`
+  # TODO: end removal
 fi
 
 echo "`date`: all files processed, concatenate report files to zephir_full_daily_rpt.txt" 

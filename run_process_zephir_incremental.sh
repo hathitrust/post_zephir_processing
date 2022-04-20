@@ -179,19 +179,23 @@ HATHIFILE=hathi_upd_${YESTERDAY}.txt
 mv ${BASENAME}_hathi.txt $HATHIFILE
 $zipcommand -f $HATHIFILE
 
-cp ${HATHIFILE}.gz ${HT_WEB_DIR}/
-cmdstatus=$?
-if [ $cmdstatus != "0" ]; then
-  message="Problem transferring hathifile to $HT_WEB_HOST: rc is $cmdstatus"
-  echo $message >> $REPORT_FILE
-  exit
-fi
+# This is being deprecated in favor of the separate hathifiles repository
+# TODO: remove completely
+# cp ${HATHIFILE}.gz ${HT_WEB_DIR}/
+# cmdstatus=$?
+# if [ $cmdstatus != "0" ]; then
+#  message="Problem transferring hathifile to $HT_WEB_HOST: rc is $cmdstatus"
+#  echo $message >> $REPORT_FILE
+#  exit
+# fi
 
-echo "`date`: generate json hathifile list" >> $REPORT_FILE
-`/htapps/www/sites/www.hathitrust.org/extra_perl/json_filelist.pl >> $REPORT_FILE`
+# echo "`date`: generate json hathifile list" >> $REPORT_FILE
+# `/htapps/www/sites/www.hathitrust.org/extra_perl/json_filelist.pl >> $REPORT_FILE`
 
 # copy hathifile to ht archive directory
-cp ${HATHIFILE}.gz ${ARCHIVE}/hathifiles/
+# cp ${HATHIFILE}.gz ${ARCHIVE}/hathifiles/
+
+# TODO: end remove completely
 
 echo "`date`: compress dollar dup files and send to zephir"
 echo "`date`: compress dollar dup files and send to zephir" >> $REPORT_FILE
