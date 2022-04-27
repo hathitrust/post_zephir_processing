@@ -123,7 +123,7 @@ open(CHANGE, ">$changefile") or die "can't open $changefile for output: $!\n";
 binmode(BAD);
 binmode(CHANGE);
 
-open(OUT_HATHI,">$out_hathi") or die "can't open $out_hathi for output: $!\n";
+# TODO: open(OUT_HATHI,">$out_hathi") or die "can't open $out_hathi for output: $!\n";
 open(OUT_JSON,">$out_json") or die "can't open $out_json for output: $!\n";
 #binmode(OUT_JSON, ":encoding(UTF-8)");
 binmode(OUT_JSON);
@@ -133,9 +133,9 @@ select STDOUT;
 open(OUT_DOLLAR_DUP,">$out_dollar_dup") or die "can't open $out_dollar_dup for output: $!\n";
 open(OUT_DELETE,">$out_delete") or die "can't open $out_delete for output: $!\n";
 
-open(OUT_HATHI_HEADER, ">hathi_field_list.txt") or die "can't open hathi field header file for output: $!\n";
-write_hathi_header();
-close OUT_HATHI_HEADER;
+# TODO: open(OUT_HATHI_HEADER, ">hathi_field_list.txt") or die "can't open hathi field header file for output: $!\n";
+# TODO: write_hathi_header();
+# TODO: close OUT_HATHI_HEADER;
 
 print OUT_RPT "processing file $infile\n";
 
@@ -565,6 +565,8 @@ RECORD:while($bib_line = <IN> ) {
     my $timestamp = $db_timestamp;
     $timestamp or $timestamp = $current_timestamp;
 
+=begin
+  TODO: remove all this
     if ($update_date < $update_cutoff) {
       $excluded_update_date++;
     } else {
@@ -601,6 +603,7 @@ RECORD:while($bib_line = <IN> ) {
       print OUT_HATHI join("\t", @hathi_lines), "\n";
       $outcnt_hathi++;
     }
+=cut
   }
   $bib->field('974') or do {	# make sure there are 974 fields
     print OUT_DELETE $bib_key, "\n";
@@ -812,6 +815,8 @@ sub getDate {
   return $fmtdate;
 }
 
+=begin
+  # TODO: not necessary
 sub write_hathi_header {
 
   print OUT_HATHI_HEADER join("\t", 
@@ -843,7 +848,9 @@ sub write_hathi_header {
         "author",			# 26
   ), "\n";
 }
+=cut
 
+=begin
 sub clean_fields {
   my $fields = shift;
   my $field_count = 0;
@@ -856,6 +863,7 @@ sub clean_fields {
   }
   return;
 }
+=cut
 
 sub clean_json_line {
   my $json = shift;
