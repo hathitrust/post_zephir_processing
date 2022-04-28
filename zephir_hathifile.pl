@@ -123,7 +123,6 @@ open(CHANGE, ">$changefile") or die "can't open $changefile for output: $!\n";
 binmode(BAD);
 binmode(CHANGE);
 
-# TODO: open(OUT_HATHI,">$out_hathi") or die "can't open $out_hathi for output: $!\n";
 open(OUT_JSON,">$out_json") or die "can't open $out_json for output: $!\n";
 #binmode(OUT_JSON, ":encoding(UTF-8)");
 binmode(OUT_JSON);
@@ -132,10 +131,6 @@ select OUT_RPT; $| = 1;
 select STDOUT;
 open(OUT_DOLLAR_DUP,">$out_dollar_dup") or die "can't open $out_dollar_dup for output: $!\n";
 open(OUT_DELETE,">$out_delete") or die "can't open $out_delete for output: $!\n";
-
-# TODO: open(OUT_HATHI_HEADER, ">hathi_field_list.txt") or die "can't open hathi field header file for output: $!\n";
-# TODO: write_hathi_header();
-# TODO: close OUT_HATHI_HEADER;
 
 print OUT_RPT "processing file $infile\n";
 
@@ -565,45 +560,6 @@ RECORD:while($bib_line = <IN> ) {
     my $timestamp = $db_timestamp;
     $timestamp or $timestamp = $current_timestamp;
 
-=begin
-  TODO: remove all this
-    if ($update_date < $update_cutoff) {
-      $excluded_update_date++;
-    } else {
-      #$update_date{$update_date}++;
-      my @hathi_lines = (
-        $mdp_id,			# 1
-        $access_current,		# 2
-        $rights_current,		# 3
-        $bib_key,			# 4
-        $description,			# 5
-        $source,			# 6
-        $sdr_num,			# 7
-        $oclc_num,			# 8
-        $isbn,				# 9
-        $issn,				# 10
-        $lccn,				# 11
-        $title,				# 12
-        $imprint,			# 13
-        $reason_current,		# 14
-        $timestamp,			# 15
-        $bib_info->{us_fed_doc},	# 16
-        $bri->{date_used},		# 17
-        $bib_info->{pub_place},		# 18
-        $bib_info->{lang},		# 19
-        $bib_info->{bib_fmt},		# 20
-        $collection,			# 21
-        $content_provider_code,		# 22
-        $responsible_entity_code,	# 23
-        $digitization_source,		# 24
-        $access_profile,		# 25
-        $author,			# 26
-      ); 
-      clean_fields(\@hathi_lines);
-      print OUT_HATHI join("\t", @hathi_lines), "\n";
-      $outcnt_hathi++;
-    }
-=cut
   }
   $bib->field('974') or do {	# make sure there are 974 fields
     print OUT_DELETE $bib_key, "\n";
@@ -814,56 +770,6 @@ sub getDate {
   my $fmtdate = sprintf("%4.4d%2.2d%2.2d",$year,$mon,$day);
   return $fmtdate;
 }
-
-=begin
-  # TODO: not necessary
-sub write_hathi_header {
-
-  print OUT_HATHI_HEADER join("\t", 
-        "htid",				# 1
-        "access",			# 2
-        "rights",			# 3
-        "ht_bib_key",			# 4
-        "description",			# 5
-        "source",			# 6
-        "source_bib_num", 		# 7
-        "oclc_num",			# 8
-        "isbn",				# 9
-        "issn",				# 10
-        "lccn",				# 11
-        "title",			# 12
-        "imprint",			# 13
-        "rights_reason_code",		# 14
-        "rights_timestamp",		# 15
-        "us_gov_doc_flag",		# 16
-        "rights_date_used",		# 17
-        "pub_place",			# 18
-        "lang",				# 19
-        "bib_fmt",			# 20
-        "collection_code",		# 21
-        "content_provider_code",	# 22
-        "responsible_entity_code",	# 23
-        "digitization_agent_code",	# 24
-        "access_profile_code",		# 25
-        "author",			# 26
-  ), "\n";
-}
-=cut
-
-=begin
-sub clean_fields {
-  my $fields = shift;
-  my $field_count = 0;
-  foreach my $field (@$fields) {
-    $field_count++;
-    $field =~ /\t/ and do {
-      #print STDERR "$$fields[0]($$fields[3]): tab in field $field_count: $field\n";
-      $field =~ s/\t/ /g;
-    };
-  }
-  return;
-}
-=cut
 
 sub clean_json_line {
   my $json = shift;
