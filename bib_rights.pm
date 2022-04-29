@@ -47,6 +47,7 @@ our @EXPORT = qw ( get_bib_info get_bib_rights_info debug_line get_volume_date )
 
 sub new {
   my $class = shift;
+
   $class = ref($class) || $class; # Handle cloning
 
   my $self;
@@ -73,6 +74,7 @@ sub new {
   #  db file of us cities--used for checking imprint field with multiple subfield
   my $us_cities_db = dirname(__FILE__) . "/data/us_cities.db";
   my %US_CITIES;
+  # uncoverable branch true
   tie %US_CITIES, "DB_File", $us_cities_db, O_RDONLY, 0644, $DB_BTREE or die "can't open db file $us_cities_db: $!";
   $self->{US_CITIES} = \%US_CITIES;
 
@@ -80,6 +82,7 @@ sub new {
   $ENV{'us_fed_pub_exception_file'} and do { # us fed pub exception file (file of oclc number of records that shouldn't be considered us fed docs, regardless of 008 coding)
     my $us_fed_pub_exception_file = $ENV{'us_fed_pub_exception_file'};
     if (-e $us_fed_pub_exception_file) {
+      # uncoverable branch true
       open (US_FED_PUB_EXCEPTIONS, "<$us_fed_pub_exception_file") or die "can't open $us_fed_pub_exception_file for input: $!\n";
       print STDERR "using $us_fed_pub_exception_file for us fed pub exceptions\n";
       my $exception_count = 0;
@@ -343,7 +346,6 @@ sub get_bib_info {
 
   $bi->{bib_fmt} = getBibFmt($bib_key, $bib);
   $bib->field('008') and $bi->{f008} = $bib->field('008')->as_string();
-
   ($bi->{bib_fmt} and $bi->{f008}) or do {
     print STDERR "get_bib_info: no 008 or FMT field for $bib_key\n";
     return {};
@@ -445,6 +447,7 @@ sub get_bib_info {
       foreach my $field ($bib->field('260|264|110|710')) {
         my $field_string = $field->as_string();
         #$field_string =~ /national research council \(u\.s\.\)/i and do {
+        # uncoverable branch false
         $field_string =~ /national research council/i and $field_string !~ /canada/i and do {
           $bi->{us_fed_pub_exception} = "national research council";
           last CHECK_GOV; 
@@ -593,9 +596,10 @@ sub getBibFmt {
   $recTyp =~ /[ef]/ and $bibLev =~ /[abcdms]/ and return "MP";
   $recTyp =~ /[a]/ and $bibLev =~ /[bsi]/ and return "SE";
   $recTyp =~ /[bp]/ and $bibLev =~ /[abcdms]/ and return "MX";
+  # uncoverable branch true
   $bibLev eq 's' and do {
-    print STDERR "$bib_key: biblev s, rectype $recTyp, fmt set to SE\n";
-    return "SE";
+    print STDERR "$bib_key: biblev s, rectype $recTyp, fmt set to SE\n"; # uncoverable statement
+    return "SE"; # uncoverable statement
   };
   # no match  --error
   print STDERR "$bib_key: can't set format, recTyp: $recTyp, bibLev: $bibLev\n";
