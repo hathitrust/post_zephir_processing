@@ -77,12 +77,12 @@ echo "file_list: $file_list"
 
 for file in $file_list; do
   echo "`date`: processing file $file"
-  `$ROOTDIR/zephir_hathifile.pl -h 1 -z 1 -i $file -o ${file}_out -r ${file}.rights -d -f $RIGHTS_DBM &> ${file}_stderr &`
+  `$ROOTDIR/post_zephir_cleanup.pl -h 1 -z 1 -i $file -o ${file}_out -r ${file}.rights -d -f $RIGHTS_DBM &> ${file}_stderr &`
 done
 
 # wait loop: check last line of each rpt file
 # exit from loop when all are done (last line eq "DONE")
-echo "`date`: wait for zephir_hathifile processes to end" >> $REPORT_FILE
+echo "`date`: wait for post_zephir_cleanup processes to end" >> $REPORT_FILE
 while :
 do
   #echo "`date` sleeping......"
@@ -191,46 +191,6 @@ if [ $DAY == "01" ]; then
     echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
   fi
   cp zephir_full_${YESTERDAY}.rights.tsv $ZEPHIR_DATA/full/
-
-  echo "`date`: all files processed, concatenate and compress hathi txt files to hathi_full_${TODAY}.txt.gz" 
-  echo "`date`: all files processed, concatenate and compress hathi txt files to hathi_full_${TODAY}.txt.gz" >> $REPORT_FILE
-  cat zephir_full_daily_??_out_hathi.txt | ${zipcommand} -c > hathi_full_${TODAY}.txt.gz
-  cmdstatus=$?
-  if [ $cmdstatus != "0" ]; then
-    message="Problem concatenating hathi files: rc is $cmdstatus"
-    echo "error, message is $message"
-    echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
-  fi
-
-  # TODO: deprecate hathifile generation completely
-  # cp hathi_full_${TODAY}.txt.gz $ZEPHIR_DATA/full/
-  # cp hathi_full_${TODAY}.txt.gz /htapps/archive/hathifiles/ 
-
-  #moved to the configs
-  #HT_WEB_DIR='/htapps/www/sites/www.hathitrust.org/files/hathifiles'
-
-  # echo "`date`: sending full hathifile to hathi server hathifiles directory" >> $REPORT_FILE
-  # cp $ZEPHIR_DATA/full/hathi_full_${TODAY}.txt.gz ${HT_WEB_DIR}/hathi_full_${TODAY}.txt.gz
-  # echo "`date`: sending hathifile field list header file to hathi server hathifiles directory" >> $REPORT_FILE
-  # cp hathi_field_list.txt ${HT_WEB_DIR}/ 
-
-  # echo "`date`: deleting old hathifiles" >> $REPORT_FILE
-  # CUTOFF_YEAR_MONTH=`date --date="2 months ago" +%Y%m`
-  # FULL_PATTERN="hathi_full_${CUTOFF_YEAR_MONTH}*"
-  # UPD_PATTERN="hathi_upd_${CUTOFF_YEAR_MONTH}*"
-  
-  # echo "CUTOFF_YEAR_MONTH: $CUTOFF_YEAR_MONTH" >> $REPORT_FILE
-  # echo "FULL_PATTERN: $FULL_PATTERN" >> $REPORT_FILE
-  # echo "UPD_PATTERN: $UPD_PATTERN" >> $REPORT_FILE
-  # echo >> $REPORT_FILE
-
-  # rm "${HT_WEB_DIR}/${UPD_PATTERN}"
-  # rm "${HT_WEB_DIR}/${FULL_PATTERN}"
-  # ls -l "${HT_WEB_DIR}"
-
-  # echo "`date`: generate json hathifile list" >> $REPORT_FILE
-  # `/htapps/www/sites/www.hathitrust.org/extra_perl/json_filelist.pl >> $REPORT_FILE`
-  # TODO: end removal
 fi
 
 echo "`date`: all files processed, concatenate report files to zephir_full_daily_rpt.txt" 
