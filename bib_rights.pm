@@ -447,7 +447,6 @@ sub get_bib_info {
       foreach my $field ($bib->field('260|264|110|710')) {
         my $field_string = $field->as_string();
         #$field_string =~ /national research council \(u\.s\.\)/i and do {
-        # uncoverable branch false
         $field_string =~ /national research council/i and $field_string !~ /canada/i and do {
           $bi->{us_fed_pub_exception} = "national research council";
           last CHECK_GOV; 
@@ -596,10 +595,9 @@ sub getBibFmt {
   $recTyp =~ /[ef]/ and $bibLev =~ /[abcdms]/ and return "MP";
   $recTyp =~ /[a]/ and $bibLev =~ /[bsi]/ and return "SE";
   $recTyp =~ /[bp]/ and $bibLev =~ /[abcdms]/ and return "MX";
-  # uncoverable branch true
   $bibLev eq 's' and do {
-    print STDERR "$bib_key: biblev s, rectype $recTyp, fmt set to SE\n"; # uncoverable statement
-    return "SE"; # uncoverable statement
+    print STDERR "$bib_key: biblev s, rectype $recTyp, fmt set to SE\n";
+    return "SE";
   };
   # no match  --error
   print STDERR "$bib_key: can't set format, recTyp: $recTyp, bibLev: $bibLev\n";
