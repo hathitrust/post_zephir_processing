@@ -569,7 +569,6 @@ sub get_volume_date {
 
   # return the maximum year
   @vol_date = sort(@vol_date);
-  my $vol_date =  pop(@vol_date);
   # reality check--
 #  $vol_date < 1500 and $vol_date = '';
 
@@ -577,6 +576,8 @@ sub get_volume_date {
  # restrictions we're placing on it.
  #
  # For bonus points, identify arabic/hebrew dates and convert if you're feeling lucky.
+
+  my $vol_date =  pop(@vol_date);
   while ($vol_date < 1500 or $vol_date > 2025) { # or so. Not sure what we should consider too far in the future.
     $vol_date = pop(@vol_date);
     last unless @vol_date;
