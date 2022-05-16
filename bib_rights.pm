@@ -497,7 +497,10 @@ sub get_volume_date {
   my $low;
   my $high;
   my $date;
-  
+
+  # Are we sure things that contain a umdl or tech report number will never also contain a date?
+  # If they do, we're missing them here.
+
   # umdl item descriptions may contain NNNN.NNN--if so, return null
   $item_desc =~ /^\d{4}\.[a-z0-9]{3}$/i and return '';
 
@@ -513,7 +516,17 @@ sub get_volume_date {
   #no.3043,3046
   #39015040299169      no.5001-5007,5009-5010
   #$item_desc =~ s/(v\.|no\.|p{1,2}\.|pt\.)[\d,-]+//g;
+
+  # Here we're not catching lots of variants:
+  #  * volume: volume, v, vol
+  #  * number: number, no, num, n (the last of which risks matching november for some languages?)
+  #  * part: part, pt, p
+  #  * Also:
+  #    * pp for pages
+  #    * sect and section
   $item_desc =~ s/\b(v\.\s*|no\.\s*|p{1,2}\.\s*|pt\.\s*)[\d,-\/]+//g;
+
+
 
   # strip months
   $item_desc =~ s/(january|february|march|april|may|june|july|august|september|october|november|december)\.{0,1}-{0,1}//gi;
@@ -529,7 +542,9 @@ sub get_volume_date {
   #($low, $high) = ( $item_desc =~ /\b(\d{4})\-(\d{2})\b/ ) and do {
   #($low, $high) = ( $item_desc =~ /\s(\d{4})\-(\d{2})\s/ ) and do {
   #$item_desc =~ /\b(\d{4})\-(\d{2})\b/ and do {
-  $item_desc =~ /\b(\d{4})[-\/](\d{2})\b/ and do {
+
+  # Change all these to force the year to begin with a 1 or a 2
+  $item_desc =~ /\b([12]\d{3})[-\/](\d{2})\b/ and do {
     $low = $1;
     $high = $2;
     $high = substr($low,0,2) . $high;
@@ -538,7 +553,7 @@ sub get_volume_date {
 
   # check for date ranges: yyyy-y
   #($low, $high) = ( $item_desc =~ /\b(\d{4})\-(\d)\b/ ) and do {
-  ($low, $high) = ( $item_desc =~ /\s(\d{4})\-(\d)\s/ ) and do {
+  ($low, $high) = ( $item_desc =~ /\s([12]\d{3})\-(\d)\s/ ) and do {
     $high = substr($low,0,3) . $high;
     push(@vol_date, $high);
   };
@@ -546,15 +561,25 @@ sub get_volume_date {
   # look for 4-digit strings
 #  $item_desc =~ tr/0-9u/ /cs;           # xlate non-digits to blank (keep "u")
   $item_desc =~ tr/u^|/9/;              # translate "u" to "9"
-  push (@vol_date, $item_desc =~ /\b(\d{4})\b/g);
+
+  push (@vol_date, $item_desc =~ /\b([12]\d{3})\b/g);
 
   # return the maximum year
   @vol_date = sort(@vol_date);
   my $vol_date =  pop(@vol_date);
   # reality check--
-  $vol_date < 1500 and $vol_date = '';
-  return $vol_date;
-}  
+#  $vol_date < 1500 and $vol_date = '';
+
+ # Loop through the seemingly-valid dates until you find one that fits the
+ # restrictions we're placing on it.
+ #
+ # For bonus points, identify arabic/hebrew dates and convert if you're feeling lucky.
+  while ($vol_date < 1500 or $vol_date > 2025) { # or so. Not sure what we should consider too far in the future.
+    $vol_date = pop(@vol_date);
+    last unless @vol_date;
+  }
+  return $vol_date; # should be either a valid year or a false value
+}
 
 sub clean_date {
   my $date = shift;
