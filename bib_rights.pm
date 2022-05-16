@@ -553,7 +553,10 @@ sub get_volume_date {
 
   # check for date ranges: yyyy-y
   #($low, $high) = ( $item_desc =~ /\b(\d{4})\-(\d)\b/ ) and do {
-  ($low, $high) = ( $item_desc =~ /\s([12]\d{3})\-(\d)\s/ ) and do {
+
+
+  # I see the above allows 1990/91; not sure why this doesn't allow 1990/1
+  ($low, $high) = ( $item_desc =~ /\s([12]\d{3})[-\/](\d)\s/ ) and do {
     $high = substr($low,0,3) . $high;
     push(@vol_date, $high);
   };
