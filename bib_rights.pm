@@ -523,7 +523,7 @@ sub get_volume_date {
   
   # report numbers 
   #no.CR-2291 1973
-  $item_desc =~ s/\b[a-zA-Z.]+-\d+//;
+  $item_desc =~ s/(\b[a-zA-Z.]+-(\d+))/is_probable_year($2) ? $1 : ''/e;
 
   # check for date ranges: yyyy-yy
   #($low, $high) = ( $item_desc =~ /\b(\d{4})\-(\d{2})\b/ ) and do {
@@ -554,7 +554,12 @@ sub get_volume_date {
   # reality check--
   $vol_date < 1500 and $vol_date = '';
   return $vol_date;
-}  
+}
+
+sub is_probable_year {
+  my $str = shift;
+  return ($str =~ m/^20\d\d$/ || $str =~ m/^1[5-9]\d\d$/)? 1 : 0;
+}
 
 sub clean_date {
   my $date = shift;
