@@ -73,6 +73,7 @@ sub new {
   #  db file of us cities--used for checking imprint field with multiple subfield
   my $us_cities_db = dirname(__FILE__) . "/data/us_cities.db";
   my %US_CITIES;
+  # uncoverable branch true
   tie %US_CITIES, "DB_File", $us_cities_db, O_RDONLY, 0644, $DB_BTREE or die "can't open db file $us_cities_db: $!";
   $self->{US_CITIES} = \%US_CITIES;
 
@@ -80,6 +81,7 @@ sub new {
   $ENV{'us_fed_pub_exception_file'} and do { # us fed pub exception file (file of oclc number of records that shouldn't be considered us fed docs, regardless of 008 coding)
     my $us_fed_pub_exception_file = $ENV{'us_fed_pub_exception_file'};
     if (-e $us_fed_pub_exception_file) {
+      # uncoverable branch true
       open (US_FED_PUB_EXCEPTIONS, "<$us_fed_pub_exception_file") or die "can't open $us_fed_pub_exception_file for input: $!\n";
       print STDERR "using $us_fed_pub_exception_file for us fed pub exceptions\n";
       my $exception_count = 0;
