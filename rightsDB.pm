@@ -107,7 +107,7 @@ sub getAccessProfileTable {
   my $self = shift;
   my $hash = {};
   my $ref;
-  $ref = $self->{sdr_dbh}->selectall_arrayref( "select collection, digitization_source, name from ht_repository.ht_collection_digitizers, ht_rights.access_profiles where access_profile = id");
+  $ref = $self->{sdr_dbh}->selectall_arrayref( "select collection, digitization_source, name from ht.ht_collection_digitizers, ht.access_profiles where access_profile = id");
   foreach my $row ( @{$ref} ) {
     my $collection = $$row[0];
     my $dig_source = $$row[1];

@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+
+  pz:
+    build: .
+    volumes:
+      - .:/usr/src/app
+    depends_on:
+      - mariadb
+    environment:
+      DB_CONNECTION_STRING: "mysql2://ht_rights:ht_rights@mariadb/ht"
+
+  mariadb:
+    image: ghcr.io/hathitrust/db-image:latest
+    restart: always
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: 1 
+      MYSQL_DATABASE: ht
+      MYSQL_USER: ht_rights
+      MYSQL_PASSWORD: ht_rights
