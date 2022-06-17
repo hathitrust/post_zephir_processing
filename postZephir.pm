@@ -9,7 +9,7 @@ use strict;
 #BEGIN {push @INC, '.'}
 use File::Basename;
 BEGIN {push @INC, dirname(__FILE__)}
-#no strict 'refs';
+no strict 'refs';
 use Sys::Hostname;
 use YAML qw'LoadFile';
 use Data::Dumper;
@@ -30,53 +30,9 @@ use MARC::Record::MiJ;
 use bib_rights;
 use rightsDB;
 
+
 # build mapping of collection to sysnum prefixes (coll => sdr_prefix)
-# first--set collections where the prefix differs
-my $sdrnum_prefix_map = {
-# collection => prefix
-  'deu' => 'udel',
-  #'ibc' => 'bc\.',
-  'ibc' => '(?:bc\.|bc-loc\.)',
-  'iduke' => 'duke\.',
-  'iloc' => 'loc',
-  'incsu' => 'ncsu\.',
-  'innc' => 'nnc',
-  'inrlf' => 'nrlf',
-  'ipst' => 'pst\.',
-  'isrlf' => 'srlf',
-  'iucla' => 'ucla',
-  'iucd' => 'ucd',
-  'iufl' => '(?:ufl|ufdc)',
-  'iuiuc' => 'uiuc',
-  'iunc' => 'unc\.',
-  'mdl' => 'mdl\.',
-  'mwica' => 'mwica',
-  'mmet' => 'tu',
-  'mu' => 'uma',
-  'nrlf' => '(?:nrlf-ucsc|nrlf-ucsf|nrlf)',
-  'pst' => 'pst\.',
-  'qmm' => 'qmm',
-  'txcm' => 'tam',
-  #'ucm' => 'ucm\.',
-  'ucm' => '(?:ucm\.|ucm-loc\.)',
-  #'uiucl' => 'uiuc-loc',
-  'uiucl' => 'uiuc',
-  'usu' => 'usu\.',
-  'uva' => 'uva\.',
-  'gri' => 'cmalg',
-  'umlaw' => 'miu',
-  'umdb' => 'miu',
-  'umbus' => 'miu',
-  'umdcmp' => 'miu',
-  'umprivate' => 'miu',
-  'gwla' => 'miu',
-  'iau' => 'uiowa',
-  'ctu' => 'ucw',
-  'ucbk' => '(?:ucbk|ucb|ucb-2|cul)',
-  'geu' => 'emu',
-  'nbb' => 'miu',
-  'aubru' => 'uql-1',
-};
+my $sdrnum_prefix_map = load_prefix_map("data/sdr_num_prefix_map.tsv");
 
 # lifted from main because they need to be global (:
 my $jp = new JSON::XS;
@@ -112,6 +68,7 @@ sub main {
   my $out_report = $outbase . "_rpt.txt";
   my $out_dollar_dup = $outbase . "_dollar_dup.txt";
   my $out_delete = $outbase . "_delete.txt";
+  # ultimately this ends up as /htapps/babel/feed/var/bibrecords/zephir_ingested_items.txt.gz 
   my $out_zia = $outbase . "_zia.txt";
   my $rights_db_file = '';
   $opt_f and $rights_db_file = $opt_f;
@@ -230,34 +187,6 @@ sub main {
     };
     $sdrnum_prefix_map->{$coll} = $coll;
   }
-
-  #foreach my $coll (sort keys %$sdrnum_prefix_map) {
-  #  print join("\t", $coll, $sdrnum_prefix_map->{$coll}), "\n";
-  #}
-
-  #my %rights_map = (
-  #  "pd" => "allow",      # 1 - public domain
-  #  "ic" => "deny",       # 2 - in-copyright
-  #  "opb" => "deny",      # 3 - out-of-print and brittle (implies in-copyright)
-  #  "op" => "deny",       # 3 - out-of-print (implies in-copyright)
-  #  "orph" => "deny",     # 4 - copyright-orphaned (implies in-copyright)
-  #  "und" => "deny",      # 5 - undetermined copyright status
-  #  "umall" => "deny",    # 6 - available to UM affiliates and walk-in patrons (all campuses)
-  #  "world" => "allow",   # 7 - available to everyone in the world (will be deprecated)
-  #  "ic-world" => "allow",        # 7 - in-copyright and permitted as world viewable by the depositor
-  #  "nobody" => "deny",   # 8 - available to nobody; blocked for all users
-  #  "pdus" => "allow",    # 9 - public domain only when viewed in the US
-  #  "cc-by" => "allow",           # 10 - Creative Commons
-  #  "cc-by-nd" => "allow",        # 11 - Creative Commons
-  #  "cc-by-nc-nd" => "allow",     # 12 - Creative Commons
-  #  "cc-by-nc" => "allow",        # 13 - Creative Commons
-  #  "cc-by-nc-sa" => "allow",     # 14 - Creative Commons
-  #  "cc-by-sa" => "allow",        # 15 - Creative Commons
-  #  "orphcand" => "deny",         # 16 - orphan candidate
-  #  "cc-zero" => "allow",         # 17 - Creative Commons
-  #  "und-world" => "allow",       # 18 - undetermined copyright status and permitted as world viewable by the depositor
-  #  "icus" => "deny",       # 19 - in copyright in the US 
-  #);
 
   my $br = bib_rights->new();
 
@@ -436,19 +365,24 @@ sub main {
         print ZIA join("\t", $mdp_id, $source, $collection, $digitization_source, $ia_id), "\n";
         $zia_cnt++;
       };
+
+=pod
+      # Not used anywhere else
       my $responsible_entity_code = $ht_collections->{$collection}->{responsible_entity_code} or do {
         print OUT_RPT "$mdp_id: no responsible entity for collection $collection in ht_collections\n";
         $no_resp_ent++;
       };
+      # Not used anywhere else
       my $content_provider_code = $ht_collections->{$collection}->{content_provider_code} or do {
         print OUT_RPT "$mdp_id: no content provider for collection $collection in ht_collections\n";
         $no_cont_prov++;
       };
+      #  Not used anywhere else
       my $access_profile = $rightsDB->determineAccessProfile($collection, $digitization_source) or do {
         print OUT_RPT "$mdp_id: can't determine access profile fo collection '$collection' and dig source '$digitization_source'\n";
         $no_access_profile++;
       };
-
+=cut
       # rights processing
 
       # determine rights from current bib/item info
@@ -866,7 +800,7 @@ sub check_bib {
   my @f245 = $bib->field('245') or bib_error($bib_source, $bib_key, $bib, "no 245 field in record");
   if (scalar @f245 == 1) {
     my $f245_data = $f245[0]->as_string('ak') or bib_error($bib_source, $bib_key, $bib, "no subfield ak in 245 field");
-  } else {
+  } elsif (scalar @f245 > 1) {
     bib_error($bib_source, $bib_key, $bib, "multiple 245 fields in record"); 
   }
   foreach my $field ($bib->field('00.')) {
@@ -1048,6 +982,21 @@ sub htrc_output {
     $records_written++;
   }
   return $records_written;
+}
+
+sub get_bib_errors {
+    return \%bib_error;
+}
+
+sub load_prefix_map {
+  open( PREFIXES, shift);
+  my $mapping = {};
+  foreach my $line (<PREFIXES>) {
+      chomp($line);
+      my @rec = split(/\t/, $line);
+      $mapping->{$rec[0]} = $rec[1];
+  };
+  return $mapping;
 }
 
 sub write_htrc_record {

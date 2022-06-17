@@ -23,6 +23,7 @@ RUN cpanm -n  \
   XML::LibXML \
   XML::LibXSLT \
   Test::More \
+  Test::Output \
   DBD::mysql \
   File::Slurp \
   Data::Dumper
