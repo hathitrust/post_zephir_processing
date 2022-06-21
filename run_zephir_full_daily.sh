@@ -208,10 +208,8 @@ echo "`date`: cleanup--counts"
 echo "`date`: cleanup--counts" >> $REPORT_FILE
 zephir_count=`$unzipcommand -c $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT | wc -l`
 hathi_catalog_count=`$unzipcommand -c zephir_full_${YESTERDAY}_vufind.json.gz | wc -l`
-hathifiles_count=`$unzipcommand -c hathi_full_${TODAY}.txt.gz | wc -l`
 echo "`date`: $zephir_count records in full zephir export json file" >> $REPORT_FILE
 echo "`date`: $hathi_catalog_count records in full hathi catalog json file" >> $REPORT_FILE
-echo "`date`: $hathifiles_count records in full hathifiles extract" >> $REPORT_FILE
 echo >> $REPORT_FILE
 
 echo "`date`: cleanup--remove intermediate files" 

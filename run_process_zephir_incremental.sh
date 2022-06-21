@@ -23,9 +23,6 @@ today_dash=`date +%Y-%m-%d`
 export us_fed_pub_exception_file="/htdata/govdocs/feddocs_oclc_filter/oclcs_removed_from_registry_${today_dash}.txt"
 echo "fed pub exception file set in environment: $us_fed_pub_exception_file"
 
-#moved to the configs
-# HT_WEB_DIR='/htapps/www/sites/www.hathitrust.org/files/hathifiles'
-
 DATADIR=$ROOTDIR/data/zephir
 ARCHIVE=/htapps/archive
 #set ZEPHIR_VUFIND_EXPORT=vufind_incremental_${zephir_date}.json.gz 
@@ -172,30 +169,6 @@ if [ $cmdstatus != "0" ]; then
   echo $message >> $REPORT_FILE
   exit
 fi
-
-echo "`date`: compress hathi file and send to hathitrust server"
-echo "`date`: compress hathi file and send to hathitrust server" >> $REPORT_FILE
-HATHIFILE=hathi_upd_${YESTERDAY}.txt
-mv ${BASENAME}_hathi.txt $HATHIFILE
-$zipcommand -f $HATHIFILE
-
-# This is being deprecated in favor of the separate hathifiles repository
-# TODO: remove completely
-# cp ${HATHIFILE}.gz ${HT_WEB_DIR}/
-# cmdstatus=$?
-# if [ $cmdstatus != "0" ]; then
-#  message="Problem transferring hathifile to $HT_WEB_HOST: rc is $cmdstatus"
-#  echo $message >> $REPORT_FILE
-#  exit
-# fi
-
-# echo "`date`: generate json hathifile list" >> $REPORT_FILE
-# `/htapps/www/sites/www.hathitrust.org/extra_perl/json_filelist.pl >> $REPORT_FILE`
-
-# copy hathifile to ht archive directory
-# cp ${HATHIFILE}.gz ${ARCHIVE}/hathifiles/
-
-# TODO: end remove completely
 
 echo "`date`: compress dollar dup files and send to zephir"
 echo "`date`: compress dollar dup files and send to zephir" >> $REPORT_FILE
