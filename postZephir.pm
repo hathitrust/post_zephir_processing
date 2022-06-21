@@ -53,21 +53,22 @@ sub main {
   sub usage {
     my $msg = shift;
     $msg and $msg = " ($msg)";
-    return"usage: $prgname -i infile -o outbase [-f rights_db_file][-r rights_output_file [-d (rights debug file wanted]][-u incremental_cutoff_date (yyyymmdd, default is 00000000)][-h htrc_file_wanted][-z zephir_ingested_items_file_wanted]$msg\n";
+    return"usage: $prgname -i infile -o outbase [-f rights_db_file][-r rights_output_file [-d (rights debug file wanted]][-h htrc_file_wanted][-z zephir_ingested_items_file_wanted]$msg\n";
   };
 
-  our($opt_i, $opt_o, $opt_r, $opt_f, $opt_u, $opt_d, $opt_h, $opt_z);
+  our($opt_i, $opt_o, $opt_r, $opt_f, $opt_d, $opt_h, $opt_z);
   getopts('i:o:r:f:u:h:z:d');
 
   $opt_i or die usage("no input file specified");
   $opt_o or die usage("no output file specified");
-  my $infile = $opt_i;
-  my $outbase = $opt_o;
+  my $infile = $opt_i; # ht_bib_export_incr_<sephir_date>.json.gz
+  my $outbase = $opt_o; #typically zephir_upd_<yesterday>
   my $out_hathi = $outbase . "_hathi.txt";
   my $out_json = $outbase . ".json";
   my $out_report = $outbase . "_rpt.txt";
   my $out_dollar_dup = $outbase . "_dollar_dup.txt";
   my $out_delete = $outbase . "_delete.txt";
+
   # ultimately this ends up as /htapps/babel/feed/var/bibrecords/zephir_ingested_items.txt.gz 
   my $out_zia = $outbase . "_zia.txt";
   my $rights_db_file = '';
@@ -103,22 +104,14 @@ sub main {
 
   my %rights_diff = ();
    
-  my %bib_error = ();
-
   my $current_timestamp = `date '+%Y-%m-%d %H:%M:%S'`;
   chomp $current_timestamp;
   my $current_date = getDate(time() - 86400); 	# yesterday is the date the zephir file was created
-  my $update_cutoff = 0;
-  $opt_u and do {
-    $opt_u =~ /^\d{8}$/ or die usage("invalid update cutoff date $opt_u");
-    $update_cutoff = $opt_u;
-  };
 
   print "Input file is $infile\n";
 
   my $infile_open = $infile;
   $infile =~ /\.gz$/ and do {
-    # $infile_open = "unpigz -c $infile |";
     $infile_open = "gunzip -c $infile |";
     print "infile $infile is compressed, using gunzip to process: $infile_open\n";
     $infile =~ s/\.gz$//;
@@ -153,12 +146,6 @@ sub main {
 
   print OUT_RPT "processing file $infile\n";
 
-  if ($update_cutoff) {
-    print OUT_RPT "incremental mode, only include items with update date on or after $update_cutoff in hathifile\n";
-  } else {
-    print OUT_RPT "full mode, include all items in hathifile\n";
-  }
-
   my $rightsDB = rightsDB->new();
   my $rights_sub = '';
   my %RIGHTS;
@@ -175,7 +162,6 @@ sub main {
 
   # list of collections from ht_rights database
   my $ht_collections = getCollectionTable($rightsDB);
-  #print  Dumper($ht_collections);
    
   # read current list of hathitrust collections, add to map if not already set
   #COLL:foreach my $coll (sort keys (%$ht_collections)) {
@@ -204,8 +190,6 @@ sub main {
   my $bibcnt = 0;
   #my $dup_cid = 0;
   my $f974_cnt = 0;
-  my $outcnt_hathi = 0;
-  my $excluded_update_date = 0;
   my $outcnt_json = 0;
   my $no_sdr_num = 0;
   my $dollar_dup_cnt = 0;
@@ -227,22 +211,17 @@ sub main {
   my $bib_info;
   my $bib_key;
   my ($sdr_list, $sdr_num, $lccn, $isbn, $issn, $title, $author, $imprint, $oclc_num);
-  my ($mdp_id, $rights, $description, $sub_library, $collection, $source, $update_date); 
+  my ($htid, $rights, $description, $sub_library, $collection, $source, $update_date); 
   #my %update_date = ();
-  my $digitization_source;
   my $rights_diff_cnt = 0;
   my $rights_match_cnt = 0;
 
 
   my $bib;
 
-  #my %cid_list = ();
-
   my $bad_skipped_cnt = 0;
-  my $bad_tab_newline_cnt = 0;
   my $bad_out_cnt = 0;
   my $change_out_cnt = 0;
-  my $num_nbsp_records = 0;
 
   # labels for rights report file
   $opt_r and print RIGHTS_RPT join("\t", 
@@ -302,12 +281,6 @@ sub main {
       $change_out_cnt++;
     };
 
-    #$cid_list{$bib_key} and do {
-    #  $dup_cid++;
-    #  #print STDERR "$bib_key duplicate\n";
-    #  next RECORD;
-    #};
-    #$cid_list{$bib_key}++;
     check_bib($bib, $bib_key);
     $bib_info = $br->get_bib_info($bib, $bib_key) or print OUT_RPT "$bib_key: can't get bib info\n";
     ($oclc_num, $sdr_list) = process_035($bib, $bib_key);
@@ -342,59 +315,58 @@ sub main {
 
     F974:foreach my $f974 (@f974) {
       my ($print_id, $ns, $id);
-      $mdp_id = $f974->as_string('u') or do {
+      $htid = $f974->as_string('u') or do {
         print OUT_RPT "$bib_key ($bibcnt): no subfield u for 974 field\n";
         next F974;
       };
-      ($ns, $id) = split(/\./, $mdp_id);
+      ($ns, $id) = split(/\./, $htid);
       $uc1_delete->{$id} and do {
         $bib->delete_field($f974);
-        print OUT_RPT "$mdp_id: non-dollar barcode uc1 $id with dollar version deleted\n";
-        print OUT_DOLLAR_DUP "$mdp_id\n";
+        print OUT_RPT "$htid: non-dollar barcode uc1 $id with dollar version deleted\n";
+        print OUT_DOLLAR_DUP "$htid\n";
         $dollar_dup_cnt++;
         next F974;
       };
-      $print_id = "$bib_key:$mdp_id ($bibcnt)";
+      $print_id = "$bib_key:$htid ($bibcnt)";
       $description = $f974->as_string('z');
-      $digitization_source = $f974->as_string('s');
+      my $digitization_source = $f974->as_string('s');
       $source = $f974->as_string('b');
       $collection = $f974->as_string('c');
       $update_date = $f974->as_string('d');
       $zia_output and do {
         my $ia_id = $f974->as_string('8');
-        print ZIA join("\t", $mdp_id, $source, $collection, $digitization_source, $ia_id), "\n";
+        print ZIA join("\t", $htid, $source, $collection, $digitization_source, $ia_id), "\n";
         $zia_cnt++;
       };
 
-=pod
-      # Not used anywhere else
+      # Only used for reporting
       my $responsible_entity_code = $ht_collections->{$collection}->{responsible_entity_code} or do {
-        print OUT_RPT "$mdp_id: no responsible entity for collection $collection in ht_collections\n";
+        print OUT_RPT "$htid: no responsible entity for collection $collection in ht_collections\n";
         $no_resp_ent++;
       };
-      # Not used anywhere else
+      # Only used for reporting
       my $content_provider_code = $ht_collections->{$collection}->{content_provider_code} or do {
-        print OUT_RPT "$mdp_id: no content provider for collection $collection in ht_collections\n";
+        print OUT_RPT "$htid: no content provider for collection $collection in ht_collections\n";
         $no_cont_prov++;
       };
-      #  Not used anywhere else
+      # Only used for reporting 
       my $access_profile = $rightsDB->determineAccessProfile($collection, $digitization_source) or do {
-        print OUT_RPT "$mdp_id: can't determine access profile fo collection '$collection' and dig source '$digitization_source'\n";
+        print OUT_RPT "$htid: can't determine access profile fo collection '$collection' and dig source '$digitization_source'\n";
         $no_access_profile++;
       };
-=cut
+      
       # rights processing
 
       # determine rights from current bib/item info
-      my $bri = $br->get_bib_rights_info($mdp_id, $bib_info, $description);
+      my $bri = $br->get_bib_rights_info($htid, $bib_info, $description);
       my $bib_rights = $bri->{'attr'};
       my $rights_current = $bib_rights; 	# set to newly-determined bib rights
       my $reason_current = 'bib'; 	# set reason to bib for new records
       $bri->{date_used} and $bri->{date_used} ne '9999' and $f974->update('y' => $bri->{date_used});
       
       # check for existing rights in rights db
-      #my ($db_rights, $db_reason, $timestamp) = &$rights_sub($mdp_id);
-      my ($db_rights, $db_reason, $db_dig_source, $db_timestamp, $db_rights_note, $db_access_profile) = &$rights_sub($mdp_id);
+      #my ($db_rights, $db_reason, $timestamp) = &$rights_sub($htid);
+      my ($db_rights, $db_reason, $db_dig_source, $db_timestamp, $db_rights_note, $db_access_profile) = &$rights_sub($htid);
       $rights_cnt++;
 
       my $compare_rights = 0;
@@ -442,7 +414,7 @@ sub main {
       $access_current = rights_map($rights_current);
 
       if ( $reason_current eq 'bib' and ($gfv_override or $rights_current ne $db_rights or $digitization_source ne $db_dig_source) ) {
-        print RIGHTS "$mdp_id\t$rights_current\tbib\tjstever\t$digitization_source\n";
+        print RIGHTS "$htid\t$rights_current\tbib\tjstever\t$digitization_source\n";
         $rights_out_cnt++;
         $update_date ne $current_date and do {
           print OUT_RPT "$print_id: bib rights update, 974 sub d changed from $update_date to $current_date\n";
@@ -466,7 +438,7 @@ sub main {
           }
           $rights_diff_cnt++;
           print RIGHTS_RPT join("\t", 
-            $mdp_id,				# 1
+            $htid,				# 1
             $bib_key,				# 2
   #          $preferred_record_collection,		# 3	
             $current_preferred_record_number, 	# 3
@@ -522,10 +494,8 @@ sub main {
   print OUT_RPT "$bibcnt bib records read\n"; 
   #print OUT_RPT "$dup_cid duplicate bib records for cid skipped\n"; 
   print OUT_RPT "$bad_skipped_cnt bad bib records skipped\n"; 
-  print OUT_RPT "$bad_tab_newline_cnt bib records with tab or newline, fixed\n"; 
   print OUT_RPT "$bad_out_cnt bad bib records written to bad file\n"; 
   print OUT_RPT "$change_out_cnt changed bib records written to change file\n"; 
-  print OUT_RPT "$num_nbsp_records records with non-breaking spaces\n";
   print OUT_RPT "$no_sdr_num no sdr number found in record\n";
   print OUT_RPT "$suppressed_974 suppressed 974 fieids ignored\n";
   print OUT_RPT "$no_974 no unsuppressed 974 fields in record, skipped\n";
@@ -533,8 +503,6 @@ sub main {
   print OUT_RPT "$no_cont_prov no content provider for collection\n";
   print OUT_RPT "$no_access_profile can't determine access profile\n";
   print OUT_RPT "$f974_cnt 974 fields processed\n";
-  print OUT_RPT "  $outcnt_hathi hathi records written\n";
-  print OUT_RPT "  $excluded_update_date hathi records excluded--update date\n";
   print OUT_RPT "  $zia_cnt zephir ingested item records written\n";
   print OUT_RPT "$outcnt_json json records written hathi catalog\n";
   print OUT_RPT "-----------------------------------------------\n";
@@ -658,13 +626,13 @@ sub get_bib_data {
 }
 
 sub GetRights {
-  my $mdp_id = shift;
-  #my ($rights, $reason, $source_code, $timestamp, $rights_note) = $rightsDB->GetRightsFromDB($mdp_id) or do {
-  #  #print "$mdp_id:  can't get rights from rights db\n";
+  my $htid = shift;
+  #my ($rights, $reason, $source_code, $timestamp, $rights_note) = $rightsDB->GetRightsFromDB($htid) or do {
+  #  #print "$htid:  can't get rights from rights db\n";
   #  return ('','','');
   #};
   #return ($rights, $reason, $timestamp);
-  return $rightsDB->GetRightsFromDB($mdp_id); 
+  return $rightsDB->GetRightsFromDB($htid); 
 }
 
 sub GetRightsDBM {
@@ -682,8 +650,8 @@ sub filter_dollar_barcode {	 # check for duplication between uc1 BARCODE and $BA
   my $non_dollar_delete = {};
   my $all_ids = {};
   F974:foreach my $f974 (@$f974) {
-    my $mdp_id = $f974->as_string('u') or next F974;
-    my ($ns, $id) = split(/\./, $mdp_id);
+    my $htid = $f974->as_string('u') or next F974;
+    my ($ns, $id) = split(/\./, $htid);
     ($ns eq 'uc1') or next F974;
     $id =~ s/\$//g;
     my ($b_number) = $id =~ /^b(\d+)$/ or next F974;
@@ -768,28 +736,48 @@ sub rights_map {
   return 'deny';
 }
 
-sub check_bib {
+# get source of record from cat field
+sub get_bib_source {
   my $bib = shift;
   my $bib_key = shift;
-  # get source of record from cat field
+  
   my $cat_field = $bib->field('CAT') or do {
     print STDERR "$bib_key (check_bib): no cat field in record\n";
     return;
   };
+
   my $bib_source = $cat_field->as_string('a') or do { 
     print STDERR "$bib_key (check_bib): no subfield a in cat field in record\n";
     return;
   };
+
+  return $bib_source;
+}
+
+sub check_bib_leader {
+  my $bib = shift;
+  my $bib_key = shift;
+  my $bib_source = shift;
+
   my $ldr = $bib->leader() or bib_error($bib_source, $bib_key, $bib, "no leader");
+
+  # leader has the wrong length
   $ldr and do {
     length($ldr) == 24 or bib_error($bib_source, $bib_key, $bib, "invalid ldr length");
   };
-
+  # leader has 'delete' set, fix it
   substr($ldr, 5, 1) =~ /d/i and do {
     bib_error($bib_source, $bib_key, $bib, "leader set for delete (recstatus is 'd'), changed to 'c'");
     substr($ldr, 5, 1) = 'c';
     $bib->leader($ldr); 
   }; 
+}
+
+sub check_f008 {
+  my $bib = shift;
+  my $bib_key = shift;
+  my $bib_source = shift;
+
   my $f008 = $bib->field('008') or bib_error($bib_source, $bib_key, $bib, "no 008 field");
   $f008 and do {
     my $f008_data = $f008->as_string();
@@ -797,12 +785,27 @@ sub check_bib {
       bib_error($bib_source, $bib_key, $bib, "invalid 008 length: " . length($f008_data));
     };
   };
+}
+
+sub check_f245 {
+  my $bib = shift;
+  my $bib_key = shift;
+  my $bib_source = shift;
+
   my @f245 = $bib->field('245') or bib_error($bib_source, $bib_key, $bib, "no 245 field in record");
   if (scalar @f245 == 1) {
     my $f245_data = $f245[0]->as_string('ak') or bib_error($bib_source, $bib_key, $bib, "no subfield ak in 245 field");
   } elsif (scalar @f245 > 1) {
     bib_error($bib_source, $bib_key, $bib, "multiple 245 fields in record"); 
   }
+}
+
+# Replaces non-ascii in 00* field with blank
+sub remove_nonascii_from_control_fields {
+  my $bib = shift;
+  my $bib_key = shift;
+  my $bib_source = shift;
+
   foreach my $field ($bib->field('00.')) {
     my $field_str = $field->as_string();
     my $tag = $field->tag();
@@ -811,6 +814,21 @@ sub check_bib {
       $field->replace_with(MARC::Field->new($tag,$field_str));
     };
   }
+}
+  
+sub check_bib {
+  my $bib = shift;
+  my $bib_key = shift;
+  
+  my $bib_source = get_bib_source($bib, $bib_key);
+
+  check_bib_leader($bib, $bib_key, $bib_source);
+
+  check_f008($bib, $bib_key, $bib_source);
+
+  check_f245($bib, $bib_key, $bib_source);
+
+  remove_nonascii_from_control_fields($bib, $bib_key, $bib_source);
 } 
  
 sub bib_error {
@@ -840,6 +858,10 @@ sub get_current_preferred_record_number {
   return $hol_field->as_string('0');
 }
 
+# Only used by get_current_preferred_record_number
+# Which is in turn used to generate the RIGHTS_RPT which run_process_zephir_incremental.sh copies to /htapps/babel/feed/var/rights/
+# run_process_zephir_incremental.sh also calls run_zephir_full_daily.sh which generates
+# zephir_full_<yesterday>.rights.tsv but doesn't do anything with it.
 sub get_hathi_bib_record_solr {
   my $hathi_bib_key = shift;
   #my $select = 'http://solr-sdr-catalog.umdl.umich.edu:9033/catalog/select';

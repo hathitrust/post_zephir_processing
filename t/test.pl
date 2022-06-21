@@ -165,10 +165,7 @@ is($mapping->{'innc'}, 'nnc', 'loads the prefix mapping');
 # Takes bib_source from CAT$a, bib_key, bib_record, error_msg
 # Increments bib_error hash for key: bib_source:error_msg
 # prints to the OUT_RPT
-# prints a special line to OUT_RPT, increments bad_out_cnt and bib_line if bib_source matches MIU
-print $bib->leader;
-my $leaderless = $bib;
-#$leaderless->delete("leader");
+# prints a special line to OUT_RPT, increments bad_out_cnt and bib_line if bib_source matches MIU. There doesn't appear to be a reason to do this.
 
 # get_hathi_bib_record_solr()
 
