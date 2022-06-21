@@ -132,7 +132,7 @@ $ROOTDIR/bld_rights_db.pl -x $RIGHTS_DBM
 
 echo "`date`: processing file $ZEPHIR_VUFIND_EXPORT"
 echo "`date`: processing file $ZEPHIR_VUFIND_EXPORT" >> $REPORT_FILE
-$ROOTDIR/post_zephir_cleanup.pl -i $ZEPHIR_VUFIND_EXPORT -o ${BASENAME} -r ${BASENAME}.rights -d -f $RIGHTS_DBM -u $YESTERDAY > ${BASENAME}_stderr 
+$ROOTDIR/postZephir.pm -i $ZEPHIR_VUFIND_EXPORT -o ${BASENAME} -r ${BASENAME}.rights -d -f $RIGHTS_DBM > ${BASENAME}_stderr 
 tail -50 ${BASENAME}_rpt.txt >> $REPORT_FILE
 
 zcat $ZEPHIR_VUFIND_DELETE > ${BASENAME}_zephir_delete.txt
