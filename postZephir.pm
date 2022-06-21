@@ -188,7 +188,6 @@ sub main {
   }
 
   my $bibcnt = 0;
-  #my $dup_cid = 0;
   my $f974_cnt = 0;
   my $outcnt_json = 0;
   my $no_sdr_num = 0;
@@ -259,10 +258,13 @@ sub main {
     my $save_bib_line = $bib_line;
     my $changes = 0;
 
+    ##############################
+    # Cleaning the json and checking if it's ok
     eval {
       ($bib_line, $changes)  = clean_json_line($bib_line);
       $bib = MARC::Record::MiJ->new($bib_line);
     };
+    # $@ is the perl syntax error message from the last eval command
     $@ and do {
       print OUT_RPT "problem processing json line $bibcnt\n";
       print OUT_RPT substr($bib_line,0,80), ":", join(' " ', $@), "\n";
@@ -275,12 +277,13 @@ sub main {
     
     $bib_key = $bib->field('001')->as_string() or die "$bibcnt: no 001 field\n";
     $changes and do {
-      #print STDERR "$bib_key($bibcnt): $changes characters stripped/blanked from json line\n";
       print OUT_RPT "$bib_key($bibcnt): $changes characters stripped/blanked from json line\n";
       print CHANGE $save_bib_line, "\n";
       $change_out_cnt++;
     };
 
+    ##############################
+    # Collect a bunch of fields from the MARC
     check_bib($bib, $bib_key);
     $bib_info = $br->get_bib_info($bib, $bib_key) or print OUT_RPT "$bib_key: can't get bib info\n";
     ($oclc_num, $sdr_list) = process_035($bib, $bib_key);
@@ -296,7 +299,6 @@ sub main {
     $author = get_bib_data($bib, '100', 'abcd');
     $author or $author = get_bib_data($bib, '110', 'abcd');
     $author or $author = get_bib_data($bib, '111', 'acd');
-    #$author or $author = get_bib_data($bib, '700', 'abc');
    
     my $preferred_record_number = get_bib_data($bib, "HOL", '0'); 
     my $preferred_record_collection = get_bib_data($bib, "HOL", 'c'); 
@@ -310,9 +312,11 @@ sub main {
       $bib->delete_field($field);
     }
 
+    # Get list of duplicate uc1 barcode ids that need to be deleted
     my $uc1_delete = filter_dollar_barcode(\@f974);	# check for duplication between uc1 BARCODE and $BARCODE
-  #  foreach my $id (sort keys %$uc1_delete) { print "$id\n";}
 
+    #######################
+    # Process each 974 in sequence
     F974:foreach my $f974 (@f974) {
       my ($print_id, $ns, $id);
       $htid = $f974->as_string('u') or do {
@@ -320,6 +324,8 @@ sub main {
         next F974;
       };
       ($ns, $id) = split(/\./, $htid);
+
+      # actually delete duplicate uc1 NON-dollar barcodes
       $uc1_delete->{$id} and do {
         $bib->delete_field($f974);
         print OUT_RPT "$htid: non-dollar barcode uc1 $id with dollar version deleted\n";
@@ -327,12 +333,17 @@ sub main {
         $dollar_dup_cnt++;
         next F974;
       };
+
+      # Item info
       $print_id = "$bib_key:$htid ($bibcnt)";
       $description = $f974->as_string('z');
       my $digitization_source = $f974->as_string('s');
       $source = $f974->as_string('b');
       $collection = $f974->as_string('c');
       $update_date = $f974->as_string('d');
+
+      # We want to generate a zia file. 
+      # Get the IA id from 974, subfield 8
       $zia_output and do {
         my $ia_id = $f974->as_string('8');
         print ZIA join("\t", $htid, $source, $collection, $digitization_source, $ia_id), "\n";
@@ -354,7 +365,8 @@ sub main {
         print OUT_RPT "$htid: can't determine access profile fo collection '$collection' and dig source '$digitization_source'\n";
         $no_access_profile++;
       };
-      
+     
+      ######################### 
       # rights processing
 
       # determine rights from current bib/item info
@@ -365,16 +377,14 @@ sub main {
       $bri->{date_used} and $bri->{date_used} ne '9999' and $f974->update('y' => $bri->{date_used});
       
       # check for existing rights in rights db
-      #my ($db_rights, $db_reason, $timestamp) = &$rights_sub($htid);
       my ($db_rights, $db_reason, $db_dig_source, $db_timestamp, $db_rights_note, $db_access_profile) = &$rights_sub($htid);
       $rights_cnt++;
 
-      my $compare_rights = 0;
-      my $new_rights = 0;
-      my $gfv_override = 0;
+      my $compare_rights = 0; # boolean
+      my $new_rights = 0; # boolean
+      my $gfv_override = 0; # boolean
       my $access_profile = $db_access_profile;
       if ($db_rights eq '') {	# not in rights db
-        #print STDERR "$print_id: no db rights\n";
         $new_rights_cnt++;
         $new_rights++;
       } elsif ($bib_rights =~ /^pd/ and $db_reason eq 'gfv') {	# gfv in rights db and bib rights pd/pdus
@@ -390,7 +400,6 @@ sub main {
           $db_non_bib_rights_cnt++;
           $rights_current = $db_rights;	# set to non-bib db rights
           $reason_current = $db_reason;	# set to non-bib db reason
-          #print OUT_RPT "$print_id: non-bib reason $db_reason ($db_timestamp): " . outputField($f974) . "\n";
           print OUT_RPT "$print_id: non-bib reason, db: $db_rights/$db_reason ($db_timestamp), bib: $bib_rights\n";
         }
       }
@@ -402,22 +411,23 @@ sub main {
         next F974;
       };
       $f974->update('r' => $rights_current);
-      $f974->update( 'q' => $reason_current );
+      $f974->update('q' => $reason_current );
       $reason_current eq 'bib' and do {
         $f974->update( 't' => $bri->{reason} );
       };
       my $access_current;
-      #$access_current = $rights_map{$rights_current} or do {
-      #  print OUT_RPT "$print_id: can't map rights attribute $rights_current\n";
-      #  $access_current = 'deny';
-      #};
       $access_current = rights_map($rights_current);
 
+      ################
+      # We need this in the rights file if we changed gfv to bib, or bib rights calc doesnt agree with bib rights in db, or digitization sources dont match 
       if ( $reason_current eq 'bib' and ($gfv_override or $rights_current ne $db_rights or $digitization_source ne $db_dig_source) ) {
         print RIGHTS "$htid\t$rights_current\tbib\tjstever\t$digitization_source\n";
         $rights_out_cnt++;
         $update_date ne $current_date and do {
           print OUT_RPT "$print_id: bib rights update, 974 sub d changed from $update_date to $current_date\n";
+
+          ############
+          # Change date in 974d
           $update_date = $current_date;
           $f974->update('d' => $update_date);
         };
@@ -426,9 +436,10 @@ sub main {
         };
         $rights_debug and print DEBUG $br->debug_line($bib_info, $bri), "\n";
       }
-
+      
+      #####################  
+      # compare bib rights in db with bib rights from current record, report if different
       $compare_rights and do {	# if there exists bib rights in db
-        # compare bib rights in db with bib rights from current record, report if different
         my $bib_access = rights_map($bib_rights);
         my $db_access = rights_map($db_rights);
         #if ($bib_rights ne $db_rights) {		# attribute changes
@@ -478,7 +489,7 @@ sub main {
       my $timestamp = $db_timestamp;
       $timestamp or $timestamp = $current_timestamp;
 
-    }
+    } # Foreach 974
     $bib->field('974') or do {	# make sure there are 974 fields
       print OUT_DELETE $bib_key, "\n";
       print OUT_RPT "$bib_key ($bibcnt): no unsuppressed 974 fields in record--not written\n";
@@ -627,11 +638,7 @@ sub get_bib_data {
 
 sub GetRights {
   my $htid = shift;
-  #my ($rights, $reason, $source_code, $timestamp, $rights_note) = $rightsDB->GetRightsFromDB($htid) or do {
-  #  #print "$htid:  can't get rights from rights db\n";
-  #  return ('','','');
-  #};
-  #return ($rights, $reason, $timestamp);
+  #my ($rights, $reason, $source_code, $timestamp, $rights_note)
   return $rightsDB->GetRightsFromDB($htid); 
 }
 
@@ -645,6 +652,7 @@ sub GetRightsDBM {
   return split("\t", $RIGHTS{$full_id});
 }
 
+# Returns hash of non-dollar delete ids to the number of times seen
 sub filter_dollar_barcode {	 # check for duplication between uc1 BARCODE and $BARCODE
   my $f974 = shift;
   my $non_dollar_delete = {};
@@ -652,31 +660,16 @@ sub filter_dollar_barcode {	 # check for duplication between uc1 BARCODE and $BA
   F974:foreach my $f974 (@$f974) {
     my $htid = $f974->as_string('u') or next F974;
     my ($ns, $id) = split(/\./, $htid);
-    ($ns eq 'uc1') or next F974;
-    $id =~ s/\$//g;
+    ($ns eq 'uc1') or next F974; # only uc1 is effected
+    $id =~ s/\$//g; # delete the dollar
     my ($b_number) = $id =~ /^b(\d+)$/ or next F974;
-    $b_number > 815188 and next F974;
+    $b_number > 815188 and next F974; # for some reason only small ids are effected
+    # we have already seen this id
     $all_ids->{$id} and $non_dollar_delete->{$id}++;
     $all_ids->{$id}++;
   }
   #foreach my $id (sort keys %$non_dollar_delete) { print "$id\n";}
   return $non_dollar_delete;
-}
-
-sub outputField {
-  my $field = shift;
-  my $newline = "\n";
-  my $out = "";
-  $out .= $field->tag()." ";
-  if ($field->tag() lt '010') { $out .= "   ".$field->data; }
-  else {
-    $out .= $field->indicator(1).$field->indicator(2)." ";
-    my @subfieldlist = $field->subfields();
-    foreach my $sfl (@subfieldlist) {
-      $out.="|".shift(@$sfl).shift(@$sfl);
-    }
-  }
-  return $out;
 }
 
 sub getDate {

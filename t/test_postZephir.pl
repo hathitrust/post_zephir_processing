@@ -15,7 +15,7 @@ use DB_File;
 BEGIN {push @INC, dirname(__FILE__) . "/.."};
 use postZephir;
 
-my $bib = MARC::Record::MiJ->new(read_file("test_record.json"));
+my $bib = MARC::Record::MiJ->new(read_file("t/fixtures/test_record.json"));
 my $bib_key = $bib->field('001')->as_string();
 
 is($bib_key, "000000012", 'bib key extraction');
@@ -48,9 +48,9 @@ is($sdr_num_hash->{'umbus'}, $expected_sdr_nums{'umbus'}, 'sdr num hash');
 my $title = postZephir::get_bib_data($bib, '245', 'abc');
 is($title, 'MMPI; research developments and clinical applications. Edited by James Neal Butcher', 'title');
 # indicators matter
-my $title = postZephir::get_bib_data($bib, '24510', 'abc');
+$title = postZephir::get_bib_data($bib, '24510', 'abc');
 is($title, 'MMPI; research developments and clinical applications. Edited by James Neal Butcher', 'title');
-my $title = postZephir::get_bib_data($bib, '24501', 'abc');
+$title = postZephir::get_bib_data($bib, '24501', 'abc');
 is($title, '', 'title');
 
 # GetRights()
@@ -60,9 +60,12 @@ is($title, '', 'title');
 # filter_dollar_barcode()
 # Checks for duplication between uc1 BARCODE and $BARCODE
 # This may no longer be a "thing"
-
-
-# outputField()
+my $dollar_bib = MARC::Record::MiJ->new(read_file("t/fixtures/dollar_barcode_record.json"));
+my @f974 = $dollar_bib->field('974');
+is(scalar @f974, 3, "dollar bib starts with three 974s");
+my $deleted = postZephir::filter_dollar_barcode(\@f974);
+is(scalar keys %$deleted, 1, "returns hash of ids to remove => counts");
+is($deleted->{'b444627'}, 1, "duplicate barcode is in filter_dollar_barcode hash");
 
 # getDate()
 # Formats the given seconds since epoch as YYYY-MM-DD
