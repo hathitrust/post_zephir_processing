@@ -175,7 +175,12 @@ is($mapping->{'innc'}, 'nnc', 'loads the prefix mapping');
 # get_current_preferred_record_number()
 
 # getCollectionTable()
-#my $rightsDB = rightsDB->new();
+my $rightsDB = rightsDB->new();
+my $collection_table = postZephir::getCollectionTable( $rightsDB );
+#foreach my $coll ( sort keys %$collection_table) { print "collection:${coll}"; }
+#print $collection_table;
+#is($collection_table->{"IBC"}->{'content_provider'}, 'some inst', "getCollectionTable retrieves content_provider_code");
+
 #my %RIGHTS;
 #tie %RIGHTS, "DB_File", "t/fixtures/rights_dbm", O_RDONLY, 0644, $DB_BTREE;
 # TODO: figure out connection to dev maria so this can be tested
