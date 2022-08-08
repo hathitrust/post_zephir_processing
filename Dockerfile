@@ -26,4 +26,5 @@ RUN cpanm -n  \
   Test::Output \
   DBD::mysql \
   File::Slurp \
-  Data::Dumper
+  Data::Dumper \
+  Devel::Cover

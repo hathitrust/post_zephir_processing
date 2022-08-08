@@ -120,3 +120,8 @@ docker-compose build
 docker-compose up -d
 docker-compose run --rm pz perl t/test_postZephir.pl
 ```
+
+For test coverage, replace the previous `docker-compose run` with
+```bash
+docker-compose run --rm pz bash -c "perl -MDevel::Cover=-silent,1 t/test_postZephir.pl && cover -nosummary /usr/src/app/cover_db"
+```
