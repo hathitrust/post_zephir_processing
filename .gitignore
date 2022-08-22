@@ -22,3 +22,4 @@ test_*
 compare_*
 *.jsonl
 *.json
+t/fixtures/rights_dbm

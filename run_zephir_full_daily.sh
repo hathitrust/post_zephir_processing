@@ -77,7 +77,7 @@ echo "file_list: $file_list"
 
 for file in $file_list; do
   echo "`date`: processing file $file"
-  `$ROOTDIR/post_zephir_cleanup.pl -h 1 -z 1 -i $file -o ${file}_out -r ${file}.rights -d -f $RIGHTS_DBM &> ${file}_stderr &`
+  `$ROOTDIR/postZephir.pm -h 1 -z 1 -i $file -o ${file}_out -r ${file}.rights -d -f $RIGHTS_DBM &> ${file}_stderr &`
 done
 
 # wait loop: check last line of each rpt file
