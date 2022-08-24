@@ -211,7 +211,7 @@ if [ $cmdstatus != "0" ]; then
 fi
 
 if [[ $today_dash =~ ^20...01.01$ ]]; then
-  # process full zephir file to create file of ingested items and HTRC datasets metadata
+  # process full zephir file to create file of ingested items
   $ROOTDIR/run_zephir_full_daily.sh
 
   ruby get_bib_additional_recs_for_OAI.rb > additional_recs.json
@@ -224,7 +224,7 @@ else
   $ROOTDIR/zephir2oai.pl -f $YESTERDAY -i ${BASENAME}.json.gz -d $ZEPHIR_VUFIND_DELETE -o ${DATADIR_OAI}/zephir_oai_upd_${TODAY} -s 200000000
   find $DATADIR_OAI -type f -mtime +30 -exec rm -f {} ';'
   
-  # process full zephir file to create file of ingested items and HTRC datasets metadata
+  # process full zephir file to create file of ingested items
   $ROOTDIR/run_zephir_full_daily.sh
 
 fi

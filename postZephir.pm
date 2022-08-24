@@ -53,11 +53,11 @@ sub main {
   sub usage {
     my $msg = shift;
     $msg and $msg = " ($msg)";
-    return"usage: $prgname -i infile -o outbase [-f rights_db_file][-r rights_output_file [-d (rights debug file wanted]][-h htrc_file_wanted][-z zephir_ingested_items_file_wanted]$msg\n";
+    return"usage: $prgname -i infile -o outbase [-f rights_db_file][-r rights_output_file [-d (rights debug file wanted]][-z zephir_ingested_items_file_wanted]$msg\n";
   };
 
-  our($opt_i, $opt_o, $opt_r, $opt_f, $opt_d, $opt_h, $opt_z);
-  getopts('i:o:r:f:u:h:z:d');
+  our($opt_i, $opt_o, $opt_r, $opt_f, $opt_d, $opt_z);
+  getopts('i:o:r:f:u:z:d');
 
   $opt_i or die usage("no input file specified");
   $opt_o or die usage("no output file specified");
@@ -87,13 +87,6 @@ sub main {
     $opt_r or die usage("can't use right debug flag without -r");
     $rights_debug++;
     open(DEBUG,">$rights_output_file.debug") or die "can't open $rights_output_file.debug for output: $!\n";
-  };
-
-  my $htrc_output = undef;
-  $opt_h and do {
-    my $meta_base = $outbase . "_meta";
-    $htrc_output = setup_htrc_output($meta_base);
-    print "htrc outupt file basename: $meta_base\n";
   };
 
   my $zia_output = 0;
@@ -498,7 +491,6 @@ sub main {
     };
     print OUT_JSON MARC::Record::MiJ->to_mij($bib), "\n";
     $outcnt_json++;
-    defined($htrc_output) and htrc_output($bib, $htrc_output);
   }
     
   print OUT_RPT "-----------------------------------------------\n";
@@ -922,83 +914,6 @@ sub getCollectionTable {
   return $hash;
 }
 
-sub setup_htrc_output {
-  # set up a hash of filenhandles and counters for htrc output files
-  my $htrc_out_basename = shift;
-  my $htrc_output = {};
-  foreach my $name ('pd_google', 'pd_open_access', 'ic', 'restricted') {
-    print STDERR $htrc_out_basename . "_" . $name . ".jsonl";
-    $htrc_output->{$name}{'fh'} = new FileHandle ">${htrc_out_basename}_$name.jsonl" or die "can't create filehandle for $name: $!\n";
-    binmode($htrc_output->{$name}{'fh'});
-    $htrc_output->{$name}{'count'} = 0;
-  }
-  $htrc_output->{pd_attr_list} = {    # (1,7,9,10,11,12,13,14,15,17,18,20,21,22,23,24,25)
-    'pd' => 1,
-    'ic-world' => 1,
-    'und-world' => 1,
-    'pdus' => 1,
-    'cc-by-3.0' => 1,
-    'cc-by-nd-3.0' => 1,
-    'cc-by-nc-nd-3.0' => 1,
-    'cc-by-nc-3.0' => 1,
-    'cc-by-nc-sa-3.0' => 1,
-    'cc-by-sa-3.0' => 1,
-    'cc-zero' => 1,
-    'cc-by-4.0' => 1,
-    'cc-by-nd-4.0' => 1,
-    'cc-by-nc-nd-4.0' => 1,
-    'cc-by-nc-4.0' => 1,
-    'cc-by-nc-sa-4.0' => 1,
-    'cc-by-sa-4.0' => 1,
-  };
-
-  return $htrc_output;
-}
-
-sub htrc_output {
-  my $bib = shift;
-  my $output = shift;
-  my $recID = $bib->field('001')->as_string();
-  my $records_written = 0;
-
-  my @f974 = $bib->field('974');
-  scalar @f974 or return 0;
-  foreach my $field (@f974) {
-    $bib->delete_field($field);
-  }
-
-  my $field_fmt;
-  $field_fmt = $bib->field('FMT') and $field_fmt->{_tag} = "970";
-
-  foreach my $field ($bib->field("CID|HOL|DAT|FMT|HOL|CAT|COM")) {
-    $bib->delete_field($field);
-  }
-
-  F974:foreach my $field (@f974) {
-    my $ht_id = $field->as_string('u');
-    my $rights = $field->as_string('r');
-    my ($db_rights, $db_reason, $db_dig_source, $db_timestamp, $db_rights_note, $db_access_profile) = &$rights_sub($ht_id);
-    $rights ne $db_rights and do {
-      print "$ht_id: rights mismatch, catalog: $rights, rightsdb: $db_rights, update date: $db_timestamp\n";
-      $field->update('r' => $db_rights);
-      $rights = $db_rights;
-    };
-    $field->delete_subfield(code => 't');
-    $field->add_subfields( 'a' => $db_access_profile );
-    #$field->add_subfields( 'q' => $db_reason ); # (not needed, adding reason in regular output--tlp )
-    $bib->append_fields($field);
-    
-    write_htrc_record($bib, $rights, $db_access_profile, $output) or do {
-      print "ht_id: can't write htrc record\n";
-      $bib->delete_field($field);
-      next F974;
-    };
-    $bib->delete_field($field);
-    $records_written++;
-  }
-  return $records_written;
-}
-
 sub get_bib_errors {
     return \%bib_error;
 }
@@ -1014,25 +929,6 @@ sub load_prefix_map {
   return $mapping;
 }
 
-sub write_htrc_record {
-  my $bib = shift;
-  my $rights = shift;
-  my $access_profile = shift;
-  my $output = shift;
-  my $filename = '';
-  SET_FILENAME: {
-    $output->{pd_attr_list}{$rights} and $access_profile eq 'google' and $filename = 'pd_google' and last SET_FILENAME;
-    $output->{pd_attr_list}{$rights} and $access_profile eq 'open' and $filename = 'pd_open_access' and last SET_FILENAME;
-    $access_profile =~ /^(open|google)$/ and $filename = 'ic' and last SET_FILENAME;
-    $access_profile =~ /^page/ and $filename = 'restricted' and last SET_FILENAME;
-    print "can't set filename for rights = $rights and access_profile = $access_profile\n";
-    return 0;
-  }
-  my $fh = $output->{$filename}{'fh'};
-  print $fh MARC::Record::MiJ->to_mij($bib), "\n";
-  $output->{$filename}{'count'}++;
-  return 1;
-}
 1;
 
 main unless caller;

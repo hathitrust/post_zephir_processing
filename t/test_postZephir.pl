@@ -199,19 +199,4 @@ subtest "getCollectionTable()" => sub {
 #tie %RIGHTS, "DB_File", "t/fixtures/rights_dbm", O_RDONLY, 0644, $DB_BTREE;
 # TODO: figure out connection to dev maria so this can be tested
 
-# moseshll sez: Not sure if this is deprecated. Testing anyway.
-subtest "setup_htrc_output()" => sub {
-  my @expected_fields = qw(ic pd_attr_list pd_google pd_open_access restricted);
-  my $htrc_output = postZephir::setup_htrc_output();
-  foreach my $expected_field (@expected_fields) {
-    ok(defined $htrc_output->{$expected_field});
-  }
-};
-
-# htrc_output()
-# will not test, deprecating
-
-# write_htrc_record()
-# will not test, deprecating
-
 done_testing();
