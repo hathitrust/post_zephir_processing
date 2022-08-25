@@ -153,8 +153,6 @@ if [ $DAY == "01" ]; then
     echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
   fi
   cp zephir_full_${YESTERDAY}.rights /htapps/babel/feed/var/rights/
-  cp zephir_full_${YESTERDAY}.rights $ZEPHIR_DATA/full/
-  cp zephir_full_${YESTERDAY}.rights $DATA_ROOT/zephir/
   
   echo "`date`: all files processed, concatenate rights debug files to zephir_full_${YESTERDAY}.rights.debug"
   echo "`date`: all files processed, concatenate rights debug files to zephir_full_${YESTERDAY}.rights.debug" >> $REPORT_FILE

@@ -101,7 +101,6 @@ if [ $cmdstatus == "0" ]; then
   echo "`date`: copy $ZEPHIR_GROOVE_INCREMENTAL to rootdir/data/zephir" >> $REPORT_FILE
   # should go here:
   mv $ZEPHIR_GROOVE_INCREMENTAL /htapps/babel/feed/var/bibrecords/
-  #mv $ZEPHIR_GROOVE_INCREMENTAL $ROOTDIR/data/zephir/
 else
   echo "***" >> $REPORT_FILE
   echo "Problem getting file ${ZEPHIR_GROOVE_INCREMENTAL} from zephir: rc is $cmdstatus" >> $REPORT_FILE
@@ -117,9 +116,7 @@ cmdstatus=$?
 if [ $cmdstatus == "0" ]; then
   echo "`date`: copy $ZEPHIR_DAILY_TOUCHED to /htapps/babel/feed/var/bibrecords"
   echo "`date`: copy $ZEPHIR_DAILY_TOUCHED to /htapps/babel/feed/var/bibrecords" >> $REPORT_FILE
-  #cp $ZEPHIR_DAILY_TOUCHED $data_root/local/mdp/return/zephir/daily_touched.tsv.gz
-  cp $ZEPHIR_DAILY_TOUCHED /htapps/babel/feed/var/bibrecords
-  mv $ZEPHIR_DAILY_TOUCHED $ROOTDIR/data/zephir/
+  mv $ZEPHIR_DAILY_TOUCHED /htapps/babel/feed/var/bibrecords
 else 
   echo "***" >> $REPORT_FILE
   echo "Problem getting file ${ZEPHIR_DAILY_TOUCHED} from zephir: rc is $cmdstatus" >> $REPORT_FILE
@@ -141,8 +138,7 @@ $zipcommand ${BASENAME}_all_delete.txt
 
 echo "`date`: copy rights file ${BASENAME}.rights to /htapps/babel/feed/var/rights"
 echo "`date`: copy rights file ${BASENAME}.rights to /htapps/babel/feed/var/rights" >> $REPORT_FILE
-cp ${BASENAME}.rights /htapps/babel/feed/var/rights 
-mv ${BASENAME}.rights $ROOTDIR/data/return/zephir/
+mv ${BASENAME}.rights /htapps/babel/feed/var/rights 
 
 echo "`date`: compress json file and send to hathitrust solr server"
 echo "`date`: compress json file and send to hathitrust solr server" >> $REPORT_FILE
@@ -156,9 +152,6 @@ if [ $cmdstatus != "0" ]; then
   exit
 fi
 
-echo "`date`: copy json file to value storage govdocs folder" >> $REPORT_FILE
-cp ${BASENAME}.json.gz  /htdata/govdocs/zephir/
-
 # copy to ht archive directory
 cp ${BASENAME}.json.gz  ${ARCHIVE}/catalog/
 
@@ -168,34 +161,10 @@ echo "`date`: send combined delete file to hathitrust solr server as ${BASENAME}
 cp ${BASENAME}_all_delete.txt.gz /htsolr/catalog/prep/${BASENAME}_delete.txt.gz
 cmdstatus=$?
 if [ $cmdstatus != "0" ]; then
-  message="Problem transferring file $ZEPHIR_VUFIND_DELETE to beeftea-2: rc is $cmdstatus"
+  message="Problem transferring file $ZEPHIR_VUFIND_DELETE to /htsolr/catalog/prep: rc is $cmdstatus"
   echo $message >> $REPORT_FILE
   exit
 fi
-
-echo "`date`: compress hathi file and send to hathitrust server"
-echo "`date`: compress hathi file and send to hathitrust server" >> $REPORT_FILE
-HATHIFILE=hathi_upd_${YESTERDAY}.txt
-mv ${BASENAME}_hathi.txt $HATHIFILE
-$zipcommand -f $HATHIFILE
-
-# This is being deprecated in favor of the separate hathifiles repository
-# TODO: remove completely
-# cp ${HATHIFILE}.gz ${HT_WEB_DIR}/
-# cmdstatus=$?
-# if [ $cmdstatus != "0" ]; then
-#  message="Problem transferring hathifile to $HT_WEB_HOST: rc is $cmdstatus"
-#  echo $message >> $REPORT_FILE
-#  exit
-# fi
-
-# echo "`date`: generate json hathifile list" >> $REPORT_FILE
-# `/htapps/www/sites/www.hathitrust.org/extra_perl/json_filelist.pl >> $REPORT_FILE`
-
-# copy hathifile to ht archive directory
-# cp ${HATHIFILE}.gz ${ARCHIVE}/hathifiles/
-
-# TODO: end remove completely
 
 echo "`date`: compress dollar dup files and send to zephir"
 echo "`date`: compress dollar dup files and send to zephir" >> $REPORT_FILE
@@ -239,7 +208,3 @@ echo "copy rights debug file to mdp_govdocs directory" >> $REPORT_FILE
 
 
 exit
-# this has been transcribe where it is needed
-#error_exit:
-#echo "error, message is $message"
-#echo $message | mailx -s"error in $SCRIPTNAME" $EMAIL
