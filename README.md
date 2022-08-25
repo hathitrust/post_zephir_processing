@@ -17,7 +17,7 @@ run_process_zephir_incremental.sh (daily)
   + Output written to nfs directory on server where OAI update process occurs 
 * Delete old OAI files.
 * Retrieve files with changed & new records daily_touched_YYYY-MM-DD.tsv.gz and groove_incremental_YYYY_MM-DD.tsv.gz from Zephir for pickup by ingest to be loaded to the `feed_zephir_items` table, which supports determining what items are newly available for ingest, what digitization source we expect to see for those items, and what their collection code (which maps to content provider and responsible source) is
-* Retrieves full bib metadata file from zephir and generates the HTRC datasets metadata with run_zephir_full_daily.sh. (Why?)
+* Retrieves full bib metadata file from zephir and runs run_zephir_full_daily.sh. (Why?)
 
 Why?
 ----
@@ -59,8 +59,10 @@ Bash script dependencies
 
 run_zephir_full_daily.sh (daily, and monthly)
 =============================================
-* Pulls a full bib metadata file from zephir and generates the HTRC datasets metadata (parameter to post_zephir_cleanup.pl) Soon to be deprecated (2022-06-20)
-  + Files written to a directory and rsynced to HTRC server (A&E process) Soon to be deprecated (2022-06-20)
+* Pulls a full bib metadata file from zephir
+* Assembles zephir_ingested_items.txt.gz and moves to /htapps/babel/feed/var/bibrecords
+* ~~generates the HTRC datasets metadata (parameter to post_zephir_cleanup.pl)~~ deprecated (2022-08-24)
+  + ~~Files written to a directory and rsynced to HTRC server (A&E process)~~ deprecated (2022-08-24)
 * On the first of the month, processes the full zephir file:
   + Splits input file and runs multiple invocations of post_zephri_cleanup.pl in parallel
   + Generate new/updated bib rights
@@ -79,7 +81,7 @@ Data In
 Data Out
 --------
 * `groove_export_YYYY-MM-DD.tsv.gz` will be moved to /htapps/babel/feed/var/bibrecords/groove_full.tsv.gz  
-* `meta_(ic, pd_google, pd_open_Access, restricted)_YYYYMMDD.jsonl.gz` put at /htprep/metadata
+* ~~`meta_(ic, pd_google, pd_open_Access, restricted)_YYYYMMDD.jsonl.gz` put at /htprep/metadata~~
 * `zephir_full_${YESTERDAY}_vufind.json.gz`, copied to /htdata/govdocs/zephir, and the zephir archive. Indexed into catalog via the same process as for `run_process_zephir_incremental.sh`
 * `zephir_full_${YESTERDAY}.rights`, will be moved to /htapps/babel/feed/var/rights/
 * `zephir_full_${YESTERDAY}.rights.debug`, doesn't appear to be used

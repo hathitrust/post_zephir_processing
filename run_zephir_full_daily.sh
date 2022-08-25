@@ -101,20 +101,6 @@ do
   fi
 done
 
-echo "`date`: all files processed, concatenate htrc files" 
-echo "`date`: all files processed, concatenate htrc files" >> $REPORT_FILE
-types=(ic pd_google pd_open_access restricted)
-for type in "${types[@]}"
-do
-  echo "combining $type files"
-  cat zephir_full_daily_??_out_meta_${type}.jsonl | ${zipcommand} -c > meta_${type}_${TODAY}.jsonl.gz
-done
-for type in "${types[@]}" 
-do
-  echo "move combined $type file to transfer directory"
-  mv meta_${type}_${TODAY}.jsonl.gz ${META_DIR}/
-done
-
 echo "`date`: all files processed, concatenate and compress files to zephir_ingested_items.txt.gz" 
 echo "`date`: all files processed, concatenate and compress files to zephir_ingested_items.txt.gz" >> $REPORT_FILE
 cat zephir_full_daily_??_out_zia.txt | ${zipcommand} -c > zephir_ingested_items.txt.gz
@@ -225,8 +211,3 @@ echo "`date`: DONE"
 echo "`date`: DONE" >> $REPORT_FILE
 cat $REPORT_FILE | mailx -s"$SCRIPTNAME report: $TODAY" $EMAIL
 exit
-
-# this has been transcribed where it is needed
-#error_exit:
-#echo "error, message is $message"
-#echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
