@@ -140,8 +140,6 @@ sub main {
   print OUT_RPT "processing file $infile\n";
 
   my $rightsDB = rightsDB->new();
-  my $rights_sub = '';
-  my %RIGHTS;
   if ($rights_db_file) {
     print "using dbm file $rights_db_file for rights determination\n";
     print OUT_RPT "using dbm file $rights_db_file for rights determination\n";
