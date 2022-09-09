@@ -25,7 +25,7 @@ use DB_File;
 use MARC::Record;
 use MARC::Batch;
 use MARC::Record::MiJ;
-#use MARC::File::XML(BinaryEncoding => 'utf8');
+use MARC::File::XML(BinaryEncoding => 'utf8');
 
 use bib_rights;
 use rightsDB;
