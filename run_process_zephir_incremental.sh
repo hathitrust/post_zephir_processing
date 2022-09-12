@@ -1,18 +1,7 @@
 ROOTDIR="$(cd $( dirname "${BASH_SOURCE[0]}" ) && pwd )"
 
 source $ROOTDIR/config/.env
-if [ -x "$(command -v pigz)" ]; then
-  zipcommand=pigz
-else
-  zipcommand=gzip
-fi
-if [ -x "$(command -v unpigz)" ]; then
-  unzipcommand=unpigz
-else
-  unzipcommand=gunzip
-fi
 
-echo "starting: `date`"
 
 SCRIPTNAME=`basename $0`
 zephir_date=`date --date="yesterday" +%Y-%m-%d`
@@ -21,30 +10,24 @@ TODAY=`date +%Y%m%d`
 today_dash=`date +%Y-%m-%d`
 
 export us_fed_pub_exception_file="/htdata/govdocs/feddocs_oclc_filter/oclcs_removed_from_registry_${today_dash}.txt"
-echo "fed pub exception file set in environment: $us_fed_pub_exception_file"
-
-#moved to the configs
-# HT_WEB_DIR='/htapps/www/sites/www.hathitrust.org/files/hathifiles'
 
 DATADIR=$ROOTDIR/data/zephir
 ARCHIVE=/htapps/archive
-#set ZEPHIR_VUFIND_EXPORT=vufind_incremental_${zephir_date}.json.gz 
 ZEPHIR_VUFIND_EXPORT=ht_bib_export_incr_${zephir_date}.json.gz 
 ZEPHIR_VUFIND_DELETE=vufind_removed_cids_${zephir_date}.txt.gz
 ZEPHIR_GROOVE_INCREMENTAL=groove_incremental_${zephir_date}.tsv.gz
 ZEPHIR_DAILY_TOUCHED=daily_touched_${zephir_date}.tsv.gz
-#set ZEPHIR_GROOVE_FULL=groove_export_${zephir_date}.tsv.gz
 ZEPHIR_VUFIND_DOLL_D=vufind_incremental_${zephir_date}_dollar_dup.txt
 BASENAME=zephir_upd_${YESTERDAY}
 REPORT_FILE=${BASENAME}_report.txt
-echo "basename is $BASENAME"
+
+echo "starting: `date`" > $REPORT_FILE
+echo "basename is $BASENAME" >> $REPORT_FILE
+echo "fed pub exception file set in environment: $us_fed_pub_exception_file" >> $REPORT_FILE
 
 RIGHTS_DBM=$ROOTDIR/tmp/rights_dbm
 
-echo "`date`: zephir incremental extract started" > $REPORT_FILE
-echo "`date`: zephir incremental extract started" 
-
-echo "`date`: retrieve $ZEPHIR_VUFIND_EXPORT"
+echo "`date`: zephir incremental extract started" >> $REPORT_FILE
 echo "`date`: retrieve $ZEPHIR_VUFIND_EXPORT" >> $REPORT_FILE
 
 ftpslib/ftps_zephir_get exports/$ZEPHIR_VUFIND_EXPORT $ZEPHIR_VUFIND_EXPORT
@@ -52,21 +35,17 @@ ftpslib/ftps_zephir_get exports/$ZEPHIR_VUFIND_EXPORT $ZEPHIR_VUFIND_EXPORT
 cmdstatus=$?
 if [ $cmdstatus != "0" ]; then
   message="Problem getting file ${ZEPHIR_VUFIND_EXPORT} from zephir: rc is $cmdstatus"
-  echo "error, message is $message"
+  echo "error, message is $message" >> $REPORT_FILE
   echo $message | mailx -s"error in $SCRIPTNAME" $EMAIL 
 fi
 
 if [ ! -e $ZEPHIR_VUFIND_EXPORT ]; then
-  echo "***"
-  echo "file $ZEPHIR_VUFIND_EXPORT not found, exitting"
-  echo "***"
   message="file $ZEPHIR_VUFIND_EXPORT not found, exitting"
-  echo "error, message is $message"
+  echo "error, message is $message" >> $REPORT_FILE
   echo $message | mailx -s"error in $SCRIPTNAME" $EMAIL
   exit
 fi
 
-echo "`date`: retrieve $ZEPHIR_VUFIND_DELETE"
 echo "`date`: retrieve $ZEPHIR_VUFIND_DELETE" >> $REPORT_FILE
 
 ftpslib/ftps_zephir_get exports/$ZEPHIR_VUFIND_DELETE $ZEPHIR_VUFIND_DELETE
@@ -74,30 +53,24 @@ ftpslib/ftps_zephir_get exports/$ZEPHIR_VUFIND_DELETE $ZEPHIR_VUFIND_DELETE
 cmdstatus=$?
 if [ $cmdstatus != "0" ]; then
   message="Problem getting file ${ZEPHIR_VUFIND_DELETE} from zephir: rc is $cmdstatus"
-  echo "error, message is $message"
+  echo "error, message is $message" >> $REPORT_FILE
   echo $message | mailx -s"error in $SCRIPTNAME" $EMAIL
   exit
 fi
 
 if [ ! -e $ZEPHIR_VUFIND_DELETE ]; then
-  echo "***"
-  echo "file $ZEPHIR_VUFIND_DELETE not found, exitting"
-  echo "***"
   message="file $ZEPHIR_VUFIND_DELETE not found, exitting"
-  echo "error, message is $message"
+  echo "error, message is $message" >> $REPORT_FILE
   echo $message | mailx -s"error in $SCRIPTNAME" $EMAIL
   exit
 fi
 
-
-echo "`date`: retrieve $ZEPHIR_GROOVE_INCREMENTAL"
 echo "`date`: retrieve $ZEPHIR_GROOVE_INCREMENTAL" >> $REPORT_FILE
 
 ftpslib/ftps_zephir_get exports/$ZEPHIR_GROOVE_INCREMENTAL $ZEPHIR_GROOVE_INCREMENTAL
 
 cmdstatus=$?
 if [ $cmdstatus == "0" ]; then
-  echo "`date`: copy $ZEPHIR_GROOVE_INCREMENTAL to rootdir/data/zephir"
   echo "`date`: copy $ZEPHIR_GROOVE_INCREMENTAL to rootdir/data/zephir" >> $REPORT_FILE
   # should go here:
   mv $ZEPHIR_GROOVE_INCREMENTAL /htapps/babel/feed/var/bibrecords/
@@ -107,14 +80,12 @@ else
   echo "***" >> $REPORT_FILE
 fi
 
-echo "`date`: retrieve $ZEPHIR_DAILY_TOUCHED"
 echo "`date`: retrieve $ZEPHIR_DAILY_TOUCHED" >> $REPORT_FILE
 
 ftpslib/ftps_zephir_get exports/$ZEPHIR_DAILY_TOUCHED $ZEPHIR_DAILY_TOUCHED
 
 cmdstatus=$?
 if [ $cmdstatus == "0" ]; then
-  echo "`date`: copy $ZEPHIR_DAILY_TOUCHED to /htapps/babel/feed/var/bibrecords"
   echo "`date`: copy $ZEPHIR_DAILY_TOUCHED to /htapps/babel/feed/var/bibrecords" >> $REPORT_FILE
   mv $ZEPHIR_DAILY_TOUCHED /htapps/babel/feed/var/bibrecords
 else 
@@ -123,31 +94,27 @@ else
   echo "***" >> $REPORT_FILE
 fi
 
-echo "`date`: dump the rights db to a dbm file"
 echo "`date`: dump the rights db to a dbm file" >> $REPORT_FILE
 $ROOTDIR/bld_rights_db.pl -x $RIGHTS_DBM
 
-echo "`date`: processing file $ZEPHIR_VUFIND_EXPORT"
 echo "`date`: processing file $ZEPHIR_VUFIND_EXPORT" >> $REPORT_FILE
 $ROOTDIR/postZephir.pm -i $ZEPHIR_VUFIND_EXPORT -o ${BASENAME} -r ${BASENAME}.rights -d -f $RIGHTS_DBM > ${BASENAME}_stderr 
 tail -50 ${BASENAME}_rpt.txt >> $REPORT_FILE
 
 zcat $ZEPHIR_VUFIND_DELETE > ${BASENAME}_zephir_delete.txt
 sort -u ${BASENAME}_zephir_delete.txt ${BASENAME}_delete.txt -o ${BASENAME}_all_delete.txt
-$zipcommand ${BASENAME}_all_delete.txt
+gzip ${BASENAME}_all_delete.txt
 
-echo "`date`: copy rights file ${BASENAME}.rights to /htapps/babel/feed/var/rights"
 echo "`date`: copy rights file ${BASENAME}.rights to /htapps/babel/feed/var/rights" >> $REPORT_FILE
 mv ${BASENAME}.rights /htapps/babel/feed/var/rights 
 
-echo "`date`: compress json file and send to hathitrust solr server"
 echo "`date`: compress json file and send to hathitrust solr server" >> $REPORT_FILE
-$zipcommand -n -f ${BASENAME}.json
+gzip -n -f ${BASENAME}.json
 
 cp ${BASENAME}.json.gz /htsolr/catalog/prep
 cmdstatus=$?
 if [ $cmdstatus != "0" ]; then
-  message="Problem transferring file ${BASENAME}.json.gz to beeftea-2: rc is $cmdstatus"
+  message="Problem transferring file ${BASENAME}.json.gz to /htsolr/catalog/prep: rc is $cmdstatus"
   echo $message >> $REPORT_FILE
   exit
 fi
@@ -155,7 +122,6 @@ fi
 # copy to ht archive directory
 cp ${BASENAME}.json.gz  ${ARCHIVE}/catalog/
 
-echo "`date`: send combined delete file to hathitrust solr server as ${BASENAME}_delete.txt.gz"
 echo "`date`: send combined delete file to hathitrust solr server as ${BASENAME}_delete.txt.gz" >> $REPORT_FILE
 
 cp ${BASENAME}_all_delete.txt.gz /htsolr/catalog/prep/${BASENAME}_delete.txt.gz
@@ -166,10 +132,9 @@ if [ $cmdstatus != "0" ]; then
   exit
 fi
 
-echo "`date`: compress dollar dup files and send to zephir"
 echo "`date`: compress dollar dup files and send to zephir" >> $REPORT_FILE
 mv ${BASENAME}_dollar_dup.txt $ZEPHIR_VUFIND_DOLL_D
-$zipcommand -n -f $ZEPHIR_VUFIND_DOLL_D
+gzip -n -f $ZEPHIR_VUFIND_DOLL_D
 ftpslib/ftps_zephir_send ${ZEPHIR_VUFIND_DOLL_D}.gz 
 
 cmdstatus=$?
@@ -198,13 +163,10 @@ else
 
 fi
 
-echo "DONE `date`"
 echo "DONE `date`" >> $REPORT_FILE
 cat $REPORT_FILE | mailx -s"$SCRIPTNAME report: $TODAY" $EMAIL
 
 echo "copy rights debug file to mdp_govdocs directory" >> $REPORT_FILE
 # todo: why? what uses debug_current?
 # cat ${BASENAME}.rights.debug >> $ROOTDIR/data/zephir/debug_current.txt
-
-
 exit
