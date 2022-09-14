@@ -12,7 +12,9 @@ else
   unzipcommand=gunzip
 fi
 
-echo "starting: `date`"
+REPORT_FILE=$ZEPHIR_DATA/zephir_full_daily_report.txt
+
+echo "starting: `date`" > $REPORT_FILE
 
 SCRIPTNAME=`basename $0`
 zephir_date=`date --date="yesterday" +%Y-%m-%d`
@@ -21,59 +23,53 @@ TODAY=`date +%Y%m%d`
 
 today_dash=`date +%Y-%m-%d`
 us_fed_pub_exception_file=/htdata/govdocs/feddocs_oclc_filter/oclcs_removed_from_registry_${today_dash}.txt
-echo "fed pub exception file set in environment: $us_fed_pub_exception_file"
+echo "fed pub exception file set in environment: $us_fed_pub_exception_file" >> $REPORT_FILE
 
 # File from zephir contains 6060217 record (2013-10-21)
 SPLITCOUNT=1000000
 
 ZEPHIR_VUFIND_EXPORT=ht_bib_export_full_${zephir_date}.json.gz
 ZEPHIR_GROOVE_EXPORT=groove_export_${zephir_date}.tsv.gz
-REPORT_FILE=$ZEPHIR_DATA/zephir_full_daily_report.txt
 
-echo "basename is zephir_full_daily"
+echo "basename is zephir_full_daily" >> $REPORT_FILE
 
 RIGHTS_DBM=$ROOTDIR/tmp/rights_dbm
 
 echo "`date`: zephir full extract started" > $REPORT_FILE
-echo "`date`: zephir full extract started" 
 
 echo "`date`: retrieve zephir files: groove_export_${zephir_date}.tsv.gz" >> $REPORT_FILE
-echo "`date`: retrieve zephir files: $ZEPHIR_GROOVE_EXPORT"
 
 ftpslib/ftps_zephir_get exports/$ZEPHIR_GROOVE_EXPORT $ZEPHIR_GROOVE_EXPORT
 if [ ! -e $ZEPHIR_GROOVE_EXPORT ]; then
-  echo "***"
-  echo "file $ZEPHIR_GROOVE_EXPORT not found, exiting"
-  echo "***"
+  echo "***" >> $REPORT_FILE
+  echo "file $ZEPHIR_GROOVE_EXPORT not found, exiting" >> $REPORT_FILE
+  echo "***" >> $REPORT_FILE
   exit
 fi
 
 mv $ZEPHIR_GROOVE_EXPORT /htapps/babel/feed/var/bibrecords/groove_full.tsv.gz
 
 echo "*** retrieve full zephir vufind extract" >> $REPORT_FILE
-echo "*** retrieve full zephir vufind extract"
 
 ftpslib/ftps_zephir_get exports/$ZEPHIR_VUFIND_EXPORT $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT
 if [ ! -e $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT ]; then
-  echo "***"
-  echo "file $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT not found, exitting"
-  echo "***"
+  echo "***" >> $REPORT_FILE
+  echo "file $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT not found, exitting" >> $REPORT_FILE
+  echo "***" >> $REPORT_FILE
   exit
 fi
 
-echo "*** dump the rights db to a dbm file"
+echo "*** dump the rights db to a dbm file" >> $REPORT_FILE
 $ROOTDIR/bld_rights_db.pl -x $RIGHTS_DBM
 
 # split the json file 
-echo "*** split the json file"
 rm -f zephir_full_daily_??
-echo input file is $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT
+echo input file is $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT >> $REPORT_FILE
 ls -l $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT
 
 $unzipcommand -c $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT | split -l $SPLITCOUNT - zephir_full_daily_
 
 file_list=`ls zephir_full_daily_??`
-echo "file_list: $file_list"
 
 for file in $file_list; do
   echo "`date`: processing file $file"
@@ -101,60 +97,50 @@ do
   fi
 done
 
-echo "`date`: all files processed, concatenate and compress files to zephir_ingested_items.txt.gz" 
 echo "`date`: all files processed, concatenate and compress files to zephir_ingested_items.txt.gz" >> $REPORT_FILE
 cat zephir_full_daily_??_out_zia.txt | ${zipcommand} -c > zephir_ingested_items.txt.gz
 cmdstatus=$?
 if [ $cmdstatus != "0" ]; then
   message="Problem concatenating files: rc is $cmdstatus"
-  echo "error, message is $message"
+  echo "error, message is $message" >> $REPORT_FILE
   echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
 fi
 echo "`zcat zephir_ingested_items.txt.gz | wc -l` lines in zephir ingested items file" >> $REPORT_FILE
-cp zephir_ingested_items.txt.gz /htapps/babel/feed/var/bibrecords
-mv zephir_ingested_items.txt.gz $DATA_ROOT 
+mv zephir_ingested_items.txt.gz /htapps/babel/feed/var/bibrecords
 
 DAY=`date +%d`
 if [ $DAY == "01" ]; then
-  echo "First day of month--prepare and deliver monthly output"
   echo "First day of month--prepare and deliver monthly output" >> $REPORT_FILE
 
-  echo "`date`: all files processed, concatenate and compress vufind json files to zephir_full_${YESTERDAY}_vufind.json.gz" 
   echo "`date`: all files processed, concatenate and compress vufind json files to zephir_full_${YESTERDAY}_vufind.json.gz" >> $REPORT_FILE
   cat zephir_full_daily_??_out.json | ${zipcommand} -c > zephir_full_${YESTERDAY}_vufind.json.gz
   cmdstatus=$?
   if [ $cmdstatus != "0" ]; then
     message="Problem concatenating vufind json files: rc is $cmdstatus"
-    echo "error, message is $message"
+    echo "error, message is $message" >> $REPORT_FILE
     echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
   fi
-  cp zephir_full_${YESTERDAY}_vufind.json.gz $ZEPHIR_DATA/full/zephir_full_${YESTERDAY}_vufind.json.gz
   echo "`date`: sending full file to hathi trust catalog solr server" >> $REPORT_FILE
   cp ${ZEPHIR_DATA}/full/zephir_full_${YESTERDAY}_vufind.json.gz /htsolr/catalog/prep 
   cmdstatus=$?
   if [ $cmdstatus != "0" ]; then
-    message="Problem transferring file to beeftea-2: rc is $cmdstatus"
-    #goto error_exit
-    echo "error, message is $message"
+    message="Problem transferring file to htsolr/catalog/prep is $cmdstatus"
+    echo "error, message is $message" >> $REPORT_FILE
     echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
   fi
-  echo "`date`: copy full file to value storage govdocs folder" >> $REPORT_FILE
-  cp zephir_full_${YESTERDAY}_vufind.json.gz  /htdata/govdocs/zephir/
-  cp zephir_full_${YESTERDAY}_vufind.json.gz  $ZEPHIR_ARCHIVE/
-  cp zephir_full_${YESTERDAY}_vufind.json.gz /htapps/archive/catalog/
+  echo "`date`: mv full file to catalog archive" >> $REPORT_FILE
+  mv zephir_full_${YESTERDAY}_vufind.json.gz /htapps/archive/catalog/
 
-  echo "`date`: all files processed, concatenate rights files to zephir_full_${YESTERDAY}.rights"
   echo "`date`: all files processed, concatenate rights files to zephir_full_${YESTERDAY}.rights" >> $REPORT_FILE
   cat zephir_full_daily_??.rights > zephir_full_${YESTERDAY}.rights 
   cmdstatus=$?
   if [ $cmdstatus != "0" ]; then
     message="Problem concatenating rights files: rc is $cmdstatus"
-    echo "error, message is $message"
+    echo "error, message is $message" >> $REPORT_FILE
     echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
   fi
-  cp zephir_full_${YESTERDAY}.rights /htapps/babel/feed/var/rights/
+  mv zephir_full_${YESTERDAY}.rights /htapps/babel/feed/var/rights/
   
-  echo "`date`: all files processed, concatenate rights debug files to zephir_full_${YESTERDAY}.rights.debug"
   echo "`date`: all files processed, concatenate rights debug files to zephir_full_${YESTERDAY}.rights.debug" >> $REPORT_FILE
   cat zephir_full_daily_??.rights.debug > zephir_full_${YESTERDAY}.rights.debug 
   cmdstatus=$?
@@ -164,20 +150,17 @@ if [ $DAY == "01" ]; then
     echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
   fi
   
-  echo "`date`: all files processed, concatenate rights chg files to zephir_full_${YESTERDAY}.rights.tsv" 
   echo "`date`: all files processed, concatenate rights chg files to zephir_full_${YESTERDAY}.rights.tsv" >> $REPORT_FILE
-  sort -u zephir_full_daily_??.rights_rpt.tsv -o zephir_full_${YESTERDAY}.rights.tsv 
+  sort -u zephir_full_daily_??.rights_rpt.tsv -o zephir_full_${YESTERDAY}.rights_rpt.tsv 
   cmdstatus=$?
   if [ $cmdstatus != "0" ]; then
     message="Problem sorting rights report files: rc is $cmdstatus"
-    #goto error_exit
-    echo "error, message is $message"
+    echo "error, message is $message" >> $REPORT_FILE
     echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
   fi
-  cp zephir_full_${YESTERDAY}.rights.tsv $ZEPHIR_DATA/full/
+  mv zephir_full_${YESTERDAY}.rights_rpt.tsv $ZEPHIR_DATA/full/
 fi
 
-echo "`date`: all files processed, concatenate report files to zephir_full_daily_rpt.txt" 
 echo "`date`: all files processed, concatenate report files to zephir_full_daily_rpt.txt" >> $REPORT_FILE
 cat zephir_full_daily_??_out_rpt.txt > zephir_full_daily_rpt.txt 
 cmdstatus=$?
@@ -186,9 +169,8 @@ if [ $cmdstatus != "0" ]; then
   echo "error, message is $message"
   echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
 fi
-cp zephir_full_daily_rpt.txt $ZEPHIR_DATA/full/ 
+mv zephir_full_daily_rpt.txt $ZEPHIR_DATA/full/ 
 
-echo "`date`: cleanup--counts"
 echo "`date`: cleanup--counts" >> $REPORT_FILE
 zephir_count=`$unzipcommand -c $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT | wc -l`
 hathi_catalog_count=`$unzipcommand -c zephir_full_${YESTERDAY}_vufind.json.gz | wc -l`
@@ -198,14 +180,12 @@ echo "`date`: $hathi_catalog_count records in full hathi catalog json file" >> $
 echo "`date`: $hathifiles_count records in full hathifiles extract" >> $REPORT_FILE
 echo >> $REPORT_FILE
 
-echo "`date`: cleanup--remove intermediate files" 
 echo "`date`: cleanup--remove intermediate files" >> $REPORT_FILE
 cat zephir_full_daily_*stderr > stderr.tmp.txt
 rm zephir_full_daily_??
 rm zephir_full_daily_??_*
 rm zephir_full_daily_??.*
 
-echo "`date`: DONE"
 echo "`date`: DONE" >> $REPORT_FILE
 cat $REPORT_FILE | mailx -s"$SCRIPTNAME report: $TODAY" $EMAIL
 exit
