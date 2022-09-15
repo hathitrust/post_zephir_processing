@@ -41,7 +41,6 @@ Data Out
 * `zephir_upd_YYYYMMDD.json.gz` will be sent to /htsolr/catalog/prep for [catalog indexing](https://github.com/hathitrust/hathitrust_catalog_indexer)
 * Updated bibliographic records - used by https://github.com/hathitrust/feed_internal/blob/master/feed.daily/02_get_bibrecords.pl to update the feed_zephir_items table on a daily basis. Could place directly in /htapps/babel/feed/var/bibrecords and remove the scp logic in `02_get_bibrecords.pl`, or just have `02_get_bibrecords.pl` call `ftps_zephir_get` directly: `daily_touched_YYYY-MM-DD.txt.gz` and `groove_incremental_YYYY-MM-DD.tsv.gz` (Retrieved with `ftps_zephir_get`.)  `daily_touched*.txt.gz` and `groove_incremental*.tsv.gz` will be placed in /htapps/babel/feed/var/bibrecords
 * `zephir_oai_upd_YYYYMMDD_oaimarc_seqnum.xml` currently going to /htdev/htdata/oai. Soon to be deprecated (2022-06-20).
-* `zephir_ingested_items.txt.gz` - copied to `/htapps/babel/feed/var/bibrecords`. Used by https://github.com/hathitrust/feed_internal/blob/master/feed.monthly/zephir_diff.pl to refresh the full `feed_zephir_items` table on a monthly basis.
 * `zephir_full_daily_rpt.txt` Does anyone need this?
 
 Perl script dependencies
@@ -67,7 +66,7 @@ run_zephir_full_daily.sh (daily, and monthly)
 
 Why?
 ----
-When run daily, mostly for HTRC purposes? 
+Previously generated the HTRC datasets. All that remains is the zephir_ingested_items and bib rights.
 
 Data In
 -------
@@ -84,6 +83,7 @@ Data Out
 * `zephir_full_${YESTERDAY}.rights.debug`, doesn't appear to be used
 * `zephir_full_daily_rpt.txt`moved to ../data/full/
 * `zephir_full_${YESTERDAY}.rights_rpt.tsv moved to ./data/full/
+* `zephir_ingested_items.txt.gz` - copied to `/htapps/babel/feed/var/bibrecords`. Used by https://github.com/hathitrust/feed_internal/blob/master/feed.monthly/zephir_diff.pl to refresh the full `feed_zephir_items` table on a monthly basis.
 
 Perl script dependencies
 ------------------------
