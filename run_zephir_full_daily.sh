@@ -184,6 +184,12 @@ rm zephir_full_daily_??
 rm zephir_full_daily_??_*
 rm zephir_full_daily_??.*
 
+# Let's not keep the full ht_bib_export_full around if we don't need it
+# Might not need the monthlies either, but this is a start
+if [ $DAY != "01" ]; then
+  rm $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT
+fi
+  
 echo "`date`: DONE" >> $REPORT_FILE
 cat $REPORT_FILE | mailx -s"$SCRIPTNAME report: $TODAY" $EMAIL
 exit
