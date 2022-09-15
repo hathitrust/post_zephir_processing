@@ -124,7 +124,7 @@ cp ${BASENAME}.json.gz  ${ARCHIVE}/catalog/
 
 echo "`date`: send combined delete file to hathitrust solr server as ${BASENAME}_delete.txt.gz" >> $REPORT_FILE
 
-cp ${BASENAME}_all_delete.txt.gz /htsolr/catalog/prep/${BASENAME}_delete.txt.gz
+mv ${BASENAME}_all_delete.txt.gz /htsolr/catalog/prep/${BASENAME}_delete.txt.gz
 cmdstatus=$?
 if [ $cmdstatus != "0" ]; then
   message="Problem transferring file $ZEPHIR_VUFIND_DELETE to /htsolr/catalog/prep: rc is $cmdstatus"
@@ -160,8 +160,10 @@ else
   
   # process full zephir file to create file of ingested items
   $ROOTDIR/run_zephir_full_daily.sh
-
 fi
+
+# This should have already been copied to the archive/catalog
+rm ${BASENAME}.json.gz
 
 echo "DONE `date`" >> $REPORT_FILE
 cat $REPORT_FILE | mailx -s"$SCRIPTNAME report: $TODAY" $EMAIL
