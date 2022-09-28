@@ -7,8 +7,7 @@ no strict 'subs';
 use DBI;
 #use Data::Dumper;
 use File::Basename;
-use lib dirname(__FILE__);
-require 'config/config.pl';
+use YAML;
 
 sub new {
   my $class = shift;
@@ -17,12 +16,8 @@ sub new {
   my $self;
 
   # config
-  # my %config = do 'rightsDB_config.pl';
-  my %config = ( user => get_rights_user(),
-                 password => get_rights_password(),
-                 hostname => get_rights_host(),
-                 dbname => get_rights_db());
-
+  my $config_path = dirname(__FILE__) . '/config/database.yml';
+  my %config = %{ YAML::LoadFile($config_path) };
   # globals
   my $sdr_dbh = ConnectToSdrDb($config{user}, $config{password}, $config{hostname}, $config{dbname});
   my $sdr_sth = InitSdrSth($sdr_dbh);
