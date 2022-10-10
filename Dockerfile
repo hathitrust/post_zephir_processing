@@ -1,30 +1,32 @@
 FROM perl:5.34
 
-WORKDIR /usr/src/app
-
 RUN cpanm -n  \
-  YAML \
-  JSON::XS \
-  URI::Escape \
-  LWP::Simple \
-  MARC::Record \
-  MARC::Batch \
-  MARC::Record::MiJ \
-  MARC::File::XML \
-  Exporter \
-  Sys::Hostname \
-  DBI \
   Data::Dumper \
-  MARC \
-  MARC::Record::MiJ \
-  MARC::File::XML \
+  DBD::mysql \
   DB_File \
+  DBI \
+  Devel::Cover \
+  Devel::Cover::Report::Coveralls \
+  Exporter \
+  File::Slurp \
+  JSON::XS \
   LWP::Simple \
-  XML::LibXML \
-  XML::LibXSLT \
+  MARC \
+  MARC::Batch \
+  MARC::File::XML \
+  MARC::Record \
+  MARC::Record::MiJ \
+  Sys::Hostname \
   Test::More \
   Test::Output \
-  DBD::mysql \
-  File::Slurp \
-  Data::Dumper \
-  Devel::Cover
+  URI::Escape \
+  XML::LibXML \
+  XML::LibXSLT \
+  YAML
+
+RUN apt-get update && apt-get install -y netcat
+
+COPY . /usr/src/app
+WORKDIR /usr/src/app
+
+CMD run_process_zephir_incremental.sh
