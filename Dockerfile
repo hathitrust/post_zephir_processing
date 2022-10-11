@@ -24,9 +24,15 @@ RUN cpanm -n  \
   XML::LibXSLT \
   YAML
 
-RUN apt-get update && apt-get install -y netcat
+RUN apt-get update && apt-get install -y \
+  bsd-mailx \
+  msmtp \
+  netcat \
+  pigz
 
-COPY . /usr/src/app
-WORKDIR /usr/src/app
+ENV ROOTDIR /usr/src/app
+
+COPY . $ROOTDIR
+WORKDIR $ROOTDIR
 
 CMD run_process_zephir_incremental.sh

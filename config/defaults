@@ -1,0 +1,31 @@
+#!/bin/bash
+
+export DATA_ROOT=${DATA_ROOT:-$ROOTDIR/data}
+export TMPDIR=${TMPDIR:-/tmp}
+
+# We write a lot of reports no one reads
+export REPORTS=${REPORTS:-$DATA_ROOT/reports}
+
+# formerly /aleph-prep/zephir-data
+export ZEPHIR_DATA=${ZEPHIR_DATA:-$DATA_ROOT/zephir}
+export RIGHTS_DATA=${RIGHTS_DATA:-$DATA_ROOT/zephir}
+export FEDDOCS_HOME=${FEDDOCS_HOME:-$DATA_ROOT/govdocs}
+
+# Location of oai output
+export DATADIR_OAI=${DATADIR_OAI:-$DATA_ROOT/oai}
+
+# The person getting the emails
+export EMAIL=${EMAIL:-nobody@default.invalid}
+
+# Rights database dump location
+export RIGHTS_DBM=${RIGHTS_DBM:-$DATA_ROOT/rights_dbm}
+
+# Destinations for generated data
+export INGEST_BIBRECORDS=${INGEST_BIBRECORDS:-$DATA_ROOT/ingest_bibrecords}
+export RIGHTS_DIR=${RIGHTS_DIR:-$DATA_ROOT/rights}
+export CATALOG_PREP=${CATALOG_PREP:-$DATA_ROOT/catalog_prep}
+export CATALOG_ARCHIVE=${CATALOG_ARCHIVE:-$DATAROOT/catalog_archive}
+
+for dir in $TMPDIR $DATA_ROOT $ZEPHIR_DATA $RIGHTS_DATA $DATADIR_OAI $INGEST_BIBRECORDS $RIGHTS_DIR $CATALOG_PREP $CATALOG_ARCHIVE;
+  do mkdir -pv $dir;
+done

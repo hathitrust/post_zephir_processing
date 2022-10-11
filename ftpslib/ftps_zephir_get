@@ -1,10 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 
-# because curl -n finds the .netrc in the HOME directory
-r=`dirname $0`
-rootdir=`cd $r && pwd`
-
-conf=$rootdir/../config/.netrc
+conf=$ROOTDIR/config/.netrc
 
 remote_file=$1
 local_file=$2

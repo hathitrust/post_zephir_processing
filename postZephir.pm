@@ -1,12 +1,9 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 package postZephir;
 
 use open qw( :encoding(UTF-8) :std );
 use strict;
-#use local::lib "$FindBin::Bin";
-#use lib "$FindBin::Bin/lib";
-#BEGIN {push @INC, '.'}
 use File::Basename;
 BEGIN {push @INC, dirname(__FILE__)}
 no strict 'refs';
@@ -32,7 +29,7 @@ use rightsDB;
 
 
 # build mapping of collection to sysnum prefixes (coll => sdr_prefix)
-my $sdrnum_prefix_map = load_prefix_map("data/sdr_num_prefix_map.tsv");
+my $sdrnum_prefix_map = load_prefix_map("$ENV{ROOTDIR}/data/sdr_num_prefix_map.tsv");
 
 # lifted from main because they need to be global (:
 my $jp = new JSON::XS;
@@ -467,11 +464,11 @@ sub main {
       };
     
       my $sdr_source = lc($collection);
-      $source eq 'MiU' and $sdr_source = 'miu';
+      lc($source) eq 'miu' and $sdr_source = 'miu';
       $sdr_num = $sdr_list->{$sdr_source} or do {
         $no_sdr_num++;
         print OUT_RPT "$print_id: no sdr num for source $source ($sdr_source)\n"; 
-        print STDERR "$print_id: no sdr num for source $source ($sdr_source)\n"; 
+        #        print STDERR "$print_id: no sdr num for source $source ($sdr_source)\n"; 
         print OUT_RPT Dumper($sdr_list);
       };
 

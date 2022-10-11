@@ -340,7 +340,6 @@ sub get_bib_info {
   my $field; 
   
   my  $bi = {};
-  my $field;
   my ($f_imprint);
 
   $bi->{bib_fmt} = getBibFmt($bib_key, $bib);

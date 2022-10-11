@@ -99,6 +99,9 @@ Bash script dependencies
 
 Production Setup
 =====
+
+(TODO: reference setup in k8s)
+
 Fill out the config/.env and config/.netrc files. Replace the contents of config/config.pl with correct credentials.
 
 ```bash

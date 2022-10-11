@@ -1,11 +1,6 @@
-#!/bin/sh 
+#!/bin/bash 
 
-# because curl needs the .netrc
-r=`dirname $0`
-rootdir=`cd $r && pwd`
-dir=$1
-
-conf=$rootdir/../config/.netrc
+conf=$ROOTDIR/config/.netrc
 SERVER=ftps.cdlib.org
 #set SERVER=ftps-stg.cdlib.org
 

@@ -1,10 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 
-# because curl -n finds the .netrc in the HOME directory
-r=`dirname $0`
-rootdir=`cd $r && pwd`
-echo "ftps_zephir_send's rootdir: $rootdir"
-conf=$rootdir/../config/.netrc
+conf=$ROOTDIR/config/.netrc
+
 
 if [ "$#" -eq "1" ]; then 
   infile=$1
@@ -14,6 +11,11 @@ elif [ "$#" -eq "2" ]; then
   outfile=$2
 else
   echo "usage: $0 infile [outfile]"
+  exit 1
+fi
+
+if [[ -v NOSEND ]]; then
+  echo "NOSEND is set; not sending $infile to zephir"
   exit
 fi
 
