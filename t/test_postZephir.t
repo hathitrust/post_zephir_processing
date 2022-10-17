@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 use strict;
 use warnings;
@@ -175,7 +175,7 @@ subtest "check_bib()" => sub {
 };
 
 subtest "load_prefix_map" => sub {
-  my $mapping = postZephir::load_prefix_map("data/sdr_num_prefix_map.tsv");
+  my $mapping = postZephir::load_prefix_map("$ENV{ROOTDIR}/data/sdr_num_prefix_map.tsv");
   is($mapping->{'innc'}, 'nnc', 'loads the prefix mapping');
 };
 

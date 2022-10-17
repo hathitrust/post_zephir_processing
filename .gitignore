@@ -18,8 +18,8 @@ local*
 .bundle
 *.tmp
 *.tsv
-test_*
 compare_*
 *.jsonl
 *.json
 t/fixtures/rights_dbm
+cover_db

@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 use File::Basename;
 use lib dirname(__FILE__);
 use DB_File;

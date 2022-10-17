@@ -10,6 +10,26 @@ services:
       - mariadb
     environment:
       DB_CONNECTION_STRING: "mysql2://ht_rights:ht_rights@mariadb/ht"
+    command:
+      - /bin/bash
+
+  test:
+    build: .
+    volumes:
+      - .:/usr/src/app
+    depends_on:
+      - mariadb
+    environment:
+      - DB_CONNECTION_STRING="mysql2://ht_rights:ht_rights@mariadb/ht"
+      # pass through info needed by coveralls uploader
+      - GITHUB_TOKEN
+      - GITHUB_RUN_ID
+      - GITHUB_EVENT_TOKEN
+      - GITHUB_EVENT_PATH
+      - GITHUB_SHA
+      - GITHUB_REF
+      - GITHUB_ACTIONS
+    command: bin/wait-for mariadb:3306 -- prove
 
   mariadb:
     image: ghcr.io/hathitrust/db-image:latest

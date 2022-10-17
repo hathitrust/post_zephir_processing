@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: hathitrust/github_actions/build@v1
         with:
-          dockerfile: Dockerfile.prod
+          dockerfile: Dockerfile
           image: ghcr.io/hathitrust/post_zephir_processing-unstable
           tag: ${{ github.event.inputs.tag }}
           push_latest: false

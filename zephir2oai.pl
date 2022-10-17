@@ -1,10 +1,7 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 use open qw( :encoding(UTF-8) :std );
 use strict;
-use local::lib "$FindBin::Bin";
-use lib "$FindBin::Bin/lib";
-BEGIN {push @INC, '.'}
 use File::Basename;
 BEGIN {push @INC, dirname(__FILE__)}
 use Getopt::Std;

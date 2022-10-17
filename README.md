@@ -97,20 +97,6 @@ Bash script dependencies
 * `ftps_zephir_send`
 
 
-Production Setup
-=====
-Fill out the config/.env and config/.netrc files. Replace the contents of config/config.pl with correct credentials.
-
-```bash
-wget https://cpan.metacpan.org/authors/id/H/HA/HAARG/local-lib-2.000024.tar.gz
-tar -xzf local-lib-2.000024.tar.gz
-cd local-lib-2.000024
-perl Makefile.PL --bootstrap=/l1/govdocs/zcode/local
-make test && make install
-curl -L http://cpanmin.us | perl - App::cpanminus
-cpanm --install-deps .
-```
-
 Running Tests
 ====
 Tests with limited coverage can be run with Docker.
@@ -118,7 +104,7 @@ Tests with limited coverage can be run with Docker.
 ```bash
 docker-compose build
 docker-compose up -d
-docker-compose run --rm pz perl t/test_postZephir.pl
+docker-compose run --rm pz perl t/test_postZephir.t
 ```
 
 For test coverage, replace the previous `docker-compose run` with
