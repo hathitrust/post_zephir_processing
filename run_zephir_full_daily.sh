@@ -108,7 +108,7 @@ if [ $DAY == "01" ]; then
     echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
   fi
   echo "`date`: sending full file to hathi trust catalog solr server" 
-  cp ${ZEPHIR_DATA}/full/zephir_full_${YESTERDAY}_vufind.json.gz $CATALOG_PREP
+  cp zephir_full_${YESTERDAY}_vufind.json.gz $CATALOG_PREP
   cmdstatus=$?
   if [ $cmdstatus != "0" ]; then
     message="Problem transferring file to $CATALOG_PREP is $cmdstatus"
