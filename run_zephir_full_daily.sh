@@ -60,7 +60,8 @@ file_list=`ls zephir_full_daily_??`
 
 for file in $file_list; do
   echo "`date`: processing file $file"
-  `$ROOTDIR/postZephir.pm -z 1 -i $file -o ${file}_out -r ${file}.rights -d -f $RIGHTS_DBM &> ${file}_stderr &`
+  # TODO: wait to finalize until all of these have run?
+  JOB_APP="run_zephir_full_daily" JOB_NAME="$file" `$ROOTDIR/postZephir.pm -z 1 -i $file -o ${file}_out -r ${file}.rights -d -f $RIGHTS_DBM &> ${file}_stderr &`
 done
 
 # wait loop: check last line of each rpt file

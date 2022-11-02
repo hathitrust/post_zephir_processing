@@ -27,6 +27,9 @@ use MARC::File::XML(BinaryEncoding => 'utf8');
 use bib_rights;
 use rightsDB;
 
+use ProgressTracker;
+
+my $tracker = ProgressTracker->new(report_interval => 10000);
 
 # build mapping of collection to sysnum prefixes (coll => sdr_prefix)
 my $sdrnum_prefix_map = load_prefix_map("$ENV{ROOTDIR}/data/sdr_num_prefix_map.tsv");
@@ -235,6 +238,7 @@ sub main {
   my $bib_line;
 
   RECORD:while($bib_line = <IN> ) {
+    $tracker->inc();
     $exit and do {
       print OUT_RPT "exitting due to signal\n";
       last RECORD;
@@ -488,6 +492,7 @@ sub main {
     $outcnt_json++;
   }
     
+  # TODO push all these metrics in prometheus
   print OUT_RPT "-----------------------------------------------\n";
   print OUT_RPT "$bibcnt bib records read\n"; 
   #print OUT_RPT "$dup_cid duplicate bib records for cid skipped\n"; 
@@ -532,6 +537,7 @@ sub main {
 
   print OUT_RPT "DONE\n";
   print STDERR  "DONE\n";
+  $tracker->finalize;
 }
 
 # args: bib record, bib key (001)

@@ -95,7 +95,7 @@ echo "`date`: dump the rights db to a dbm file"
 $ROOTDIR/bld_rights_db.pl -x $RIGHTS_DBM
 
 echo "`date`: processing file $ZEPHIR_VUFIND_EXPORT"
-$ROOTDIR/postZephir.pm -i $ZEPHIR_VUFIND_EXPORT -o ${BASENAME} -r ${BASENAME}.rights -d -f $RIGHTS_DBM > ${BASENAME}_stderr 
+JOB_NAME="run_process_zephir_incremental.sh" $ROOTDIR/postZephir.pm -i $ZEPHIR_VUFIND_EXPORT -o ${BASENAME} -r ${BASENAME}.rights -d -f $RIGHTS_DBM > ${BASENAME}_stderr 
 tail -50 ${BASENAME}_rpt.txt
 
 zcat $ZEPHIR_VUFIND_DELETE > ${BASENAME}_zephir_delete.txt
