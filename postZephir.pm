@@ -148,10 +148,6 @@ sub main {
     $rights_sub = "GetRights";
   }
 
-  # list of collections from ht_rights database
-  my $ht_collections = getCollectionTable($rightsDB);
-   
-
   my $br = bib_rights->new();
 
   my $exit = 0;
@@ -328,22 +324,6 @@ sub main {
         $zia_cnt++;
       };
 
-      # Only used for reporting
-      my $responsible_entity_code = $ht_collections->{$collection}->{responsible_entity_code} or do {
-        print OUT_RPT "$htid: no responsible entity for collection $collection in ht_collections\n";
-        $no_resp_ent++;
-      };
-      # Only used for reporting
-      my $content_provider_code = $ht_collections->{$collection}->{content_provider_code} or do {
-        print OUT_RPT "$htid: no content provider for collection $collection in ht_collections\n";
-        $no_cont_prov++;
-      };
-      # Only used for reporting 
-      my $access_profile = $rightsDB->determineAccessProfile($collection, $digitization_source) or do {
-        print OUT_RPT "$htid: can't determine access profile fo collection '$collection' and dig source '$digitization_source'\n";
-        $no_access_profile++;
-      };
-     
       ######################### 
       # rights processing
 
@@ -478,9 +458,6 @@ sub main {
   print OUT_RPT "$change_out_cnt changed bib records written to change file\n"; 
   print OUT_RPT "$suppressed_974 suppressed 974 fieids ignored\n";
   print OUT_RPT "$no_974 no unsuppressed 974 fields in record, skipped\n";
-  print OUT_RPT "$no_resp_ent no responsible entity for collection\n";
-  print OUT_RPT "$no_cont_prov no content provider for collection\n";
-  print OUT_RPT "$no_access_profile can't determine access profile\n";
   print OUT_RPT "$f974_cnt 974 fields processed\n";
   print OUT_RPT "  $zia_cnt zephir ingested item records written\n";
   print OUT_RPT "$outcnt_json json records written hathi catalog\n";
@@ -826,36 +803,6 @@ sub get_hathi_bib_record_solr {
     return 0;
   };
   return $bib_record;
-}
-
-sub getCollectionTable {
-  my $rightsdb = shift;
-  my $table_name = "ht_collections";
-  my $hash = {};
-  my $ref;
-  $ref = $rightsdb->{sdr_dbh}->selectall_arrayref( "SELECT collection, name, inst_id FROM ht.ht_collections, ht.ht_institutions where content_provider_cluster = inst_id");
-  foreach my $row ( @{$ref} ) {
-    my $collection = $$row[0];
-    my $content_provider = $$row[1];
-    my $content_provider_code = $$row[2];
-    $content_provider =~ s/&amp;/&/g;
-    $hash->{$collection} = {
-      'collection' => $collection,
-      'content_provider' => $content_provider,
-      'content_provider_code' => $content_provider_code,
-    };
-  }
-  $ref = $rightsdb->{sdr_dbh}->selectall_arrayref( "SELECT collection, name, inst_id FROM ht.ht_collections, ht.ht_institutions where responsible_entity = inst_id");
-  foreach my $row ( @{$ref} ) {
-    my $collection = $$row[0];
-    my $responsible_entity = $$row[1];
-    my $responsible_entity_code = $$row[2];
-    $responsible_entity =~ s/&amp;/&/g;
-    exists $hash->{$collection} or $hash->{$collection} = { 'collection' => $collection };
-    $hash->{$collection}->{responsible_entity} = $responsible_entity;
-    $hash->{$collection}->{responsible_entity_code} = $responsible_entity_code;
-  }
-  return $hash;
 }
 
 sub get_bib_errors {

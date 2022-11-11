@@ -163,12 +163,6 @@ subtest "check_bib()" => sub {
 
 # get_current_preferred_record_number()
 
-subtest "getCollectionTable()" => sub {
-  my $rightsDB = rightsDB->new();
-  my $collection_table = postZephir::getCollectionTable( $rightsDB );
-  is($collection_table->{"IBC"}->{'content_provider'}, 'Boston College', "getCollectionTable retrieves content_provider_code");
-};
-
 #my %RIGHTS;
 #tie %RIGHTS, "DB_File", "t/fixtures/rights_dbm", O_RDONLY, 0644, $DB_BTREE;
 # TODO: figure out connection to dev maria so this can be tested
