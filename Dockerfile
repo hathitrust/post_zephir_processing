@@ -1,5 +1,11 @@
 FROM perl:5.34
 
+RUN apt-get update && apt-get install -y \
+  bsd-mailx \
+  msmtp \
+  netcat \
+  pigz
+
 RUN cpanm -n  \
   Data::Dumper \
   DBD::mysql \
@@ -9,6 +15,7 @@ RUN cpanm -n  \
   Devel::Cover::Report::Coveralls \
   Exporter \
   File::Slurp \
+  https://github.com/hathitrust/progress_tracker.git@v0.9.0 \
   JSON::XS \
   LWP::Simple \
   MARC \
@@ -23,12 +30,6 @@ RUN cpanm -n  \
   XML::LibXML \
   XML::LibXSLT \
   YAML
-
-RUN apt-get update && apt-get install -y \
-  bsd-mailx \
-  msmtp \
-  netcat \
-  pigz
 
 ENV ROOTDIR /usr/src/app
 

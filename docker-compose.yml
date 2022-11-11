@@ -8,8 +8,10 @@ services:
       - .:/usr/src/app
     depends_on:
       - mariadb
+      - pushgateway
     environment:
       DB_CONNECTION_STRING: "mysql2://ht_rights:ht_rights@mariadb/ht"
+      PUSHGATEWAY: "http://pushgateway:9091"
     command:
       - /bin/bash
 
@@ -19,8 +21,10 @@ services:
       - .:/usr/src/app
     depends_on:
       - mariadb
+      - pushgateway
     environment:
       - DB_CONNECTION_STRING="mysql2://ht_rights:ht_rights@mariadb/ht"
+      - PUSHGATEWAY="http://pushgateway:9091"
       # pass through info needed by coveralls uploader
       - GITHUB_TOKEN
       - GITHUB_RUN_ID
@@ -29,7 +33,7 @@ services:
       - GITHUB_SHA
       - GITHUB_REF
       - GITHUB_ACTIONS
-    command: bin/wait-for mariadb:3306 -- prove
+    command: bin/wait-for mariadb:3306 pushgateway:9091 -- prove
 
   mariadb:
     image: ghcr.io/hathitrust/db-image:latest
@@ -39,3 +43,6 @@ services:
       MYSQL_DATABASE: ht
       MYSQL_USER: ht_rights
       MYSQL_PASSWORD: ht_rights
+
+  pushgateway:
+    image: prom/pushgateway
