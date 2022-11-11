@@ -15,7 +15,7 @@ RUN cpanm -n  \
   Devel::Cover::Report::Coveralls \
   Exporter \
   File::Slurp \
-  https://github.com/hathitrust/progress_tracker.git \
+  https://github.com/hathitrust/progress_tracker.git@v0.9.0 \
   JSON::XS \
   LWP::Simple \
   MARC \

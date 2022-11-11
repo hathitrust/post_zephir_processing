@@ -8,6 +8,7 @@ services:
       - .:/usr/src/app
     depends_on:
       - mariadb
+      - pushgateway
     environment:
       DB_CONNECTION_STRING: "mysql2://ht_rights:ht_rights@mariadb/ht"
       PUSHGATEWAY: "http://pushgateway:9091"
@@ -20,6 +21,7 @@ services:
       - .:/usr/src/app
     depends_on:
       - mariadb
+      - pushgateway
     environment:
       - DB_CONNECTION_STRING="mysql2://ht_rights:ht_rights@mariadb/ht"
       - PUSHGATEWAY="http://pushgateway:9091"
