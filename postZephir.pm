@@ -225,7 +225,6 @@ sub main {
       print OUT_RPT "exitting due to signal\n";
       last RECORD;
     };
-    my $current_preferred_record_number = ''; 	# cached preferred bib record from HT solr
     $bibcnt++;
     $bibcnt % 1000 == 0 and print STDERR "processing bib record $bibcnt\n";
     chomp($bib_line);
@@ -402,15 +401,13 @@ sub main {
         my $db_access = rights_map($db_rights);
         #if ($bib_rights ne $db_rights) {		# attribute changes
         if ($bib_access ne $db_access) {		# access changes
-          if ($current_preferred_record_number eq '') { # already have preferred rec no from solr?
-            $current_preferred_record_number = get_current_preferred_record_number($bib_key);
-          }
           $rights_diff_cnt++;
           print RIGHTS_RPT join("\t", 
             $htid,				# 1
             $bib_key,				# 2
   #          $preferred_record_collection,		# 3	
-            $current_preferred_record_number, 	# 3
+  #          $current_preferred_record_number, 	# 3
+            'current preferred record number omitted', # 3
             $preferred_record_number, 		# 4
             $db_access,				# 5
             $bib_access,				# 6
@@ -749,60 +746,6 @@ sub bib_error {
     print BAD $bib_line, "\n";
     $bad_out_cnt++;
   };
-}
-
-sub get_current_preferred_record_number {
-  my $bib_key = shift;
-  my $hathi_bib_record = get_hathi_bib_record_solr($bib_key) or do {
-    print STDERR "$bib_key: can't get hathi bib record\n";
-    return '';
-  };
-  my $hol_field = $hathi_bib_record->field('HOL') or do {
-    print STDERR "$bib_key: no HOL field in hathi bib record\n";
-    return '';
-  };
-  return $hol_field->as_string('0');
-}
-
-# Only used by get_current_preferred_record_number
-# Which is in turn used to generate the RIGHTS_RPT which run_process_zephir_incremental.sh copies to /htapps/babel/feed/var/rights/
-# run_process_zephir_incremental.sh also calls run_zephir_full_daily.sh which generates
-# zephir_full_<yesterday>.rights.tsv but doesn't do anything with it.
-sub get_hathi_bib_record_solr {
-  my $hathi_bib_key = shift;
-  #my $select = 'http://solr-sdr-catalog.umdl.umich.edu:9033/catalog/select';
-  my $select = 'http://solr-sdr-catalog.umdl.umich.edu:9033/solr/catalog/select';
-  my $q_orig = "id:$hathi_bib_key";
-  my $fields = 'fullrecord';
-  my $pagesize = 1;
-  my $q = uri_escape($q_orig);
-  my $url = "$select?q=$q&rows=$pagesize&start=0&wt=json&json.nl=arrarr&fl=$fields";
-  my $result_raw = get($url) or do {
-    print STDERR "$hathi_bib_key: no solr record, url is $url\n";
-    return 0;
-  };
-  my $result;
-  eval { $result = decode_json($result_raw); };
-  $@ and do {
-    print STDERR "$hathi_bib_key: error decoding json:  $@\n";
-    print STDERR "raw result: $result_raw\n";
-    return 0;
-  };
-  my $total = $result->{response}{numFound};
-  $total != 1 and return 0;
-  my $bib_record;
-  my $bib_xml = $result->{response}{docs}[0]{fullrecord};
-  ($bib_xml =~ tr/\xA0/ /) and do {
-    #print STDERR "$hathi_bib_key: non-breaking space(s) translated to space\n";
-  };
-  eval { $bib_record = MARC::Record->new_from_xml($bib_xml); };
-  $@ and do {
-    print STDERR "problem processing marc xml\n";
-    warn $@;
-    print STDERR "$bib_xml\n";
-    return 0;
-  };
-  return $bib_record;
 }
 
 sub get_bib_errors {
