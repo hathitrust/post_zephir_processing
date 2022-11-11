@@ -22,27 +22,6 @@ is($bib_key, "000000012", 'bib key extraction');
 my ($oclc_num, $sdr_num_hash) = postZephir::process_035($bib, $bib_key);
 is($oclc_num, "604", 'oclc number extraction');
 
-
-# SDR Nums were used for the Hathifiles, and a report that no one actually reads
-subtest "sdr_nums" => sub {
-  my %expected_sdr_nums = (
-            'nbb' => '.990000000120106381',
-            'umlaw' => '.990000000120106381',
-            'nrlf' => 'GLAD84523971-B',
-            'umprivate' => '.990000000120106381',
-            'umbus' => '.990000000120106381',
-            'umdcmp' => '.990000000120106381',
-            'gwla' => '.990000000120106381',
-            'umdb' => '.990000000120106381',
-            'inrlf' => 'GLAD84523971-B'
-          );
-  is($sdr_num_hash->{'nbb'}, $expected_sdr_nums{'nbb'}, 'sdr num hash');
-  is($sdr_num_hash->{'umlaw'}, $expected_sdr_nums{'umlaw'}, 'sdr num hash');
-  is($sdr_num_hash->{'nrlf'}, $expected_sdr_nums{'nrlf'}, 'sdr num hash');
-  is($sdr_num_hash->{'umprivate'}, $expected_sdr_nums{'umprivate'}, 'sdr num hash');
-  is($sdr_num_hash->{'umbus'}, $expected_sdr_nums{'umbus'}, 'sdr num hash');
-};
-
 subtest "get_bib_data()" => sub {
   # pulls strings from specified MARC field
   my $title = postZephir::get_bib_data($bib, '245', 'abc');
@@ -172,11 +151,6 @@ subtest "check_bib()" => sub {
     is(postZephir::get_bib_errors->{"$bib_source:008 contains non-ascii characters, changed to blank"}, 1, "blanks non-ascii in 00* fields");
     is($nonascii->field('008')->as_string, 'non_               _ascii', "blanks non-ascii in 00* fields");
   };
-};
-
-subtest "load_prefix_map" => sub {
-  my $mapping = postZephir::load_prefix_map("$ENV{ROOTDIR}/data/sdr_num_prefix_map.tsv");
-  is($mapping->{'innc'}, 'nnc', 'loads the prefix mapping');
 };
 
 # bib_error()

@@ -31,9 +31,6 @@ use ProgressTracker;
 
 my $tracker = ProgressTracker->new(report_interval => 10000);
 
-# build mapping of collection to sysnum prefixes (coll => sdr_prefix)
-my $sdrnum_prefix_map = load_prefix_map("$ENV{ROOTDIR}/data/sdr_num_prefix_map.tsv");
-
 # lifted from main because they need to be global (:
 my $jp = new JSON::XS;
 $jp->utf8(1);
@@ -154,16 +151,6 @@ sub main {
   # list of collections from ht_rights database
   my $ht_collections = getCollectionTable($rightsDB);
    
-  # read current list of hathitrust collections, add to map if not already set
-  #COLL:foreach my $coll (sort keys (%$ht_collections)) {
-  COLL:foreach my $coll (sort keys (%$ht_collections)) {
-    $coll = lc($coll);
-    exists $sdrnum_prefix_map->{$coll} and do {
-      #print STDERR "$coll: sdr prefix set in program: $sdrnum_prefix_map->{$coll}\n";
-      next COLL;
-    };
-    $sdrnum_prefix_map->{$coll} = $coll;
-  }
 
   my $br = bib_rights->new();
 
@@ -181,7 +168,6 @@ sub main {
   my $bibcnt = 0;
   my $f974_cnt = 0;
   my $outcnt_json = 0;
-  my $no_sdr_num = 0;
   my $dollar_dup_cnt = 0;
   my $rights_cnt = 0;
   my $new_rights_cnt = 0;
@@ -200,7 +186,7 @@ sub main {
 
   my $bib_info;
   my $bib_key;
-  my ($sdr_list, $sdr_num, $lccn, $isbn, $issn, $title, $author, $imprint, $oclc_num);
+  my ($lccn, $isbn, $issn, $title, $author, $imprint, $oclc_num);
   my ($htid, $rights, $description, $sub_library, $collection, $source, $update_date); 
   #my %update_date = ();
   my $rights_diff_cnt = 0;
@@ -278,7 +264,7 @@ sub main {
     # Collect a bunch of fields from the MARC
     check_bib($bib, $bib_key);
     $bib_info = $br->get_bib_info($bib, $bib_key) or print OUT_RPT "$bib_key: can't get bib info\n";
-    ($oclc_num, $sdr_list) = process_035($bib, $bib_key);
+    $oclc_num = process_035($bib, $bib_key);
     $imprint = get_bib_data($bib, "260", 'bc');
     $imprint or do {
       $imprint = get_bib_data($bib, "264#1", 'bc');
@@ -467,15 +453,6 @@ sub main {
         }
       };
     
-      my $sdr_source = lc($collection);
-      lc($source) eq 'miu' and $sdr_source = 'miu';
-      $sdr_num = $sdr_list->{$sdr_source} or do {
-        $no_sdr_num++;
-        print OUT_RPT "$print_id: no sdr num for source $source ($sdr_source)\n"; 
-        #        print STDERR "$print_id: no sdr num for source $source ($sdr_source)\n"; 
-        print OUT_RPT Dumper($sdr_list);
-      };
-
       $f974_cnt++;
       
       my $timestamp = $db_timestamp;
@@ -499,7 +476,6 @@ sub main {
   print OUT_RPT "$bad_skipped_cnt bad bib records skipped\n"; 
   print OUT_RPT "$bad_out_cnt bad bib records written to bad file\n"; 
   print OUT_RPT "$change_out_cnt changed bib records written to change file\n"; 
-  print OUT_RPT "$no_sdr_num no sdr number found in record\n";
   print OUT_RPT "$suppressed_974 suppressed 974 fieids ignored\n";
   print OUT_RPT "$no_974 no unsuppressed 974 fields in record, skipped\n";
   print OUT_RPT "$no_resp_ent no responsible entity for collection\n";
@@ -542,48 +518,16 @@ sub main {
 
 # args: bib record, bib key (001)
 sub process_035 {
-  # return oclc number and hash containing sdr numbers for each source
+  # return oclc number
   my $bib = shift;
   my $bib_key = shift;
   my $oclc_num_hash = {};
-  my $sdr_num_hash = {};
-  my $sdr_num_with_prefix = '';
   my $oclc_num = '';
   my $source = '';
-  #$sdr_num_hash->{'miu'} = $bib_key;	# always set this
   my ($sub_a, $prefix, $num);
   my $sysnum_separator = '';
   F035:foreach my $field ($bib->field('035')) {
     ($sub_a) = $field->as_string('a') or next F035; 
-    ($sdr_num_with_prefix) = $sub_a =~ /^sdr-(.*)/ and do {
-      $sdr_num_with_prefix =~ /^ia-/ and do {
-        $sdr_num_with_prefix = substr($sdr_num_with_prefix, 3);
-      };
-      #print "sdr_num_with_prefix: $sdr_num_with_prefix\n";
-      my $collection_match = 0;
-      foreach my $collection (sort keys %$sdrnum_prefix_map) {
-        my $prefix = $sdrnum_prefix_map->{$collection};
-        #print "pattern: /^$prefix([.a-zA-Z0-9-]+)/\n";
-        $sdr_num_with_prefix =~/^$prefix([.a-zA-Z0-9-]+)/ and do {
-          $num = $1;
-          $num =~ /^-loc/ and do {
-            my $num_save = $num;
-            $num = substr($num, 4);
-          };
-          #print "match, num is $num\n";
-          $collection_match++;
-          if ( exists($sdr_num_hash->{$collection}) ) { 
-            $sdr_num_hash->{$collection} .= ',' . $num; 
-          } else { 
-            $sdr_num_hash->{$collection} = $num; 
-          }
-        };
-      }
-      $collection_match or do {
-        print STDERR join("\t", $bib_key, $sdr_num_with_prefix, "no prefix match"), "\n";
-      };
-      next F035;
-    };
     $sub_a =~ /(\(oco{0,1}lc\)|ocm|ocn)(\d+)/i and do {
       ($oclc_num) = $2;
       $oclc_num_hash->{$oclc_num + 0}++;
@@ -592,8 +536,7 @@ sub process_035 {
     };
   }
   $oclc_num = join(',',sort(keys(%$oclc_num_hash)));
-  #foreach my $source (sort keys %$sdr_num_hash)  { print "$source: $sdr_num_hash->{$source}\n";}
-  return ($oclc_num, $sdr_num_hash);
+  return $oclc_num;
 }
 
 # args: bib record, marc tag, subfields
