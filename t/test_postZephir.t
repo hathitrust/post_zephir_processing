@@ -22,27 +22,6 @@ is($bib_key, "000000012", 'bib key extraction');
 my ($oclc_num, $sdr_num_hash) = postZephir::process_035($bib, $bib_key);
 is($oclc_num, "604", 'oclc number extraction');
 
-
-# SDR Nums were used for the Hathifiles, and a report that no one actually reads
-subtest "sdr_nums" => sub {
-  my %expected_sdr_nums = (
-            'nbb' => '.990000000120106381',
-            'umlaw' => '.990000000120106381',
-            'nrlf' => 'GLAD84523971-B',
-            'umprivate' => '.990000000120106381',
-            'umbus' => '.990000000120106381',
-            'umdcmp' => '.990000000120106381',
-            'gwla' => '.990000000120106381',
-            'umdb' => '.990000000120106381',
-            'inrlf' => 'GLAD84523971-B'
-          );
-  is($sdr_num_hash->{'nbb'}, $expected_sdr_nums{'nbb'}, 'sdr num hash');
-  is($sdr_num_hash->{'umlaw'}, $expected_sdr_nums{'umlaw'}, 'sdr num hash');
-  is($sdr_num_hash->{'nrlf'}, $expected_sdr_nums{'nrlf'}, 'sdr num hash');
-  is($sdr_num_hash->{'umprivate'}, $expected_sdr_nums{'umprivate'}, 'sdr num hash');
-  is($sdr_num_hash->{'umbus'}, $expected_sdr_nums{'umbus'}, 'sdr num hash');
-};
-
 subtest "get_bib_data()" => sub {
   # pulls strings from specified MARC field
   my $title = postZephir::get_bib_data($bib, '245', 'abc');
@@ -174,11 +153,6 @@ subtest "check_bib()" => sub {
   };
 };
 
-subtest "load_prefix_map" => sub {
-  my $mapping = postZephir::load_prefix_map("$ENV{ROOTDIR}/data/sdr_num_prefix_map.tsv");
-  is($mapping->{'innc'}, 'nnc', 'loads the prefix mapping');
-};
-
 # bib_error()
 # Takes bib_source from CAT$a, bib_key, bib_record, error_msg
 # Increments bib_error hash for key: bib_source:error_msg
@@ -188,12 +162,6 @@ subtest "load_prefix_map" => sub {
 # get_hathi_bib_record_solr()
 
 # get_current_preferred_record_number()
-
-subtest "getCollectionTable()" => sub {
-  my $rightsDB = rightsDB->new();
-  my $collection_table = postZephir::getCollectionTable( $rightsDB );
-  is($collection_table->{"IBC"}->{'content_provider'}, 'Boston College', "getCollectionTable retrieves content_provider_code");
-};
 
 #my %RIGHTS;
 #tie %RIGHTS, "DB_File", "t/fixtures/rights_dbm", O_RDONLY, 0644, $DB_BTREE;

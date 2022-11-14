@@ -31,9 +31,6 @@ use ProgressTracker;
 
 my $tracker = ProgressTracker->new(report_interval => 10000);
 
-# build mapping of collection to sysnum prefixes (coll => sdr_prefix)
-my $sdrnum_prefix_map = load_prefix_map("$ENV{ROOTDIR}/data/sdr_num_prefix_map.tsv");
-
 # lifted from main because they need to be global (:
 my $jp = new JSON::XS;
 $jp->utf8(1);
@@ -151,20 +148,6 @@ sub main {
     $rights_sub = "GetRights";
   }
 
-  # list of collections from ht_rights database
-  my $ht_collections = getCollectionTable($rightsDB);
-   
-  # read current list of hathitrust collections, add to map if not already set
-  #COLL:foreach my $coll (sort keys (%$ht_collections)) {
-  COLL:foreach my $coll (sort keys (%$ht_collections)) {
-    $coll = lc($coll);
-    exists $sdrnum_prefix_map->{$coll} and do {
-      #print STDERR "$coll: sdr prefix set in program: $sdrnum_prefix_map->{$coll}\n";
-      next COLL;
-    };
-    $sdrnum_prefix_map->{$coll} = $coll;
-  }
-
   my $br = bib_rights->new();
 
   my $exit = 0;
@@ -181,7 +164,6 @@ sub main {
   my $bibcnt = 0;
   my $f974_cnt = 0;
   my $outcnt_json = 0;
-  my $no_sdr_num = 0;
   my $dollar_dup_cnt = 0;
   my $rights_cnt = 0;
   my $new_rights_cnt = 0;
@@ -200,7 +182,7 @@ sub main {
 
   my $bib_info;
   my $bib_key;
-  my ($sdr_list, $sdr_num, $lccn, $isbn, $issn, $title, $author, $imprint, $oclc_num);
+  my ($lccn, $isbn, $issn, $title, $author, $imprint, $oclc_num);
   my ($htid, $rights, $description, $sub_library, $collection, $source, $update_date); 
   #my %update_date = ();
   my $rights_diff_cnt = 0;
@@ -243,7 +225,6 @@ sub main {
       print OUT_RPT "exitting due to signal\n";
       last RECORD;
     };
-    my $current_preferred_record_number = ''; 	# cached preferred bib record from HT solr
     $bibcnt++;
     $bibcnt % 1000 == 0 and print STDERR "processing bib record $bibcnt\n";
     chomp($bib_line);
@@ -278,7 +259,7 @@ sub main {
     # Collect a bunch of fields from the MARC
     check_bib($bib, $bib_key);
     $bib_info = $br->get_bib_info($bib, $bib_key) or print OUT_RPT "$bib_key: can't get bib info\n";
-    ($oclc_num, $sdr_list) = process_035($bib, $bib_key);
+    $oclc_num = process_035($bib, $bib_key);
     $imprint = get_bib_data($bib, "260", 'bc');
     $imprint or do {
       $imprint = get_bib_data($bib, "264#1", 'bc');
@@ -342,22 +323,6 @@ sub main {
         $zia_cnt++;
       };
 
-      # Only used for reporting
-      my $responsible_entity_code = $ht_collections->{$collection}->{responsible_entity_code} or do {
-        print OUT_RPT "$htid: no responsible entity for collection $collection in ht_collections\n";
-        $no_resp_ent++;
-      };
-      # Only used for reporting
-      my $content_provider_code = $ht_collections->{$collection}->{content_provider_code} or do {
-        print OUT_RPT "$htid: no content provider for collection $collection in ht_collections\n";
-        $no_cont_prov++;
-      };
-      # Only used for reporting 
-      my $access_profile = $rightsDB->determineAccessProfile($collection, $digitization_source) or do {
-        print OUT_RPT "$htid: can't determine access profile fo collection '$collection' and dig source '$digitization_source'\n";
-        $no_access_profile++;
-      };
-     
       ######################### 
       # rights processing
 
@@ -436,15 +401,13 @@ sub main {
         my $db_access = rights_map($db_rights);
         #if ($bib_rights ne $db_rights) {		# attribute changes
         if ($bib_access ne $db_access) {		# access changes
-          if ($current_preferred_record_number eq '') { # already have preferred rec no from solr?
-            $current_preferred_record_number = get_current_preferred_record_number($bib_key);
-          }
           $rights_diff_cnt++;
           print RIGHTS_RPT join("\t", 
             $htid,				# 1
             $bib_key,				# 2
   #          $preferred_record_collection,		# 3	
-            $current_preferred_record_number, 	# 3
+  #          $current_preferred_record_number, 	# 3
+            'current preferred record number omitted', # 3
             $preferred_record_number, 		# 4
             $db_access,				# 5
             $bib_access,				# 6
@@ -467,15 +430,6 @@ sub main {
         }
       };
     
-      my $sdr_source = lc($collection);
-      lc($source) eq 'miu' and $sdr_source = 'miu';
-      $sdr_num = $sdr_list->{$sdr_source} or do {
-        $no_sdr_num++;
-        print OUT_RPT "$print_id: no sdr num for source $source ($sdr_source)\n"; 
-        #        print STDERR "$print_id: no sdr num for source $source ($sdr_source)\n"; 
-        print OUT_RPT Dumper($sdr_list);
-      };
-
       $f974_cnt++;
       
       my $timestamp = $db_timestamp;
@@ -499,12 +453,8 @@ sub main {
   print OUT_RPT "$bad_skipped_cnt bad bib records skipped\n"; 
   print OUT_RPT "$bad_out_cnt bad bib records written to bad file\n"; 
   print OUT_RPT "$change_out_cnt changed bib records written to change file\n"; 
-  print OUT_RPT "$no_sdr_num no sdr number found in record\n";
   print OUT_RPT "$suppressed_974 suppressed 974 fieids ignored\n";
   print OUT_RPT "$no_974 no unsuppressed 974 fields in record, skipped\n";
-  print OUT_RPT "$no_resp_ent no responsible entity for collection\n";
-  print OUT_RPT "$no_cont_prov no content provider for collection\n";
-  print OUT_RPT "$no_access_profile can't determine access profile\n";
   print OUT_RPT "$f974_cnt 974 fields processed\n";
   print OUT_RPT "  $zia_cnt zephir ingested item records written\n";
   print OUT_RPT "$outcnt_json json records written hathi catalog\n";
@@ -542,48 +492,16 @@ sub main {
 
 # args: bib record, bib key (001)
 sub process_035 {
-  # return oclc number and hash containing sdr numbers for each source
+  # return oclc number
   my $bib = shift;
   my $bib_key = shift;
   my $oclc_num_hash = {};
-  my $sdr_num_hash = {};
-  my $sdr_num_with_prefix = '';
   my $oclc_num = '';
   my $source = '';
-  #$sdr_num_hash->{'miu'} = $bib_key;	# always set this
   my ($sub_a, $prefix, $num);
   my $sysnum_separator = '';
   F035:foreach my $field ($bib->field('035')) {
     ($sub_a) = $field->as_string('a') or next F035; 
-    ($sdr_num_with_prefix) = $sub_a =~ /^sdr-(.*)/ and do {
-      $sdr_num_with_prefix =~ /^ia-/ and do {
-        $sdr_num_with_prefix = substr($sdr_num_with_prefix, 3);
-      };
-      #print "sdr_num_with_prefix: $sdr_num_with_prefix\n";
-      my $collection_match = 0;
-      foreach my $collection (sort keys %$sdrnum_prefix_map) {
-        my $prefix = $sdrnum_prefix_map->{$collection};
-        #print "pattern: /^$prefix([.a-zA-Z0-9-]+)/\n";
-        $sdr_num_with_prefix =~/^$prefix([.a-zA-Z0-9-]+)/ and do {
-          $num = $1;
-          $num =~ /^-loc/ and do {
-            my $num_save = $num;
-            $num = substr($num, 4);
-          };
-          #print "match, num is $num\n";
-          $collection_match++;
-          if ( exists($sdr_num_hash->{$collection}) ) { 
-            $sdr_num_hash->{$collection} .= ',' . $num; 
-          } else { 
-            $sdr_num_hash->{$collection} = $num; 
-          }
-        };
-      }
-      $collection_match or do {
-        print STDERR join("\t", $bib_key, $sdr_num_with_prefix, "no prefix match"), "\n";
-      };
-      next F035;
-    };
     $sub_a =~ /(\(oco{0,1}lc\)|ocm|ocn)(\d+)/i and do {
       ($oclc_num) = $2;
       $oclc_num_hash->{$oclc_num + 0}++;
@@ -592,8 +510,7 @@ sub process_035 {
     };
   }
   $oclc_num = join(',',sort(keys(%$oclc_num_hash)));
-  #foreach my $source (sort keys %$sdr_num_hash)  { print "$source: $sdr_num_hash->{$source}\n";}
-  return ($oclc_num, $sdr_num_hash);
+  return $oclc_num;
 }
 
 # args: bib record, marc tag, subfields
@@ -829,90 +746,6 @@ sub bib_error {
     print BAD $bib_line, "\n";
     $bad_out_cnt++;
   };
-}
-
-sub get_current_preferred_record_number {
-  my $bib_key = shift;
-  my $hathi_bib_record = get_hathi_bib_record_solr($bib_key) or do {
-    print STDERR "$bib_key: can't get hathi bib record\n";
-    return '';
-  };
-  my $hol_field = $hathi_bib_record->field('HOL') or do {
-    print STDERR "$bib_key: no HOL field in hathi bib record\n";
-    return '';
-  };
-  return $hol_field->as_string('0');
-}
-
-# Only used by get_current_preferred_record_number
-# Which is in turn used to generate the RIGHTS_RPT which run_process_zephir_incremental.sh copies to /htapps/babel/feed/var/rights/
-# run_process_zephir_incremental.sh also calls run_zephir_full_daily.sh which generates
-# zephir_full_<yesterday>.rights.tsv but doesn't do anything with it.
-sub get_hathi_bib_record_solr {
-  my $hathi_bib_key = shift;
-  #my $select = 'http://solr-sdr-catalog.umdl.umich.edu:9033/catalog/select';
-  my $select = 'http://solr-sdr-catalog.umdl.umich.edu:9033/solr/catalog/select';
-  my $q_orig = "id:$hathi_bib_key";
-  my $fields = 'fullrecord';
-  my $pagesize = 1;
-  my $q = uri_escape($q_orig);
-  my $url = "$select?q=$q&rows=$pagesize&start=0&wt=json&json.nl=arrarr&fl=$fields";
-  my $result_raw = get($url) or do {
-    print STDERR "$hathi_bib_key: no solr record, url is $url\n";
-    return 0;
-  };
-  my $result;
-  eval { $result = decode_json($result_raw); };
-  $@ and do {
-    print STDERR "$hathi_bib_key: error decoding json:  $@\n";
-    print STDERR "raw result: $result_raw\n";
-    return 0;
-  };
-  my $total = $result->{response}{numFound};
-  $total != 1 and return 0;
-  my $bib_record;
-  my $bib_xml = $result->{response}{docs}[0]{fullrecord};
-  ($bib_xml =~ tr/\xA0/ /) and do {
-    #print STDERR "$hathi_bib_key: non-breaking space(s) translated to space\n";
-  };
-  eval { $bib_record = MARC::Record->new_from_xml($bib_xml); };
-  $@ and do {
-    print STDERR "problem processing marc xml\n";
-    warn $@;
-    print STDERR "$bib_xml\n";
-    return 0;
-  };
-  return $bib_record;
-}
-
-sub getCollectionTable {
-  my $rightsdb = shift;
-  my $table_name = "ht_collections";
-  my $hash = {};
-  my $ref;
-  $ref = $rightsdb->{sdr_dbh}->selectall_arrayref( "SELECT collection, name, inst_id FROM ht.ht_collections, ht.ht_institutions where content_provider_cluster = inst_id");
-  foreach my $row ( @{$ref} ) {
-    my $collection = $$row[0];
-    my $content_provider = $$row[1];
-    my $content_provider_code = $$row[2];
-    $content_provider =~ s/&amp;/&/g;
-    $hash->{$collection} = {
-      'collection' => $collection,
-      'content_provider' => $content_provider,
-      'content_provider_code' => $content_provider_code,
-    };
-  }
-  $ref = $rightsdb->{sdr_dbh}->selectall_arrayref( "SELECT collection, name, inst_id FROM ht.ht_collections, ht.ht_institutions where responsible_entity = inst_id");
-  foreach my $row ( @{$ref} ) {
-    my $collection = $$row[0];
-    my $responsible_entity = $$row[1];
-    my $responsible_entity_code = $$row[2];
-    $responsible_entity =~ s/&amp;/&/g;
-    exists $hash->{$collection} or $hash->{$collection} = { 'collection' => $collection };
-    $hash->{$collection}->{responsible_entity} = $responsible_entity;
-    $hash->{$collection}->{responsible_entity_code} = $responsible_entity_code;
-  }
-  return $hash;
 }
 
 sub get_bib_errors {
