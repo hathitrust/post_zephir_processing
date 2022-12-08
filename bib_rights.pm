@@ -78,22 +78,18 @@ sub new {
   $self->{US_CITIES} = \%US_CITIES;
 
   my $us_fed_pub_exceptions = {};
-  $ENV{'us_fed_pub_exception_file'} and do { # us fed pub exception file (file of oclc number of records that shouldn't be considered us fed docs, regardless of 008 coding)
+  $ENV{'us_fed_pub_exception_file'} and do { 
+    # us fed pub exception file (file of oclc number of records that shouldn't be considered us fed docs, regardless of 008 coding)
     my $us_fed_pub_exception_file = $ENV{'us_fed_pub_exception_file'};
-    if (-e $us_fed_pub_exception_file) {
-      # uncoverable branch true
-      open (US_FED_PUB_EXCEPTIONS, "<$us_fed_pub_exception_file") or die "can't open $us_fed_pub_exception_file for input: $!\n";
-      print STDERR "using $us_fed_pub_exception_file for us fed pub exceptions\n";
-      my $exception_count = 0;
-      while (<US_FED_PUB_EXCEPTIONS>) {
-        chomp();
-        $us_fed_pub_exceptions->{$_}++;
-        $exception_count++;
-      }
-      print STDERR "$exception_count oclc numbers in us fed pub exception list\n";
-    } else {
-      print STDERR "us_fed_pub_exception_file set to $us_fed_pub_exception_file, not readable\n";
+    # uncoverable branch true
+    open (US_FED_PUB_EXCEPTIONS, "<$us_fed_pub_exception_file") or die "can't open $us_fed_pub_exception_file for input: $!\n";
+    my $exception_count = 0;
+    while (<US_FED_PUB_EXCEPTIONS>) {
+      chomp();
+      $us_fed_pub_exceptions->{$_}++;
+      $exception_count++;
     }
+    $self->{us_fed_pub_exceptions_size} = $exception_count;
   };
   $self->{us_fed_pub_exceptions} = $us_fed_pub_exceptions;
 

@@ -9,7 +9,7 @@ YESTERDAY=`date --date="yesterday" +%Y%m%d`
 TODAY=`date +%Y%m%d`
 today_dash=`date +%Y-%m-%d`
 
-export us_fed_pub_exception_file="$FEDDOCS_HOME/feddocs_oclc_filter/oclcs_removed_from_registry_${today_dash}.txt"
+export us_fed_pub_exception_file="$FEDDOCS_HOME/feddocs_oclc_filter/oclcs_removed_from_registry.txt"
 
 DATADIR=$ROOTDIR/data/zephir
 ZEPHIR_VUFIND_EXPORT=ht_bib_export_incr_${zephir_date}.json.gz 

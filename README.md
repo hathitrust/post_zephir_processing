@@ -70,7 +70,7 @@ Previously generated the HTRC datasets. All that remains is the zephir_ingested_
 
 Data In
 -------
-* US Fed Doc exception list `/htdata/govdocs/feddocs_oclc_filter/oclcs_removed_from_registry_YYYY-MM-DD.txt`
+* US Fed Doc exception list `/htdata/govdocs/feddocs_oclc_filter/oclcs_removed_from_registry.txt`
 * `/tmp/rights_dbm`
 * `groove_export_YYYY-MM-DD.tsv.gz` (ftps from cdlib)
 * `ht_bib_export_full_YYYY-MM-DD.json.gz`

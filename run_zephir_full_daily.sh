@@ -11,7 +11,7 @@ YESTERDAY=`date --date="yesterday" +%Y%m%d`
 TODAY=`date +%Y%m%d`
 
 today_dash=`date +%Y-%m-%d`
-us_fed_pub_exception_file=$FEDDOCS_HOME/feddocs_oclc_filter/oclcs_removed_from_registry_${today_dash}.txt
+us_fed_pub_exception_file=$FEDDOCS_HOME/feddocs_oclc_filter/oclcs_removed_from_registry.txt
 echo "fed pub exception file set in environment: $us_fed_pub_exception_file"
 
 # File from zephir contains ~9 million records as of 2022
