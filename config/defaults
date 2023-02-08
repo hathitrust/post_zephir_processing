@@ -10,9 +10,6 @@ export REPORTS=${REPORTS:-$DATA_ROOT/reports}
 export ZEPHIR_DATA=${ZEPHIR_DATA:-$DATA_ROOT/zephir}
 export FEDDOCS_HOME=${FEDDOCS_HOME:-$DATA_ROOT/govdocs}
 
-# Location of oai output
-export DATADIR_OAI=${DATADIR_OAI:-$DATA_ROOT/oai}
-
 # The person getting the emails
 export EMAIL=${EMAIL:-nobody@default.invalid}
 
@@ -25,6 +22,6 @@ export RIGHTS_DIR=${RIGHTS_DIR:-$DATA_ROOT/rights}
 export CATALOG_PREP=${CATALOG_PREP:-$DATA_ROOT/catalog_prep}
 export CATALOG_ARCHIVE=${CATALOG_ARCHIVE:-$DATAROOT/catalog_archive}
 
-for dir in $TMPDIR $DATA_ROOT $ZEPHIR_DATA $DATADIR_OAI $INGEST_BIBRECORDS $RIGHTS_DIR $CATALOG_PREP $CATALOG_ARCHIVE;
+for dir in $TMPDIR $DATA_ROOT $ZEPHIR_DATA $INGEST_BIBRECORDS $RIGHTS_DIR $CATALOG_PREP $CATALOG_ARCHIVE;
   do mkdir -pv $dir;
 done

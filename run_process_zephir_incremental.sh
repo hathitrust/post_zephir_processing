@@ -141,28 +141,8 @@ if [ $cmdstatus != "0" ]; then
   exit
 fi
 
-if [[ $today_dash =~ ^20...01.01$ ]]; then
-  echo "ERROR: can't run the special jan 1st OAI process"
- # process full zephir file to create file of ingested items
- $ROOTDIR/run_zephir_full_daily.sh
-
-# XXX This will not work since the docker image doesn't have Ruby. OAI
-# processing should be migrated to a new system by the end of 2022, but on the
-# off chance it isn't we can run this manually.
-#
-#  ruby get_bib_additional_recs_for_OAI.rb > additional_recs.json
-#  gzip -f additional_recs.json
-#  zcat ${BASENAME}.json.gz additional_recs.json.gz | sort | uniq > all_recs_for_OAI.json
-#  gzip -f all_recs_for_OAI.json
-#  $ROOTDIR/zephir2oai.pl -f $YESTERDAY -i all_recs_for_OAI.json.gz -d $ZEPHIR_VUFIND_DELETE -o ${DATADIR_OAI}/zephir_oai_upd_${TODAY} -s 200000000
-else
-  echo "`date`: run oai process"
-  $ROOTDIR/zephir2oai.pl -f $YESTERDAY -i ${BASENAME}.json.gz -d $ZEPHIR_VUFIND_DELETE -o ${DATADIR_OAI}/zephir_oai_upd_${TODAY} -s 200000000
-  find $DATADIR_OAI -type f -mtime +30 -exec rm -f {} ';'
-  
-  # process full zephir file to create file of ingested items
-  $ROOTDIR/run_zephir_full_daily.sh
-fi
+# process full zephir file to create file of ingested items
+$ROOTDIR/run_zephir_full_daily.sh
 
 # This should have already been copied to the archive/catalog
 rm ${BASENAME}.json.gz
