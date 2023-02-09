@@ -141,9 +141,6 @@ if [ $cmdstatus != "0" ]; then
   exit
 fi
 
-# process full zephir file to create file of ingested items
-$ROOTDIR/run_zephir_full_daily.sh
-
 # This should have already been copied to the archive/catalog
 rm ${BASENAME}.json.gz
 

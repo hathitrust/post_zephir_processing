@@ -20,14 +20,14 @@ Of course, other errors are possible, especially if substantive changes are made
 * Unable to send zephir_upd_dollar_up.txt.gz to Zephir (exits)
 ---
 
-## run_zephir_full_daily.sh
+## run_zephir_full_monthly.sh
 Some of these seem silly.
 * Failure to retrieve groove_export_<date>.tsv.gz (exits)
 * Failure to retrieve ht_bib_export_full_<date>.json.gz from zephir (exits)
 * Unable to concatenate processed files into zephir_ingested_items.txt.gz (reports)
 * Unable to concatenate to zephir_full_<date>_vufind.json.gz (reports)
 * Unable to transfer zephir_full_<date>_vufind.json.gz to /htsolr/catalog/prep (reports)
-* Unable to concatenate zephir_full_daily_??.rights to zephir_full_<date>.rights (reports)
-* Unable to concatenate zephir_full_daily_??.rights.debug (reports)
-* Unable to concatenate zephir_full_daily_??.rights_rpt.tsv to zephir_full_<date>.rights_rpt.tsv (reports)
-* Unable to concatenate zephir_full_daily_??_out.rpt.txt to zephir_full_daily_rpt.txt (reports)
+* Unable to concatenate zephir_full_monthly_??.rights to zephir_full_<date>.rights (reports)
+* Unable to concatenate zephir_full_monthly_??.rights.debug (reports)
+* Unable to concatenate zephir_full_monthly_??.rights_rpt.tsv to zephir_full_<date>.rights_rpt.tsv (reports)
+* Unable to concatenate zephir_full_monthly_??_out.rpt.txt to zephir_full_monthly_rpt.txt (reports)
