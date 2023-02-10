@@ -378,7 +378,7 @@ sub main {
       ################
       # We need this in the rights file if we changed gfv to bib, or bib rights calc doesnt agree with bib rights in db, or digitization sources dont match 
       if ( $reason_current eq 'bib' and ($gfv_override or $rights_current ne $db_rights or $digitization_source ne $db_dig_source) ) {
-        print RIGHTS "$htid\t$rights_current\tbib\thathitrust-system\t$digitization_source\n";
+        print RIGHTS "$htid\t$rights_current\tbib\tbibrights\t$digitization_source\n";
         $rights_out_cnt++;
         $update_date ne $current_date and do {
           print OUT_RPT "$print_id: bib rights update, 974 sub d changed from $update_date to $current_date\n";
