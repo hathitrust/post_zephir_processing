@@ -105,5 +105,5 @@ docker-compose run --rm pz perl t/test_postZephir.t
 
 For test coverage, replace the previous `docker-compose run` with
 ```bash
-docker-compose run --rm pz bash -c "perl -MDevel::Cover=-silent,1 t/test_postZephir.pl && cover -nosummary /usr/src/app/cover_db"
+docker-compose run --rm pz bash -c "perl -MDevel::Cover=-silent,1 t/*.t && cover -nosummary /usr/src/app/cover_db"
 ```

@@ -4,7 +4,6 @@ prof_library
 config/.env
 config/config.pl
 config/.netrc
-*.txt
 zephir_full_daily_a*
 *.gz
 local
@@ -20,6 +19,5 @@ local*
 *.tsv
 compare_*
 *.jsonl
-*.json
 t/fixtures/rights_dbm
 cover_db
