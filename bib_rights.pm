@@ -64,9 +64,8 @@ sub new {
   # get values for pd cutoff dates
   $self->{us_pd_cutoff_year} = $year - 95;
   $self->{non_us_pd_cutoff_year} = $year - 125;
-  $self->{can_aus_pd_cutoff_year} = $year - 120;
 
-  foreach my $cutoff ("us_pd_cutoff_year", "non_us_pd_cutoff_year", "can_aus_pd_cutoff_year", "ntis_cutoff_year") {
+  foreach my $cutoff ("us_pd_cutoff_year", "non_us_pd_cutoff_year", "ntis_cutoff_year") {
     print STDERR "$cutoff: $self->{$cutoff}\n";
   }
 
@@ -168,21 +167,7 @@ sub get_bib_rights_info {
       $ri->{'attr'} = "ic";
       $ri->{'reason'} = "US $ri->{'date_desc'} >= $self->{us_pd_cutoff_year}";
       last SET_RIGHTS;
-    } elsif ($ri->{'pub_place'} =~ /^(..c|cn |at |aca|qea|tma|vra|wea|xga|xna|xoa|xra)$/) {	# australia or canada
-      $ri->{'date_used'} < $self->{can_aus_pd_cutoff_year} and do {
-        $ri->{'attr'} = "pd";
-        $ri->{'reason'} = "canada/australia $ri->{'date_desc'} < $self->{can_aus_pd_cutoff_year}";
-        last SET_RIGHTS;
-      };
-      $ri->{'date_used'} >= $self->{can_aus_pd_cutoff_year} and $ri->{'date_used'} < $self->{us_pd_cutoff_year} and do {
-        $ri->{'attr'} = "pdus";
-        $ri->{'reason'} = "canada/australia $ri->{'date_desc'} between $self->{can_aus_pd_cutoff_year} and $self->{us_pd_cutoff_year}";
-        last SET_RIGHTS;
-      };
-      $ri->{'attr'} = "ic";
-      $ri->{'reason'} = "non-US $ri->{'date_desc'} >= $self->{us_pd_cutoff_year}";
-      last SET_RIGHTS;
-    } else { 					# other non-us
+    } else { 					# non-US publication
       $ri->{'date_used'} < $self->{non_us_pd_cutoff_year} and do {
         $ri->{'attr'} = "pd";
         $ri->{'reason'} = "non-US $ri->{'date_desc'} < $self->{non_us_pd_cutoff_year}";
