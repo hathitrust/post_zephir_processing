@@ -23,5 +23,5 @@ jobs:
         namespace_token: ${{ secrets.KUBERNETES_TOKEN }}
         namespace: ${{ secrets.KUBERNETES_NAMESPACE }}
         resource_type: cronjob
-        resource_name: post-zephir
+        resource_name: --selector="app=post-zephir"
         container: post-zephir
