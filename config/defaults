@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export DATA_ROOT=${DATA_ROOT:-$ROOTDIR/data}
-export TMPDIR=${TMPDIR:-/tmp}
+export TMPDIR=${TMPDIR:-$DATA_ROOT/work}
 
 # We write a lot of reports no one reads
 export REPORTS=${REPORTS:-$DATA_ROOT/reports}
@@ -20,7 +20,7 @@ export RIGHTS_DBM=${RIGHTS_DBM:-$DATA_ROOT/rights_dbm}
 export INGEST_BIBRECORDS=${INGEST_BIBRECORDS:-$DATA_ROOT/ingest_bibrecords}
 export RIGHTS_DIR=${RIGHTS_DIR:-$DATA_ROOT/rights}
 export CATALOG_PREP=${CATALOG_PREP:-$DATA_ROOT/catalog_prep}
-export CATALOG_ARCHIVE=${CATALOG_ARCHIVE:-$DATAROOT/catalog_archive}
+export CATALOG_ARCHIVE=${CATALOG_ARCHIVE:-$DATA_ROOT/catalog_archive}
 
 for dir in $TMPDIR $DATA_ROOT $ZEPHIR_DATA $INGEST_BIBRECORDS $RIGHTS_DIR $CATALOG_PREP $CATALOG_ARCHIVE;
   do mkdir -pv $dir;

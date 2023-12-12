@@ -6,12 +6,14 @@ services:
     build: .
     volumes:
       - .:/usr/src/app
+      - gem_cache:/gems
     depends_on:
       - mariadb
       - pushgateway
     environment:
       DB_CONNECTION_STRING: "mysql2://ht_rights:ht_rights@mariadb/ht"
       PUSHGATEWAY: "http://pushgateway:9091"
+      CATALOG_PREP: "/usr/src/app/data/catalog_prep"
     command:
       - /bin/bash
 
@@ -46,3 +48,6 @@ services:
 
   pushgateway:
     image: prom/pushgateway
+
+volumes:
+  gem_cache:

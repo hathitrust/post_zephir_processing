@@ -1,14 +1,20 @@
-FROM perl:5.34
+FROM ruby:3.2
+
+ARG UNAME=app
+ARG UID=1000
+ARG GID=1000
 
 RUN apt-get update && apt-get install -y \
   bsd-mailx \
+  cpanminus \
   msmtp \
-  netcat \
+  netcat-traditional \
+  perl \
   pigz
 
 RUN cpanm -n  \
   Data::Dumper \
-  DBD::mysql \
+  DBD::MariaDB \
   DB_File \
   DBI \
   Devel::Cover \
@@ -31,8 +37,14 @@ RUN cpanm -n  \
   XML::LibXSLT \
   YAML
 
-ENV ROOTDIR /usr/src/app
+RUN groupadd -g ${GID} -o ${UNAME}
+RUN useradd -m -d /app -u ${UID} -g ${GID} -o -s /bin/bash ${UNAME}
+RUN mkdir -p /gems && chown ${UID}:${GID} /gems
 
+ENV ROOTDIR /usr/src/app
+ENV BUNDLE_PATH /gems
+
+USER app
 COPY . $ROOTDIR
 WORKDIR $ROOTDIR
 
