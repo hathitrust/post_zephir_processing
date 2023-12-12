@@ -5,6 +5,9 @@ RUN apt-get update && apt-get install -y \
   msmtp \
   netcat-traditional \
   pigz
+  ruby-rspec \
+  ruby-simplecov \
+  ruby-simplecov-html
 
 RUN cpanm -n  \
   Data::Dumper \
