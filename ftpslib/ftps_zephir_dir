@@ -11,4 +11,4 @@ echo "server: ${SERVER}, dir: ${dir}"
 #/l/local/bin/curl -k -n --ftp-ssl-control --ftp-pasv --ftp-method nocwd ftp://${SERVER}/${dir}
 
 
-curl --netrc-file $conf --ssl-reqd --ftp-pasv --ftp-method nocwd "ftp://${SERVER}/${dir}/"
+curl --tls-max 1.2 --netrc-file $conf --ssl-reqd --ftp-pasv --ftp-method nocwd "ftp://${SERVER}/${dir}/"

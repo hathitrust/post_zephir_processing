@@ -1,4 +1,4 @@
-FROM perl:5.34
+FROM perl:5.38
 
 RUN apt-get update && apt-get install -y \
   bsd-mailx \
