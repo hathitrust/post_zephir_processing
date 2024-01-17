@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
 
 RUN cpanm -n  \
   Data::Dumper \
-  DBD::mysql \
+  DBD::MariaDB \
   DB_File \
   DBI \
   Devel::Cover \
