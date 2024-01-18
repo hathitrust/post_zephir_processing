@@ -1,14 +1,14 @@
-FROM perl:5.34
+FROM perl:5.38
 
 RUN apt-get update && apt-get install -y \
   bsd-mailx \
   msmtp \
-  netcat \
+  netcat-traditional \
   pigz
 
 RUN cpanm -n  \
   Data::Dumper \
-  DBD::mysql \
+  DBD::MariaDB \
   DB_File \
   DBI \
   Devel::Cover \

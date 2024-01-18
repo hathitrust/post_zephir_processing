@@ -28,4 +28,4 @@ echo "server is $server, dir is: ${dir}, sending $infile as $outfile"
 
 #/l/local/bin/curl -k -n -T $infile --ftp-ssl --ftp-pasv ftp://$server/submissions/$outfile
 
-curl --netrc-file $conf -T $infile --ssl-reqd --ftp-pasv ftp://$server/submissions/$outfile
+curl --tls-max 1.2 --netrc-file $conf -T $infile --ssl-reqd --ftp-pasv ftp://$server/submissions/$outfile

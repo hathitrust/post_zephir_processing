@@ -41,7 +41,7 @@ sub ConnectToSdrDb
      my $db_name   = shift;
 
      my $sdr_dbh;
-     $sdr_dbh   = DBI->connect( "DBI:mysql:$db_name:$db_server", $db_user, $db_passwd,
+     $sdr_dbh   = DBI->connect( "DBI:MariaDB:$db_name:$db_server", $db_user, $db_passwd,
                { RaiseError => 0, AutoCommit => 1 } ) || die "Cannot connect: $DBI::errstr";
 
      return $sdr_dbh;
