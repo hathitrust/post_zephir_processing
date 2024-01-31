@@ -5,6 +5,7 @@ use DB_File;
 use File::Basename;
 use POSIX qw(strftime);
 use DBI qw(:sql_types);
+use Encode qw(encode);
 use Getopt::Std;
 use rightsDB;
 use strict;
@@ -60,7 +61,8 @@ while ( my ($id, $namespace, $attr_num, $reason_num, $source_num, $timestamp, $n
   $reason_code = $reason_codes->{$reason_num};
   $access_profile_code = $access_profile_codes->{$access_profile_num};
   my $mdp_id = join(".", $namespace, $id);
-  $INDEX{"$mdp_id"} = join("\t", $attr_code, $reason_code, $source_code, $timestamp, $note, $access_profile_code);
+  my $data = join("\t", $attr_code, $reason_code, $source_code, $timestamp, $note, $access_profile_code);
+  $INDEX{"$mdp_id"} = encode("UTF-8", $data);
   $outcnt++;
 }
 dbmclose(%INDEX);

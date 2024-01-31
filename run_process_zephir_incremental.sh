@@ -1,13 +1,26 @@
 #!/bin/bash
 
+# Call this script with:
+# - exactly one date argument of the form YYYYMMDD
+# OR
+# - no arguments to use yesterday's date
+
+if [[ $# -eq 0 ]]; then
+  YESTERDAY=`date --date="yesterday" +%Y%m%d`
+else
+  if [[ "$1" =~ ^[0-9]{8}$ ]]; then
+    YESTERDAY=$1
+  else
+    echo "Invalid date format '$1', need YYYYMMDD"
+    exit 1
+  fi
+fi
+
 source $ROOTDIR/config/defaults
 cd $TMPDIR
 
 SCRIPTNAME=`basename $0`
-zephir_date=`date --date="yesterday" +%Y-%m-%d`
-YESTERDAY=`date --date="yesterday" +%Y%m%d`
-TODAY=`date +%Y%m%d`
-today_dash=`date +%Y-%m-%d`
+zephir_date="$(echo $YESTERDAY | sed 's/\(....\)\(..\)/\1-\2-/')"
 
 export us_fed_pub_exception_file="$FEDDOCS_HOME/feddocs_oclc_filter/oclcs_removed_from_registry.txt"
 
@@ -40,7 +53,7 @@ if [ ! -e $ZEPHIR_VUFIND_EXPORT ]; then
   message="file $ZEPHIR_VUFIND_EXPORT not found, exitting"
   echo "error, message is $message"
   echo $message | mailx -s"error in $SCRIPTNAME" $EMAIL
-  exit
+  exit 1
 fi
 
 echo "`date`: retrieve $ZEPHIR_VUFIND_DELETE"
@@ -52,14 +65,14 @@ if [ $cmdstatus != "0" ]; then
   message="Problem getting file ${ZEPHIR_VUFIND_DELETE} from zephir: rc is $cmdstatus"
   echo "error, message is $message"
   echo $message | mailx -s"error in $SCRIPTNAME" $EMAIL
-  exit
+  exit 1
 fi
 
 if [ ! -e $ZEPHIR_VUFIND_DELETE ]; then
   message="file $ZEPHIR_VUFIND_DELETE not found, exitting"
   echo "error, message is $message"
   echo $message | mailx -s"error in $SCRIPTNAME" $EMAIL
-  exit
+  exit 1
 fi
 
 echo "`date`: retrieve $ZEPHIR_GROOVE_INCREMENTAL"
@@ -113,7 +126,7 @@ cmdstatus=$?
 if [ $cmdstatus != "0" ]; then
   message="Problem transferring file ${BASENAME}.json.gz to $CATALOG_PREP: rc is $cmdstatus"
   echo $message
-  exit
+  exit 1
 fi
 
 # copy to ht archive directory
@@ -126,7 +139,7 @@ cmdstatus=$?
 if [ $cmdstatus != "0" ]; then
   message="Problem transferring file $ZEPHIR_VUFIND_DELETE to $CATALOG_PREP: rc is $cmdstatus"
   echo $message
-  exit
+  exit 1
 fi
 
 echo "`date`: compress dollar dup files and send to zephir"
@@ -138,7 +151,7 @@ cmdstatus=$?
 if [ $cmdstatus != "0" ]; then
   message="Problem sending file ${ZEPHIR_VUFIND_DOLL_D}.gz to zephir: rc is $cmdstatus"
   echo $message
-  exit
+  exit 1
 fi
 
 # This should have already been copied to the archive/catalog

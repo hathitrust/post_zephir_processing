@@ -4,7 +4,10 @@ RUN apt-get update && apt-get install -y \
   bsd-mailx \
   msmtp \
   netcat-traditional \
-  pigz
+  pigz \
+  ruby-rspec \
+  ruby-simplecov \
+  ruby-simplecov-html
 
 RUN cpanm -n  \
   Data::Dumper \
