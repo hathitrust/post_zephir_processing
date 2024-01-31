@@ -22,12 +22,10 @@ logger.debug "Processing Zephir files for: #{dates}"
 dates.each do |date|
   date_str = date.strftime("%Y%m%d")
   cmd = "#{INCREMENTAL_SCRIPT} #{date_str}"
-  output = `#{cmd}`
-  if $? != 0
-    logger.error "exitstatus #{$?.exitstatus} from #{cmd}"
-    exit(1)
-  end
-  if output.length.positive?
-    logger.info("#{cmd} output: \n#{output}")
+  logger.debug "Calling '#{cmd}'"
+  # Bail out if `system` returns false or nil
+  unless system(cmd)
+    logger.error "exitstatus #{$?.exitstatus} from '#{cmd}'"
+    exit 1
   end
 end
