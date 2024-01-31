@@ -17,12 +17,12 @@ jobs:
 
       - name: Set up tests
         run: |
-          docker-compose build
+          docker compose build
 
       - name: Run tests
-        run: docker-compose run test bin/test_and_cover.sh
+        run: docker compose run test bin/test_and_cover.sh
         env:
           GITHUB_TOKEN: ${{ secrets.github_token }}
 
       - name: Run Ruby tests
-        run: docker-compose run test rspec
+        run: docker compose run test rspec
