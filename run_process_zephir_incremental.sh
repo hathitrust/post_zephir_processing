@@ -22,6 +22,23 @@ cd $TMPDIR
 SCRIPTNAME=`basename $0`
 zephir_date="$(echo $YESTERDAY | sed 's/\(....\)\(..\)/\1-\2-/')"
 
+# Route all external processes through these functions
+# to avoid silent failures.
+function run_external_command {
+  $1
+  cmdstatus=$?
+  if [ $cmdstatus != "0" ]; then
+    message="`date`: error: '$1' returned $cmdstatus"
+    report_error_and_exit "$message"
+  fi
+}
+
+function report_error_and_exit {
+  echo $1
+  echo $1 | mailx -s"error in $SCRIPTNAME" $EMAIL
+  exit 1
+}
+
 export us_fed_pub_exception_file="$FEDDOCS_HOME/feddocs_oclc_filter/oclcs_removed_from_registry.txt"
 
 DATADIR=$ROOTDIR/data/zephir
@@ -40,44 +57,23 @@ echo "fed pub exception file set in environment: $us_fed_pub_exception_file"
 echo "`date`: zephir incremental extract started"
 echo "`date`: retrieve $ZEPHIR_VUFIND_EXPORT"
 
-$ROOTDIR/ftpslib/ftps_zephir_get exports/$ZEPHIR_VUFIND_EXPORT $ZEPHIR_VUFIND_EXPORT
-
-cmdstatus=$?
-if [ $cmdstatus != "0" ]; then
-  message="Problem getting file ${ZEPHIR_VUFIND_EXPORT} from zephir: rc is $cmdstatus"
-  echo "error, message is $message"
-  echo $message | mailx -s"error in $SCRIPTNAME" $EMAIL 
-fi
+run_external_command "$ROOTDIR/ftpslib/ftps_zephir_get exports/$ZEPHIR_VUFIND_EXPORT $ZEPHIR_VUFIND_EXPORT"
 
 if [ ! -e $ZEPHIR_VUFIND_EXPORT ]; then
-  message="file $ZEPHIR_VUFIND_EXPORT not found, exitting"
-  echo "error, message is $message"
-  echo $message | mailx -s"error in $SCRIPTNAME" $EMAIL
-  exit 1
+  report_error_and_exit "file $ZEPHIR_VUFIND_EXPORT not found, exiting"
 fi
 
 echo "`date`: retrieve $ZEPHIR_VUFIND_DELETE"
 
-$ROOTDIR/ftpslib/ftps_zephir_get exports/$ZEPHIR_VUFIND_DELETE $ZEPHIR_VUFIND_DELETE
-
-cmdstatus=$?
-if [ $cmdstatus != "0" ]; then
-  message="Problem getting file ${ZEPHIR_VUFIND_DELETE} from zephir: rc is $cmdstatus"
-  echo "error, message is $message"
-  echo $message | mailx -s"error in $SCRIPTNAME" $EMAIL
-  exit 1
-fi
+run_external_command "$ROOTDIR/ftpslib/ftps_zephir_get exports/$ZEPHIR_VUFIND_DELETE $ZEPHIR_VUFIND_DELETE"
 
 if [ ! -e $ZEPHIR_VUFIND_DELETE ]; then
-  message="file $ZEPHIR_VUFIND_DELETE not found, exitting"
-  echo "error, message is $message"
-  echo $message | mailx -s"error in $SCRIPTNAME" $EMAIL
-  exit 1
+  report_error_and_exit "file $ZEPHIR_VUFIND_DELETE not found, exiting"
 fi
 
 echo "`date`: retrieve $ZEPHIR_GROOVE_INCREMENTAL"
 
-$ROOTDIR/ftpslib/ftps_zephir_get exports/$ZEPHIR_GROOVE_INCREMENTAL $ZEPHIR_GROOVE_INCREMENTAL
+run_external_command "$ROOTDIR/ftpslib/ftps_zephir_get exports/$ZEPHIR_GROOVE_INCREMENTAL $ZEPHIR_GROOVE_INCREMENTAL"
 
 cmdstatus=$?
 if [ $cmdstatus == "0" ]; then
@@ -105,54 +101,37 @@ else
 fi
 
 echo "`date`: dump the rights db to a dbm file"
-$ROOTDIR/bld_rights_db.pl -x $RIGHTS_DBM
+
+run_external_command "$ROOTDIR/bld_rights_db.pl -x $RIGHTS_DBM"
 
 echo "`date`: processing file $ZEPHIR_VUFIND_EXPORT"
-JOB_NAME="run_process_zephir_incremental.sh" $ROOTDIR/postZephir.pm -i $ZEPHIR_VUFIND_EXPORT -o ${BASENAME} -r ${BASENAME}.rights -d -f $RIGHTS_DBM > ${BASENAME}_stderr 
+cmd="JOB_NAME=run_process_zephir_incremental.sh $ROOTDIR/postZephir.pm -i $ZEPHIR_VUFIND_EXPORT -o $BASENAME -r ${BASENAME}.rights -d -f $RIGHTS_DBM > ${BASENAME}_stderr"
+run_external_command "$cmd"
 tail -50 ${BASENAME}_rpt.txt
 
-zcat $ZEPHIR_VUFIND_DELETE > ${BASENAME}_zephir_delete.txt
-sort -u ${BASENAME}_zephir_delete.txt ${BASENAME}_delete.txt -o ${BASENAME}_all_delete.txt
-gzip ${BASENAME}_all_delete.txt
+run_external_command "zcat $ZEPHIR_VUFIND_DELETE > ${BASENAME}_zephir_delete.txt"
+run_external_command "sort -u ${BASENAME}_zephir_delete.txt ${BASENAME}_delete.txt -o ${BASENAME}_all_delete.txt"
+run_external_command "gzip ${BASENAME}_all_delete.txt"
 
-echo "`date`: copy rights file ${BASENAME}.rights to $RIGHTS_DIR"
-mv ${BASENAME}.rights $RIGHTS_DIR
+echo "`date`: move rights file ${BASENAME}.rights to $RIGHTS_DIR"
+run_external_command "mv ${BASENAME}.rights $RIGHTS_DIR"
 
 echo "`date`: compress json file and send to hathitrust solr server"
-gzip -n -f ${BASENAME}.json
+run_external_command "gzip -n -f ${BASENAME}.json"
 
-cp ${BASENAME}.json.gz $CATALOG_PREP
-cmdstatus=$?
-if [ $cmdstatus != "0" ]; then
-  message="Problem transferring file ${BASENAME}.json.gz to $CATALOG_PREP: rc is $cmdstatus"
-  echo $message
-  exit 1
-fi
+run_external_command "cp ${BASENAME}.json.gz $CATALOG_PREP"
 
 # copy to ht archive directory
-cp ${BASENAME}.json.gz  ${CATALOG_ARCHIVE}
+run_external_command "cp ${BASENAME}.json.gz $CATALOG_ARCHIVE"
 
 echo "`date`: send combined delete file to hathitrust solr server as ${BASENAME}_delete.txt.gz"
 
-mv ${BASENAME}_all_delete.txt.gz $CATALOG_PREP/${BASENAME}_delete.txt.gz
-cmdstatus=$?
-if [ $cmdstatus != "0" ]; then
-  message="Problem transferring file $ZEPHIR_VUFIND_DELETE to $CATALOG_PREP: rc is $cmdstatus"
-  echo $message
-  exit 1
-fi
+run_external_command "mv ${BASENAME}_all_delete.txt.gz $CATALOG_PREP/${BASENAME}_delete.txt.gz"
 
 echo "`date`: compress dollar dup files and send to zephir"
-mv ${BASENAME}_dollar_dup.txt $ZEPHIR_VUFIND_DOLL_D
-gzip -n -f $ZEPHIR_VUFIND_DOLL_D
-$ROOTDIR/ftpslib/ftps_zephir_send ${ZEPHIR_VUFIND_DOLL_D}.gz 
-
-cmdstatus=$?
-if [ $cmdstatus != "0" ]; then
-  message="Problem sending file ${ZEPHIR_VUFIND_DOLL_D}.gz to zephir: rc is $cmdstatus"
-  echo $message
-  exit 1
-fi
+run_external_command "mv ${BASENAME}_dollar_dup.txt $ZEPHIR_VUFIND_DOLL_D"
+run_external_command "gzip -n -f $ZEPHIR_VUFIND_DOLL_D"
+run_external_command "$ROOTDIR/ftpslib/ftps_zephir_send ${ZEPHIR_VUFIND_DOLL_D}.gz"
 
 # This should have already been copied to the archive/catalog
 rm ${BASENAME}.json.gz
