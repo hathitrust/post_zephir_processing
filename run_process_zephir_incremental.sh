@@ -25,17 +25,17 @@ zephir_date="$(echo $YESTERDAY | sed 's/\(....\)\(..\)/\1-\2-/')"
 # Route all external processes through these functions
 # to avoid silent failures.
 function run_external_command {
-  $1
+  eval "$@"
   cmdstatus=$?
   if [ $cmdstatus != "0" ]; then
-    message="`date`: error: '$1' returned $cmdstatus"
+    message="`date`: error: '$@' returned $cmdstatus"
     report_error_and_exit "$message"
   fi
 }
 
 function report_error_and_exit {
-  echo $1
-  echo $1 | mailx -s"error in $SCRIPTNAME" $EMAIL
+  echo "$1"
+  echo "$1" | mailx -s"error in $SCRIPTNAME" $EMAIL
   exit 1
 }
 
@@ -57,7 +57,7 @@ echo "fed pub exception file set in environment: $us_fed_pub_exception_file"
 echo "`date`: zephir incremental extract started"
 echo "`date`: retrieve $ZEPHIR_VUFIND_EXPORT"
 
-run_external_command "$ROOTDIR/ftpslib/ftps_zephir_get exports/$ZEPHIR_VUFIND_EXPORT $ZEPHIR_VUFIND_EXPORT"
+run_external_command $ROOTDIR/ftpslib/ftps_zephir_get exports/$ZEPHIR_VUFIND_EXPORT $ZEPHIR_VUFIND_EXPORT
 
 if [ ! -e $ZEPHIR_VUFIND_EXPORT ]; then
   report_error_and_exit "file $ZEPHIR_VUFIND_EXPORT not found, exiting"
@@ -65,7 +65,7 @@ fi
 
 echo "`date`: retrieve $ZEPHIR_VUFIND_DELETE"
 
-run_external_command "$ROOTDIR/ftpslib/ftps_zephir_get exports/$ZEPHIR_VUFIND_DELETE $ZEPHIR_VUFIND_DELETE"
+run_external_command $ROOTDIR/ftpslib/ftps_zephir_get exports/$ZEPHIR_VUFIND_DELETE $ZEPHIR_VUFIND_DELETE
 
 if [ ! -e $ZEPHIR_VUFIND_DELETE ]; then
   report_error_and_exit "file $ZEPHIR_VUFIND_DELETE not found, exiting"
@@ -73,7 +73,7 @@ fi
 
 echo "`date`: retrieve $ZEPHIR_GROOVE_INCREMENTAL"
 
-run_external_command "$ROOTDIR/ftpslib/ftps_zephir_get exports/$ZEPHIR_GROOVE_INCREMENTAL $ZEPHIR_GROOVE_INCREMENTAL"
+run_external_command $ROOTDIR/ftpslib/ftps_zephir_get exports/$ZEPHIR_GROOVE_INCREMENTAL $ZEPHIR_GROOVE_INCREMENTAL
 
 cmdstatus=$?
 if [ $cmdstatus == "0" ]; then
@@ -102,36 +102,36 @@ fi
 
 echo "`date`: dump the rights db to a dbm file"
 
-run_external_command "$ROOTDIR/bld_rights_db.pl -x $RIGHTS_DBM"
+run_external_command $ROOTDIR/bld_rights_db.pl -x $RIGHTS_DBM
 
 echo "`date`: processing file $ZEPHIR_VUFIND_EXPORT"
 cmd="JOB_NAME=run_process_zephir_incremental.sh $ROOTDIR/postZephir.pm -i $ZEPHIR_VUFIND_EXPORT -o $BASENAME -r ${BASENAME}.rights -d -f $RIGHTS_DBM > ${BASENAME}_stderr"
 run_external_command "$cmd"
 tail -50 ${BASENAME}_rpt.txt
 
-run_external_command "zcat $ZEPHIR_VUFIND_DELETE > ${BASENAME}_zephir_delete.txt"
-run_external_command "sort -u ${BASENAME}_zephir_delete.txt ${BASENAME}_delete.txt -o ${BASENAME}_all_delete.txt"
-run_external_command "gzip ${BASENAME}_all_delete.txt"
+run_external_command zcat $ZEPHIR_VUFIND_DELETE > ${BASENAME}_zephir_delete.txt
+run_external_command sort -u ${BASENAME}_zephir_delete.txt ${BASENAME}_delete.txt -o ${BASENAME}_all_delete.txt
+run_external_command gzip ${BASENAME}_all_delete.txt
 
 echo "`date`: move rights file ${BASENAME}.rights to $RIGHTS_DIR"
-run_external_command "mv ${BASENAME}.rights $RIGHTS_DIR"
+run_external_command mv ${BASENAME}.rights $RIGHTS_DIR
 
 echo "`date`: compress json file and send to hathitrust solr server"
-run_external_command "gzip -n -f ${BASENAME}.json"
+run_external_command gzip -n -f ${BASENAME}.json
 
-run_external_command "cp ${BASENAME}.json.gz $CATALOG_PREP"
+run_external_command cp ${BASENAME}.json.gz $CATALOG_PREP
 
 # copy to ht archive directory
-run_external_command "cp ${BASENAME}.json.gz $CATALOG_ARCHIVE"
+run_external_command cp ${BASENAME}.json.gz $CATALOG_ARCHIVE
 
 echo "`date`: send combined delete file to hathitrust solr server as ${BASENAME}_delete.txt.gz"
 
-run_external_command "mv ${BASENAME}_all_delete.txt.gz $CATALOG_PREP/${BASENAME}_delete.txt.gz"
+run_external_command mv ${BASENAME}_all_delete.txt.gz $CATALOG_PREP/${BASENAME}_delete.txt.gz
 
 echo "`date`: compress dollar dup files and send to zephir"
-run_external_command "mv ${BASENAME}_dollar_dup.txt $ZEPHIR_VUFIND_DOLL_D"
-run_external_command "gzip -n -f $ZEPHIR_VUFIND_DOLL_D"
-run_external_command "$ROOTDIR/ftpslib/ftps_zephir_send ${ZEPHIR_VUFIND_DOLL_D}.gz"
+run_external_command mv ${BASENAME}_dollar_dup.txt $ZEPHIR_VUFIND_DOLL_D
+run_external_command gzip -n -f $ZEPHIR_VUFIND_DOLL_D
+run_external_command $ROOTDIR/ftpslib/ftps_zephir_send ${ZEPHIR_VUFIND_DOLL_D}.gz
 
 # This should have already been copied to the archive/catalog
 rm ${BASENAME}.json.gz
