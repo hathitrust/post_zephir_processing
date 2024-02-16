@@ -8,8 +8,6 @@ module PostZephirProcessing
     UPDATE_REGEXP = /^zephir_upd_(\d{8})\.json\.gz$/
     DELETE_REGEXP = /^zephir_upd_(\d{8})_delete\.txt\.gz$/
     RIGHTS_REGEXP = /^zephir_upd_(\d{8})\.rights$/
-    GROOVE_REGEXP = /^groove_incremental_(\d{4}-\d{2}-\d{2})\.tsv\.gz$/
-    TOUCHED_REGEXP = /^daily_touched_(\d{4}-\d{2}-\d{2})\.tsv\.gz$/
     attr_reader :date, :logger, :inventory
 
     # @param logger [Logger] defaults to STDOUT
@@ -28,8 +26,6 @@ module PostZephirProcessing
         zephir_update_files: zephir_update_files,
         zephir_delete_files: zephir_delete_files,
         zephir_rights_files: zephir_rights_files,
-        zephir_groove_files: zephir_groove_files,
-        zephir_touched_files: zephir_touched_files
       }
     end
 
@@ -49,18 +45,6 @@ module PostZephirProcessing
     # @return [Array<Date>] sorted ASC
     def zephir_rights_files
       directory_inventory(directory: @rights_dir, archive_directory: @rights_archive_dir, regexp: RIGHTS_REGEXP)
-    end
-
-    # groove_incremental_YYYY-MM-DD.tsv.gz files for the current month.
-    # @return [Array<Date>] sorted ASC
-    def zephir_groove_files
-      directory_inventory(directory: @ingest_bibrecords_dir, archive_directory: @ingest_bibrecords_archive_dir, regexp: GROOVE_REGEXP)
-    end
-
-    # daily_touched_YYYY-MM-DD.tsv.gz files for the current month.
-    # @return [Array<Date>] sorted ASC
-    def zephir_touched_files
-      directory_inventory(directory: @ingest_bibrecords_dir, archive_directory: @ingest_bibrecords_archive_dir, regexp: TOUCHED_REGEXP)
     end
 
     # Iterate over the parts of the inventory separately.

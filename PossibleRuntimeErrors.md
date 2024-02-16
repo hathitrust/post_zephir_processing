@@ -13,8 +13,6 @@ Of course, other errors are possible, especially if substantive changes are made
 * Unable to get ht_bib_export_incr_<date>.json.gz from zephir (reports)
 * Unable to **find** ht_bib_export_incr_<date>.json.gz (exits)
 * Unable to retrieve or find vufind_removed_cids_<date>.txt.gz (exits)
-* Unable to retrieve groove_incremental_<date>.tsv.gz (reports)
-* Unable to retrieve zephir_daily_touched (reports)
 * Unable to cp zephir_upd_<date>.json.gz to /htsolr/catalog/prep (exits)
 * Unable to cp zephir_upd_<date>_all_delete.txt.gz to /htsolr/catalog/prep (exits)
 * Unable to send zephir_upd_dollar_up.txt.gz to Zephir (exits)

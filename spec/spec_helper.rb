@@ -57,22 +57,6 @@ def rights_file_for_date(date:, archive: true)
   )
 end
 
-# Note Zephir hyphenated date
-def groove_file_for_date(date:, archive: true)
-  File.join(
-    archive ? ingest_bibrecords_archive_dir : ingest_bibrecords_dir,
-    "groove_incremental_#{date.strftime("%Y-%m-%d")}.tsv.gz"
-  )
-end
-
-# Note Zephir hyphenated date
-def touched_file_for_date(date:, archive: true)
-  File.join(
-    archive ? ingest_bibrecords_archive_dir : ingest_bibrecords_dir,
-    "daily_touched_#{date.strftime("%Y-%m-%d")}.tsv.gz"
-  )
-end
-
 # @param date [Date] determines the month and year for the file datestamps
 def setup_test_files(date:)
   start_date = Date.new(date.year, date.month, 1)
@@ -81,8 +65,6 @@ def setup_test_files(date:)
     `touch #{update_file_for_date(date: d)}`
     `touch #{delete_file_for_date(date: d)}`
     `touch #{rights_file_for_date(date: d)}`
-    `touch #{groove_file_for_date(date: d)}`
-    `touch #{touched_file_for_date(date: d)}`
   end
 end
 
