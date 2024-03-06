@@ -74,7 +74,7 @@ file_list=`ls zephir_full_monthly_??`
 for file in $file_list; do
   echo "`date`: processing file $file"
   # TODO: wait to finalize until all of these have run?
-  cmd = "JOB_APP=run_zephir_full_monthly JOB_NAME=\"$file\" $ROOTDIR/postZephir.pm -z 1 -i $file -o ${file}_out -r ${file}.rights -d -f $RIGHTS_DBM &> ${file}_stderr &"
+  cmd="JOB_APP=run_zephir_full_monthly JOB_NAME=\"$file\" $ROOTDIR/postZephir.pm -z 1 -i $file -o ${file}_out -r ${file}.rights -d -f $RIGHTS_DBM &> ${file}_stderr &"
   run_external_command $cmd
 done
 
