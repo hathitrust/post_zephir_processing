@@ -1,5 +1,24 @@
 #!/bin/bash
 
+# Route all external processes through these functions
+# to avoid silent failures.
+function run_external_command {
+  eval "$@"
+  cmdstatus=$?
+  if [ $cmdstatus != "0" ]; then
+    message="`date`: error: '$@' returned $cmdstatus"
+    report_error_and_exit "$message"
+  fi
+}
+
+function report_error_and_exit {
+  echo "**"
+  echo "$1"
+  echo "**"
+  echo "$1" | mailx -s"error in $SCRIPTNAME" $EMAIL
+  exit 1
+}
+
 source $ROOTDIR/config/defaults
 cd $TMPDIR
 
@@ -26,42 +45,37 @@ echo "`date`: zephir full extract started"
 
 echo "`date`: retrieve zephir files: groove_export_${zephir_date}.tsv.gz"
 
-$ROOTDIR/ftpslib/ftps_zephir_get exports/$ZEPHIR_GROOVE_EXPORT $ZEPHIR_GROOVE_EXPORT
+run_external_command $ROOTDIR/ftpslib/ftps_zephir_get exports/$ZEPHIR_GROOVE_EXPORT $ZEPHIR_GROOVE_EXPORT
 if [ ! -e $ZEPHIR_GROOVE_EXPORT ]; then
-  echo "***" 
-  echo "file $ZEPHIR_GROOVE_EXPORT not found, exiting" 
-  echo "***" 
-  exit
+  report_error_and_exit "file $ZEPHIR_GROOVE_EXPORT not found, exiting" 
 fi
 
-mv $ZEPHIR_GROOVE_EXPORT $INGEST_BIBRECORDS/groove_full.tsv.gz
+run_external_command mv $ZEPHIR_GROOVE_EXPORT $INGEST_BIBRECORDS/groove_full.tsv.gz
 
 echo "*** retrieve full zephir vufind extract" 
 
-$ROOTDIR/ftpslib/ftps_zephir_get exports/$ZEPHIR_VUFIND_EXPORT $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT
+run_external_command $ROOTDIR/ftpslib/ftps_zephir_get exports/$ZEPHIR_VUFIND_EXPORT $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT
 if [ ! -e $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT ]; then
-  echo "***" 
-  echo "file $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT not found, exitting" 
-  echo "***" 
-  exit
+  report_error_and_exit "file $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT not found, exiting" 
 fi
 
 echo "*** dump the rights db to a dbm file" 
-$ROOTDIR/bld_rights_db.pl -x $RIGHTS_DBM
+run_external_command $ROOTDIR/bld_rights_db.pl -x $RIGHTS_DBM
 
 # split the json file 
 rm -f zephir_full_monthly_??
-echo input file is $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT 
+echo "input file is $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT"
 ls -l $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT
 
-unpigz -c $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT | split -l $SPLITCOUNT - zephir_full_monthly_
+run_external_command "unpigz -c $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT | split -l $SPLITCOUNT - zephir_full_monthly_"
 
 file_list=`ls zephir_full_monthly_??`
 
 for file in $file_list; do
   echo "`date`: processing file $file"
   # TODO: wait to finalize until all of these have run?
-  JOB_APP="run_zephir_full_monthly" JOB_NAME="$file" `$ROOTDIR/postZephir.pm -z 1 -i $file -o ${file}_out -r ${file}.rights -d -f $RIGHTS_DBM &> ${file}_stderr &`
+  cmd="JOB_APP=run_zephir_full_monthly JOB_NAME=\"$file\" $ROOTDIR/postZephir.pm -z 1 -i $file -o ${file}_out -r ${file}.rights -d -f $RIGHTS_DBM &> ${file}_stderr &"
+  run_external_command $cmd
 done
 
 # wait loop: check last line of each rpt file
@@ -86,75 +100,39 @@ do
 done
 
 echo "`date`: all files processed, concatenate and compress files to zephir_ingested_items.txt.gz" 
-cat zephir_full_monthly_??_out_zia.txt | pigz -c > zephir_ingested_items.txt.gz
-cmdstatus=$?
-if [ $cmdstatus != "0" ]; then
-  message="Problem concatenating files: rc is $cmdstatus"
-  echo "error, message is $message" 
-  echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
-fi
+run_external_command "cat zephir_full_monthly_??_out_zia.txt | pigz -c > zephir_ingested_items.txt.gz"
+
 echo "`zcat zephir_ingested_items.txt.gz | wc -l` lines in zephir ingested items file" 
-mv zephir_ingested_items.txt.gz $INGEST_BIBRECORDS
+run_external_command mv zephir_ingested_items.txt.gz $INGEST_BIBRECORDS
 
 echo "Prepare and deliver monthly output" 
 
 echo "`date`: all files processed, concatenate and compress vufind json files to zephir_full_${YESTERDAY}_vufind.json.gz" 
-cat zephir_full_monthly_??_out.json | pigz -c > zephir_full_${YESTERDAY}_vufind.json.gz
-cmdstatus=$?
-if [ $cmdstatus != "0" ]; then
-  message="Problem concatenating vufind json files: rc is $cmdstatus"
-  echo "error, message is $message" 
-  echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
-fi
+run_external_command "cat zephir_full_monthly_??_out.json | pigz -c > zephir_full_${YESTERDAY}_vufind.json.gz"
+
 echo "`date`: sending full file to hathi trust catalog solr server" 
-cp zephir_full_${YESTERDAY}_vufind.json.gz $CATALOG_PREP
-cmdstatus=$?
-if [ $cmdstatus != "0" ]; then
-  message="Problem transferring file to $CATALOG_PREP is $cmdstatus"
-  echo "error, message is $message" 
-  echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
-fi
+run_external_command cp zephir_full_${YESTERDAY}_vufind.json.gz $CATALOG_PREP
+
 echo "`date`: mv full file to catalog archive" 
-mv zephir_full_${YESTERDAY}_vufind.json.gz $CATALOG_ARCHIVE
+run_external_command mv zephir_full_${YESTERDAY}_vufind.json.gz $CATALOG_ARCHIVE
 
 echo "`date`: all files processed, concatenate rights files to zephir_full_${YESTERDAY}.rights" 
-cat zephir_full_monthly_??.rights > zephir_full_${YESTERDAY}.rights 
-cmdstatus=$?
-if [ $cmdstatus != "0" ]; then
-  message="Problem concatenating rights files: rc is $cmdstatus"
-  echo "error, message is $message" 
-  echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
-fi
-mv zephir_full_${YESTERDAY}.rights $RIGHTS_DIR
+run_external_command cat zephir_full_monthly_??.rights > zephir_full_${YESTERDAY}.rights
+
+run_external_command mv zephir_full_${YESTERDAY}.rights $RIGHTS_DIR
 
 echo "`date`: all files processed, concatenate rights debug files to zephir_full_${YESTERDAY}.rights.debug" 
-cat zephir_full_monthly_??.rights.debug > zephir_full_${YESTERDAY}.rights.debug 
-cmdstatus=$?
-if [ $cmdstatus != "0" ]; then
-  message="Problem concatenating rights debug files: rc is $cmdstatus"
-  echo "error, message is $message"
-  echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
-fi
+run_external_command cat zephir_full_monthly_??.rights.debug > zephir_full_${YESTERDAY}.rights.debug
 
 echo "`date`: all files processed, concatenate rights chg files to zephir_full_${YESTERDAY}.rights.tsv" 
-sort -u zephir_full_monthly_??.rights_rpt.tsv -o zephir_full_${YESTERDAY}.rights_rpt.tsv 
-cmdstatus=$?
-if [ $cmdstatus != "0" ]; then
-  message="Problem sorting rights report files: rc is $cmdstatus"
-  echo "error, message is $message" 
-  echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
-fi
-mv zephir_full_${YESTERDAY}.rights_rpt.tsv $ZEPHIR_DATA/full/
+run_external_command sort -u zephir_full_monthly_??.rights_rpt.tsv -o zephir_full_${YESTERDAY}.rights_rpt.tsv
+
+run_external_command mv zephir_full_${YESTERDAY}.rights_rpt.tsv $ZEPHIR_DATA/full/
 
 echo "`date`: all files processed, concatenate report files to zephir_full_monthly_rpt.txt" 
-cat zephir_full_monthly_??_out_rpt.txt > zephir_full_monthly_rpt.txt 
-cmdstatus=$?
-if [ $cmdstatus != "0" ]; then
-  message="Problem concatenating report files: rc is $cmdstatus"
-  echo "error, message is $message"
-  echo "$message" | mailx -s"error in $SCRIPTNAME" $EMAIL
-fi
-mv zephir_full_monthly_rpt.txt $ZEPHIR_DATA/full/ 
+run_external_command cat zephir_full_monthly_??_out_rpt.txt > zephir_full_monthly_rpt.txt
+
+run_external_command mv zephir_full_monthly_rpt.txt $ZEPHIR_DATA/full/
 
 echo "`date`: cleanup--counts" 
 zephir_count=`unpigz -c $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT | wc -l`
