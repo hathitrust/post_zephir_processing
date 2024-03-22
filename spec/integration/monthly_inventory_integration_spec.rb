@@ -33,15 +33,13 @@ RSpec.describe "MonthlyInventory Integration" do
     it "returns the earliest" do
       [
         delete_file_for_date(date: Date.parse("2023-11-20")),
-        update_file_for_date(date: Date.parse("2023-11-19")),
-        rights_file_for_date(date: Date.parse("2023-11-18")),
-        groove_file_for_date(date: Date.parse("2023-11-17")),
-        touched_file_for_date(date: Date.parse("2023-11-16"))
+        update_file_for_date(date: Date.parse("2023-11-11")),
+        rights_file_for_date(date: Date.parse("2023-11-18"))
       ].each do |file|
         FileUtils.rm file
       end
       mi = PostZephirProcessing::MonthlyInventory.new(date: Date.parse("2023-11-30"))
-      expect(mi.earliest_missing_date).to eq Date.parse("2023-11-16")
+      expect(mi.earliest_missing_date).to eq Date.parse("2023-11-11")
     end
   end
 
@@ -56,12 +54,4 @@ RSpec.describe "MonthlyInventory Integration" do
     end
   end
 
-  describe "find file not yet moved to archive directory" do
-    it "returns nil" do
-      date = Date.parse("2023-11-10")
-      FileUtils.mv groove_file_for_date(date: date), groove_file_for_date(date: date, archive: false)
-      mi = PostZephirProcessing::MonthlyInventory.new(date: Date.parse("2023-11-30"))
-      expect(mi.earliest_missing_date).to be_nil
-    end
-  end
 end

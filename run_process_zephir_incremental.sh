@@ -44,8 +44,6 @@ export us_fed_pub_exception_file="$FEDDOCS_HOME/feddocs_oclc_filter/oclcs_remove
 DATADIR=$ROOTDIR/data/zephir
 ZEPHIR_VUFIND_EXPORT=ht_bib_export_incr_${zephir_date}.json.gz 
 ZEPHIR_VUFIND_DELETE=vufind_removed_cids_${zephir_date}.txt.gz
-ZEPHIR_GROOVE_INCREMENTAL=groove_incremental_${zephir_date}.tsv.gz
-ZEPHIR_DAILY_TOUCHED=daily_touched_${zephir_date}.tsv.gz
 ZEPHIR_VUFIND_DOLL_D=vufind_incremental_${zephir_date}_dollar_dup.txt
 BASENAME=zephir_upd_${YESTERDAY}
 REPORT_FILE=${BASENAME}_report.txt
@@ -71,34 +69,8 @@ if [ ! -e $ZEPHIR_VUFIND_DELETE ]; then
   report_error_and_exit "file $ZEPHIR_VUFIND_DELETE not found, exiting"
 fi
 
-echo "`date`: retrieve $ZEPHIR_GROOVE_INCREMENTAL"
-
-run_external_command $ROOTDIR/ftpslib/ftps_zephir_get exports/$ZEPHIR_GROOVE_INCREMENTAL $ZEPHIR_GROOVE_INCREMENTAL
-
-cmdstatus=$?
-if [ $cmdstatus == "0" ]; then
-  echo "`date`: copy $ZEPHIR_GROOVE_INCREMENTAL to rootdir/data/zephir"
-  # should go here:
-  mv $ZEPHIR_GROOVE_INCREMENTAL $INGEST_BIBRECORDS
-else
-  echo "***"
-  echo "Problem getting file ${ZEPHIR_GROOVE_INCREMENTAL} from zephir: rc is $cmdstatus"
-  echo "***"
-fi
-
-echo "`date`: retrieve $ZEPHIR_DAILY_TOUCHED"
-
-$ROOTDIR/ftpslib/ftps_zephir_get exports/$ZEPHIR_DAILY_TOUCHED $ZEPHIR_DAILY_TOUCHED
-
-cmdstatus=$?
-if [ $cmdstatus == "0" ]; then
-  echo "`date`: copy $ZEPHIR_DAILY_TOUCHED to $INGEST_BIBRECORDS"
-  mv $ZEPHIR_DAILY_TOUCHED $INGEST_BIBRECORDS
-else 
-  echo "***"
-  echo "Problem getting file ${ZEPHIR_DAILY_TOUCHED} from zephir: rc is $cmdstatus"
-  echo "***"
-fi
+# ZEPHIR_GROOVE_INCREMENTAL moved to repo feed_internal, 02_get_bibrecords.pl
+# ZEPHIR_DAILY_TOUCHED moved to repo feed_internal, 02_get_bibrecords.pl
 
 echo "`date`: dump the rights db to a dbm file"
 
