@@ -1,14 +1,22 @@
-version: '3'
+---
+
+x-condition-healthy: &healthy
+  condition: service_healthy
+
+x-healthcheck-defaults: &healthcheck-defaults
+  interval: 5s
+  timeout: 10s
+  start_period: 10s
+  retries: 5
 
 services:
-
   pz:
     build: .
     volumes:
       - .:/usr/src/app
     depends_on:
-      - mariadb
-      - pushgateway
+      mariadb: *healthy
+      pushgateway: *healthy
     environment:
       DB_CONNECTION_STRING: "mysql2://ht_rights:ht_rights@mariadb/ht"
       PUSHGATEWAY: "http://pushgateway:9091"
@@ -33,7 +41,7 @@ services:
       - GITHUB_SHA
       - GITHUB_REF
       - GITHUB_ACTIONS
-    command: bin/wait-for mariadb:3306 pushgateway:9091 -- prove
+    command: prove
 
   mariadb:
     image: ghcr.io/hathitrust/db-image:latest
@@ -43,6 +51,12 @@ services:
       MYSQL_DATABASE: ht
       MYSQL_USER: ht_rights
       MYSQL_PASSWORD: ht_rights
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "healthcheck.sh", "--su-mysql", "--connect", "--innodb_initialized" ]
 
   pushgateway:
     image: prom/pushgateway
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "-O", "/dev/null", "pushgateway:9091/-/healthy" ]
