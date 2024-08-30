@@ -1,8 +1,9 @@
+#!/usr/bin/env ruby
 # frozen_string_literal: true
 
 require "date"
 require "logger"
-require_relative "lib/monthly_inventory"
+require_relative "../lib/monthly_inventory"
 
 def run_system_command(command)
   LOGGER.info command
@@ -10,7 +11,7 @@ def run_system_command(command)
 end
 
 LOGGER = Logger.new($stdout)
-HOME = File.expand_path(__dir__).freeze
+HOME = File.expand_path(File.join(__dir__, "..")).freeze
 FULL_SCRIPT = File.join(HOME, "run_zephir_full_monthly.sh")
 INCREMENTAL_SCRIPT = File.join(HOME, "run_process_zephir_incremental.sh")
 YESTERDAY = Date.today - 1
@@ -25,7 +26,7 @@ if inventory.earliest_missing_date.nil?
 end
 
 dates = (inventory.earliest_missing_date..YESTERDAY)
-LOGGER.info "Processing Zephir files for #{dates}"
+LOGGER.info "Processing Zephir files from #{dates}"
 dates.each do |date|
   date_str = date.strftime("%Y%m%d")
   if date.last_of_month?
