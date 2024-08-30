@@ -42,6 +42,17 @@ def setup_test_dirs(parent_dir:)
   end
 end
 
+def full_file_for_date(date:)
+  File.join(catalog_prep_dir, "zephir_full_#{date.strftime("%Y%m%d")}_vufind.json.gz")
+end
+
+def full_rights_file_for_date(date:, archive: true)
+  File.join(
+    archive ? rights_archive_dir : rights_dir,
+    "zephir_full_#{date.strftime("%Y%m%d")}.rights"
+  )
+end
+
 def update_file_for_date(date:)
   File.join(catalog_prep_dir, "zephir_upd_#{date.strftime("%Y%m%d")}.json.gz")
 end
@@ -50,7 +61,7 @@ def delete_file_for_date(date:)
   File.join(catalog_prep_dir, "zephir_upd_#{date.strftime("%Y%m%d")}_delete.txt.gz")
 end
 
-def rights_file_for_date(date:, archive: true)
+def update_rights_file_for_date(date:, archive: true)
   File.join(
     archive ? rights_archive_dir : rights_dir,
     "zephir_upd_#{date.strftime("%Y%m%d")}.rights"
@@ -59,12 +70,14 @@ end
 
 # @param date [Date] determines the month and year for the file datestamps
 def setup_test_files(date:)
-  start_date = Date.new(date.year, date.month, 1)
-  end_date = Date.new(date.year, date.month, -1)
+  start_date = Date.new(date.year, date.month - 1, -1)
+  `touch #{full_file_for_date(date: start_date)}`
+  `touch #{full_rights_file_for_date(date: start_date)}`
+  end_date = Date.new(date.year, date.month, -2)
   (start_date..end_date).each do |d|
     `touch #{update_file_for_date(date: d)}`
     `touch #{delete_file_for_date(date: d)}`
-    `touch #{rights_file_for_date(date: d)}`
+    `touch #{update_rights_file_for_date(date: d)}`
   end
 end
 

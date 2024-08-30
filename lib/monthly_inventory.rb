@@ -3,30 +3,54 @@
 require "date"
 require "logger"
 
+class Date
+  def last_of_month?
+    next_day.month != month
+  end
+end
+
 module PostZephirProcessing
   class MonthlyInventory
+    FULL_REGEXP = /^zephir_full_(\d{8})_vufind\.json\.gz$/
+    FULL_RIGHTS_REGEXP = /^zephir_full_(\d{8})\.rights$/
     UPDATE_REGEXP = /^zephir_upd_(\d{8})\.json\.gz$/
-    DELETE_REGEXP = /^zephir_upd_(\d{8})_delete\.txt\.gz$/
-    RIGHTS_REGEXP = /^zephir_upd_(\d{8})\.rights$/
-    attr_reader :date, :logger, :inventory
+    UPDATE_DELETE_REGEXP = /^zephir_upd_(\d{8})_delete\.txt\.gz$/
+    UPDATE_RIGHTS_REGEXP = /^zephir_upd_(\d{8})\.rights$/
+    attr_reader :date, :logger, :full_inventory, :update_inventory, :catalog_prep_dir
 
     # @param logger [Logger] defaults to STDOUT
     # @param date [Date] the file datestamp date, not the "run date"
     def initialize(logger: nil, date: (Date.today - 1))
       @logger = logger || Logger.new($stdout, level: ENV.fetch("POST_ZEPHIR_LOGGER_LEVEL", Logger::INFO).to_i)
       @date = date
-      @logger.info("MonthlyInventory using date #{@date}")
+      @logger.info "MonthlyInventory using date #{@date}"
       # TODO: these should go in .env/Canister
       @catalog_prep_dir = ENV["CATALOG_PREP"] || "/htsolr/catalog/prep/"
       @rights_dir = ENV["RIGHTS_DIR"] || "/htapps/babel/feed/var/rights"
       @rights_archive_dir = File.join(@rights_dir, "archive")
       @ingest_bibrecords_dir = ENV["INGEST_BIBRECORDS"] || "/htapps/babel/feed/var/bibrecords"
       @ingest_bibrecords_archive_dir = File.join(@ingest_bibrecords_dir, "archive")
-      @inventory = {
+      @full_inventory = {
+        zephir_full_files: zephir_full_files,
+        zephir_full_rights_files: zephir_full_rights_files
+      }
+      @update_inventory = {
         zephir_update_files: zephir_update_files,
         zephir_delete_files: zephir_delete_files,
-        zephir_rights_files: zephir_rights_files,
+        zephir_rights_files: zephir_rights_files
       }
+    end
+
+    # zephir_upd_YYYYMMDD.json.gz files for the current month.
+    # @return [Array<Date>] sorted ASC
+    def zephir_full_files
+      directory_inventory(directory: @catalog_prep_dir, regexp: FULL_REGEXP)
+    end
+
+    # zephir_upd_YYYYMMDD.rights files for the current month.
+    # @return [Array<Date>] sorted ASC
+    def zephir_full_rights_files
+      directory_inventory(directory: @rights_dir, archive_directory: @rights_archive_dir, regexp: FULL_RIGHTS_REGEXP)
     end
 
     # zephir_upd_YYYYMMDD.json.gz files for the current month.
@@ -38,13 +62,13 @@ module PostZephirProcessing
     # zephir_upd_YYYYMMDD_delete.txt.gz files for the current month.
     # @return [Array<Date>] sorted ASC
     def zephir_delete_files
-      directory_inventory(directory: @catalog_prep_dir, regexp: DELETE_REGEXP)
+      directory_inventory(directory: @catalog_prep_dir, regexp: UPDATE_DELETE_REGEXP)
     end
 
     # zephir_upd_YYYYMMDD.rights files for the current month.
     # @return [Array<Date>] sorted ASC
     def zephir_rights_files
-      directory_inventory(directory: @rights_dir, archive_directory: @rights_archive_dir, regexp: RIGHTS_REGEXP)
+      directory_inventory(directory: @rights_dir, archive_directory: @rights_archive_dir, regexp: UPDATE_RIGHTS_REGEXP)
     end
 
     # Iterate over the parts of the inventory separately.
@@ -53,17 +77,31 @@ module PostZephirProcessing
     # @return [Date,nil]
     def earliest_missing_date
       earliest = []
-      inventory.each do |_category, dates|
+      @update_inventory.each do |_category, dates|
         delta = all_dates - dates
         earliest << delta.min unless delta.empty?
+      end
+      # Each category in full inventory will have only zero or one entry, that
+      # being the last day of the last month
+      @full_inventory.each do |_category, dates|
+        if dates.empty?
+          earliest << all_dates.min
+        end
       end
       earliest.min
     end
 
-    # Beginning of month to "present"
+    # The most recent last day of the month (which may be today) to "present"
     # @return [Array<Date>] sorted ASC
     def all_dates
-      @all_dates ||= (Date.new(date.year, date.month, 1)..date).to_a.sort
+      return @all_dates if @all_dates
+
+      start_date = if date.last_of_month?
+        date
+      else
+        Date.new(date.year, date.month, 1) - 1
+      end
+      @all_dates = (start_date..date).to_a.sort
     end
 
     private
@@ -80,7 +118,7 @@ module PostZephirProcessing
 
         dates += Dir.children(dir)
           .filter_map { |filename| (m = regexp.match(filename)) && Date.parse(m[1]) }
-          .select { |file_date| file_date.month == date.month && file_date.year == date.year }
+          .select { |file_date| all_dates.include? file_date }
       end
       dates.sort.uniq
     end
