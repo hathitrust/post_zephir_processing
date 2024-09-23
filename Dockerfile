@@ -4,9 +4,7 @@ RUN apt-get update && apt-get install -y \
   bsd-mailx \
   msmtp \
   pigz \
-  ruby-rspec \
-  ruby-simplecov \
-  ruby-simplecov-html
+  ruby-dev
 
 RUN cpanm -n  \
   Data::Dumper \
@@ -37,5 +35,11 @@ ENV ROOTDIR /usr/src/app
 
 COPY . $ROOTDIR
 WORKDIR $ROOTDIR
+
+ENV BUNDLE_PATH /gems
+ENV RUBYLIB /usr/src/app/lib
+RUN gem install bundler
+RUN bundle config --global silence_root_warning 1
+RUN bundle install
 
 CMD run_process_zephir_incremental.sh

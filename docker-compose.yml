@@ -14,6 +14,7 @@ services:
     build: .
     volumes:
       - .:/usr/src/app
+      - gem_cache:/gems
     depends_on:
       mariadb: *healthy
       pushgateway: *healthy
@@ -27,6 +28,7 @@ services:
     build: .
     volumes:
       - .:/usr/src/app
+      - gem_cache:/gems
     depends_on:
       - mariadb
       - pushgateway
@@ -60,3 +62,6 @@ services:
     healthcheck:
       <<: *healthcheck-defaults
       test: [ "CMD", "wget", "--quiet", "--tries=1", "-O", "/dev/null", "pushgateway:9091/-/healthy" ]
+
+volumes:
+  gem_cache:
