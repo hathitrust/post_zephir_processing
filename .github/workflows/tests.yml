@@ -24,7 +24,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.github_token }}
 
-     - name: Run Ruby standardrb
+      - name: Run Ruby standardrb
         run: docker compose run --rm test bundle exec standardrb
 
       - name: Run Ruby tests
