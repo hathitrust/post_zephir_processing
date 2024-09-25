@@ -1,5 +1,27 @@
 #!/bin/bash
 
+# Call this script with:
+# - exactly one date argument of the form YYYYMMDD
+# OR
+# - no arguments to use yesterday's date
+
+if [[ $# -eq 0 ]]; then
+  YESTERDAY=`date --date="yesterday" +%Y%m%d`
+else
+  if [[ "$1" =~ ^[0-9]{8}$ ]]; then
+    YESTERDAY=$1
+  else
+    echo "Invalid date format '$1', need YYYYMMDD"
+    exit 1
+  fi
+fi
+
+source $ROOTDIR/config/defaults
+cd $TMPDIR
+
+SCRIPTNAME=`basename $0`
+zephir_date="$(echo $YESTERDAY | sed 's/\(....\)\(..\)/\1-\2-/')"
+
 # Route all external processes through these functions
 # to avoid silent failures.
 function run_external_command {
@@ -19,17 +41,8 @@ function report_error_and_exit {
   exit 1
 }
 
-source $ROOTDIR/config/defaults
-cd $TMPDIR
-
 echo "starting: `date` in $TMPDIR with data in $DATA_ROOT"
 
-SCRIPTNAME=`basename $0`
-zephir_date=`date --date="yesterday" +%Y-%m-%d`
-YESTERDAY=`date --date="yesterday" +%Y%m%d`
-TODAY=`date +%Y%m%d`
-
-today_dash=`date +%Y-%m-%d`
 us_fed_pub_exception_file=$FEDDOCS_HOME/feddocs_oclc_filter/oclcs_removed_from_registry.txt
 echo "fed pub exception file set in environment: $us_fed_pub_exception_file"
 
