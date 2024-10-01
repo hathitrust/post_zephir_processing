@@ -41,7 +41,6 @@ function report_error_and_exit {
 
 export us_fed_pub_exception_file="$FEDDOCS_HOME/feddocs_oclc_filter/oclcs_removed_from_registry.txt"
 
-DATADIR=$ROOTDIR/data/zephir
 ZEPHIR_VUFIND_EXPORT=ht_bib_export_incr_${zephir_date}.json.gz 
 ZEPHIR_VUFIND_DELETE=vufind_removed_cids_${zephir_date}.txt.gz
 ZEPHIR_VUFIND_DOLL_D=vufind_incremental_${zephir_date}_dollar_dup.txt

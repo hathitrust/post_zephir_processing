@@ -1,9 +1,33 @@
-Post-Zephir Metadata Processing
-===============================
+<p align="center">
+<h1>Post-Zephir Metadata Processing</h1>
 
-A mostly haphazard collection of scripts (Bash, Perl) that take Zephir records, do some clean up and calculate Bib Rights, among other processes.
+![Run Tests](https://github.com/hathitrust/post_zephir_processing/workflows/Run%20Tests/badge.svg)
+[![Coverage Status](https://coveralls.io/repos/github/hathitrust/post_zephir_processing/badge.svg?branch=main)](https://coveralls.io/github/hathitrust/post_zephir_processing?branch=main)
+</p>
+
+A mostly haphazard collection of scripts (Bash, Perl) that take Zephir records,
+do some clean up and calculate Bib Rights, among other processes.
 
 Parts of these should likely be extracted into their own repositories, or obviated by a re-architecture. 
+
+## Setup
+Clone repo using your protocol of choice.
+```
+docker compose build
+```
+There is no need for a `bundle install` step as this is taken care of in the `Dockerfile`.
+
+### Run Tests
+#### Perl
+```
+docker compose run --rm test
+```
+
+#### Ruby
+```
+docker compose run --rm test bundle exec standardrb
+docker compose run --rm test bundle exec rspec
+```
 
 run_process_zephir_incremental.sh (daily)
 =========================================

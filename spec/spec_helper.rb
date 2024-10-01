@@ -2,11 +2,22 @@
 
 require "logger"
 require "simplecov"
+require "simplecov-lcov"
 
 SimpleCov.add_filter "spec"
+
+SimpleCov::Formatter::LcovFormatter.config do |c|
+  c.report_with_single_file = true
+  c.single_report_path = "coverage/lcov.info"
+end
+SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new([
+  SimpleCov::Formatter::HTMLFormatter,
+  SimpleCov::Formatter::LcovFormatter
+])
 SimpleCov.start
 
-require_relative "../lib/monthly_inventory"
+require_relative "../lib/dates"
+require_relative "../lib/derivatives"
 
 ENV["POST_ZEPHIR_LOGGER_LEVEL"] = Logger::WARN.to_s
 
@@ -22,24 +33,26 @@ def rights_archive_dir
   File.join(ENV["SPEC_TMPDIR"], "rights", "archive")
 end
 
-def ingest_bibrecords_dir
-  File.join(ENV["SPEC_TMPDIR"], "ingest_bibrecords")
-end
-
-def ingest_bibrecords_archive_dir
-  File.join(ENV["SPEC_TMPDIR"], "ingest_bibrecords", "archive")
-end
-
 # Set the all-important SPEC_TMPDIR and derivative env vars,
 # and populate test dir with the appropriate directories.
 def setup_test_dirs(parent_dir:)
   ENV["SPEC_TMPDIR"] = parent_dir
   ENV["CATALOG_PREP"] = catalog_prep_dir
   ENV["RIGHTS_DIR"] = rights_dir
-  ENV["INGEST_BIBRECORDS"] = ingest_bibrecords_dir
-  [catalog_prep_dir, rights_dir, rights_archive_dir, ingest_bibrecords_dir, ingest_bibrecords_archive_dir].each do |loc|
+  [catalog_prep_dir, rights_dir, rights_archive_dir].each do |loc|
     Dir.mkdir loc
   end
+end
+
+def full_file_for_date(date:)
+  File.join(catalog_prep_dir, "zephir_full_#{date.strftime("%Y%m%d")}_vufind.json.gz")
+end
+
+def full_rights_file_for_date(date:, archive: true)
+  File.join(
+    archive ? rights_archive_dir : rights_dir,
+    "zephir_full_#{date.strftime("%Y%m%d")}.rights"
+  )
 end
 
 def update_file_for_date(date:)
@@ -50,7 +63,7 @@ def delete_file_for_date(date:)
   File.join(catalog_prep_dir, "zephir_upd_#{date.strftime("%Y%m%d")}_delete.txt.gz")
 end
 
-def rights_file_for_date(date:, archive: true)
+def update_rights_file_for_date(date:, archive: true)
   File.join(
     archive ? rights_archive_dir : rights_dir,
     "zephir_upd_#{date.strftime("%Y%m%d")}.rights"
@@ -59,16 +72,18 @@ end
 
 # @param date [Date] determines the month and year for the file datestamps
 def setup_test_files(date:)
-  start_date = Date.new(date.year, date.month, 1)
-  end_date = Date.new(date.year, date.month, -1)
+  start_date = Date.new(date.year, date.month - 1, -1)
+  `touch #{full_file_for_date(date: start_date)}`
+  `touch #{full_rights_file_for_date(date: start_date)}`
+  end_date = Date.new(date.year, date.month, -2)
   (start_date..end_date).each do |d|
     `touch #{update_file_for_date(date: d)}`
     `touch #{delete_file_for_date(date: d)}`
-    `touch #{rights_file_for_date(date: d)}`
+    `touch #{update_rights_file_for_date(date: d)}`
   end
 end
 
-# The following RSpec boilerplate tends to recur across HathiTrust Roby test suites.
+# The following RSpec boilerplate tends to recur across HathiTrust Ruby test suites.
 RSpec.configure do |config|
   # rspec-expectations config goes here. You can use an alternate
   # assertion/expectation library such as wrong or the stdlib/minitest
