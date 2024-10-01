@@ -20,14 +20,6 @@ module PostZephirProcessing
       it "has a default date of yesterday" do
         expect(described_class.new.dates.date).to eq(Date.today - 1)
       end
-
-      it "has a full inventory" do
-        expect(described_class.new.full_derivatives).to be_an_instance_of(Hash)
-      end
-
-      it "has update derivatives" do
-        expect(described_class.new.update_derivatives).to be_an_instance_of(Hash)
-      end
     end
 
     describe "#dates" do

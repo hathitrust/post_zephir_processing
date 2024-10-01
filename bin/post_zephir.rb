@@ -1,6 +1,9 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+# Runs run_zephir_full_monthly.sh and/or run_process_zephir_incremental.sh
+# for any dates that are missing from the current inventory of derivative files.
+
 require "date"
 require "logger"
 

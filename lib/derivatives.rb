@@ -9,35 +9,30 @@ module PostZephirProcessing
   class Derivatives
     DIR_DATA = {
       zephir_full: {
-        name: :zephir_full,
         location: :CATALOG_PREP,
         pattern: /^zephir_full_(\d{8})_vufind\.json\.gz$/,
         archive: false,
         full: true
       },
       zephir_full_rights: {
-        name: :zephir_full_rights,
         location: :RIGHTS_DIR,
         pattern: /^zephir_full_(\d{8})\.rights$/,
         archive: true,
         full: true
       },
       zephir_update: {
-        name: :zephir_update,
         location: :CATALOG_PREP,
         pattern: /^zephir_upd_(\d{8})\.json\.gz$/,
         archive: false,
         full: false
       },
       zephir_update_rights: {
-        name: :zephir_update_rights,
         location: :RIGHTS_DIR,
         pattern: /^zephir_upd_(\d{8})\.rights$/,
         archive: true,
         full: false
       },
       zephir_update_delete: {
-        name: :zephir_update_delete,
         location: :CATALOG_PREP,
         pattern: /^zephir_upd_(\d{8})_delete\.txt\.gz$/,
         archive: false,
@@ -52,35 +47,13 @@ module PostZephirProcessing
       @dates = Dates.new(date: date)
     end
 
-    # The following two methods return a map of location name => array of dates
-    # Looks sorta like this:
-    # {:zephir_full=>[Date1, Date2, ...], :zephir_full_rights=>[Date1, Date2, ...]}
-    def full_derivatives
-      @full_derivatives ||= DIR_DATA.select { |key, value| value[:full] }
-        .transform_values { |value| directory_inventory(name: value[:name]) }
-    end
-
-    def update_derivatives
-      @update_derivatives ||= DIR_DATA.select { |key, value| !value[:full] }
-        .transform_values { |value| directory_inventory(name: value[:name]) }
-    end
-
-    # Iterate over the parts of the inventory separately.
-    # Find the earliest (min) date missing (if any) from each.
-    # If a date is missing in any one of them then it is a do-over candidate.
     # @return [Date,nil]
     def earliest_missing_date
       earliest = []
-      update_derivatives.each do |_dir, inventory_dates|
-        delta = dates.all_dates - inventory_dates
+      DIR_DATA.each_pair do |name, data|
+        required_dates = data[:full] ? [dates.all_dates.min] : dates.all_dates
+        delta = required_dates - directory_inventory(name: name)
         earliest << delta.min if delta.any?
-      end
-      # Each category in full inventory will have only zero or one entry, that
-      # being the most recent last day of the month
-      full_derivatives.each do |_dir, inventory_dates|
-        if inventory_dates.empty?
-          earliest << dates.all_dates.min
-        end
       end
       earliest.min
     end
@@ -116,6 +89,8 @@ module PostZephirProcessing
       inventory_dates.sort.uniq
     end
 
+    # Given a name like :zephir_full, return an Array with the associated path,
+    # and the archive path if it has one.
     def directories_named(name:)
       directories = [
         directory_for(location: DIR_DATA[name][:location])
