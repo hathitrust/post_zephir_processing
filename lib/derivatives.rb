@@ -92,13 +92,11 @@ module PostZephirProcessing
     # Given a name like :zephir_full, return an Array with the associated path,
     # and the archive path if it has one.
     def directories_named(name:)
-      directories = [
-        directory_for(location: DIR_DATA[name][:location])
-      ]
-      if DIR_DATA[name][:archive]
-        directories << File.join(directories[0], "archive")
+      [directory_for(location: DIR_DATA[name][:location])].tap do |dirs|
+        if DIR_DATA[name][:archive]
+          dirs << File.join(dirs[0], "archive")
+        end
       end
-      directories
     end
   end
 end
