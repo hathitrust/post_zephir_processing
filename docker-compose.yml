@@ -47,8 +47,13 @@ services:
 
   mariadb:
     image: ghcr.io/hathitrust/db-image:latest
+    volumes:
+      - ./sql/ingest.sql:/docker-entrypoint-initdb.d/999-ingest.sql
     restart: always
     environment:
+      # setting via MYSQL_ROOT_PASSWORD didn't work; this at least
+      # makes it clear that we have to dig out its generated root password
+      # from its startup
       MYSQL_RANDOM_ROOT_PASSWORD: 1 
       MYSQL_DATABASE: ht
       MYSQL_USER: ht_rights
