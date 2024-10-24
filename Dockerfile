@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
 
 RUN cpanm -n  \
   Data::Dumper \
+  Date::Manip \
   DBD::MariaDB \
   DB_File \
   DBI \
@@ -29,7 +30,8 @@ RUN cpanm -n  \
   URI::Escape \
   XML::LibXML \
   XML::LibXSLT \
-  YAML
+  YAML \
+  YAML::XS
 
 ENV ROOTDIR /usr/src/app
 
