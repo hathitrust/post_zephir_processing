@@ -19,6 +19,7 @@ RUN cpanm -n  \
   https://github.com/hathitrust/progress_tracker.git@v0.9.0 \
   JSON::XS \
   LWP::Simple \
+  Mail::Mailer \
   MARC \
   MARC::Batch \
   MARC::File::XML \
