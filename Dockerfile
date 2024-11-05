@@ -2,7 +2,7 @@ FROM perl:5.38
 
 RUN apt-get update && apt-get install -y \
   bsd-mailx \
-  msmtp \
+  msmtp-mta \
   pigz \
   ruby-dev
 
@@ -35,6 +35,7 @@ RUN cpanm -n  \
   YAML::XS
 
 ENV ROOTDIR /usr/src/app
+ENV HOME /usr/src/app
 
 COPY . $ROOTDIR
 WORKDIR $ROOTDIR
