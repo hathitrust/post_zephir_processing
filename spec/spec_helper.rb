@@ -18,6 +18,7 @@ SimpleCov.start
 
 require_relative "../lib/dates"
 require_relative "../lib/derivatives"
+require_relative "../lib/journal"
 
 ENV["POST_ZEPHIR_LOGGER_LEVEL"] = Logger::WARN.to_s
 
