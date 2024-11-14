@@ -69,12 +69,12 @@ workflow config for authoritative values.)
 ## `run_process_zephir_incremental.sh` (daily)
 
 * Process daily file of new/updated/deleted metadata provided by Zephir
-* Send deleted bib record IDs (provided by Zephir) to Bill
-* "Clean up" zephir records
+* Send deleted bib record IDs (provided by Zephir) to catalog indexer
+* "Clean up" zephir records (what does this mean?)
 * (re)determine bibliographic rights
   + Write new/updated bib rights to file for `populate_rights_data.pl` to pick up and update the rights db
-* File of processed new/updated records is copied to an HT server for Bill to index in the catalog
-* Retrieves full bib metadata file from zephir and runs run_zephir_full_monthly.sh. (Why?)
+* File of processed new/updated records is copied to a location for the catalog indexer to find it
+* Retrieves full bib metadata file from zephir and runs `run_zephir_full_monthly.sh`. (It does?? I don't think so.)
 
 Why?
 ----
@@ -99,8 +99,9 @@ AFAICT, Verifier should only be interested in files outside `TMPDIR`, with the p
 
 | File                                                     | Notes                                                                                        |
 | --------                                                 | -----                                                                                        |
-| `CATALOG_PREP/zephir_upd_YYYYMMDD_delete.txt.gz`         | Created as `TMPDIR/BASENAME_all_delete.txt.gz`                                               |
+| `CATALOG_ARCHIVE/zephir_upd_YYYYMMDD.json.gz`            | From `postZephir.pm`: gzipped and copied (not moved) by shell script                         |
 | `CATALOG_PREP/zephir_upd_YYYYMMDD.json.gz`               | From `postZephir.pm`: gzipped and copied (not moved) by shell script                         |
+| `CATALOG_PREP/zephir_upd_YYYYMMDD_delete.txt.gz`         | Created as `TMPDIR/BASENAME_all_delete.txt.gz` combining two files (see below)               |
 | `RIGHTS_DIR/zephir_upd_YYYYMMDD.rights`                  | From `postZephir.pm`: moved from `TMPDIR`                                                    |
 | `ROOTDIR/data/zephir/debug_current.txt`                  | _Commented out at end of monthly script. Should be removed._                                 |
 | `TMPDIR/vufind_incremental_YYYY-MM-DD_dollar_dup.txt.gz` | Created as `TMPDIR/BASENAME_dollar_dup.txt`, renamed and sent to Zephir                      |
