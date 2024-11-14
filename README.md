@@ -53,16 +53,17 @@ TODO: can we use `dotenv` and `.env` in both the shell scripts and the Ruby code
 | `ROOTDIR`           | (not used)                          | `/usr/src/app`                |
 
 Additional derivative paths are set by `config/defaults`, typically from the daily or monthly shell script.
-As such they are not available to Ruby code. (Note: there may be some fuzziness between these two
-sets since we may decide to let Argo handle one or more of these in future. Look to the Argo metadata
-workflow config for authoritative values.)
+Another mechanism (`lib/derivatives.rb`) is being experimented with for the Ruby code.
+(Note: there may be some fuzziness between these two sets since we may decide to let
+Argo handle one or more of these in future. Look to the Argo metadata workflow config for
+authoritative values.)
 
-| `ENV`               | Standard Location                   | Docker/Default Location       | Note             |
-| --------            | -------                             | -----                         | ----             |
-| `REPORTS`           | `DATA_ROOT/reports`                 | `DATA_ROOT/reports`           | *unused*         |
-| `RIGHTS_DBM`        | `DATA_ROOT/rights_dbm`              | `DATA_ROOT/rights_dbm`        | *this is a file* |
-| `TMPDIR`            | `DATA_ROOT/work`                    | `/tmp`                        |                  |
-| `ZEPHIR_DATA`       | `DATA_ROOT/zephir`                  | `DATA_ROOT/zephir`            |                  |
+| `ENV`               | Standard/Default/Docker Location    | Note             |
+| --------            | -------                             | ----             |
+| `REPORTS`           | `DATA_ROOT/reports`                 | *unused*         |
+| `RIGHTS_DBM`        | `DATA_ROOT/rights_dbm`              | *this is a file* |
+| `TMPDIR`            | `DATA_ROOT/work`                    |                  |
+| `ZEPHIR_DATA`       | `DATA_ROOT/zephir`                  |                  |
 
 
 
