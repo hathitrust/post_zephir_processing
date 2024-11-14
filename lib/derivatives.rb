@@ -7,6 +7,13 @@ module PostZephirProcessing
   # `earliest_missing_date` is the main entrypoint when constructing an agenda of Zephir
   # file dates to fetch for processing.
   class Derivatives
+    STANDARD_LOCATIONS = [
+      :CATALOG_ARCHIVE,
+      :CATALOG_PREP,
+      :RIGHTS_DIR,
+      :TMPDIR
+    ].freeze
+
     DIR_DATA = {
       zephir_full: {
         location: :CATALOG_PREP,
@@ -42,6 +49,24 @@ module PostZephirProcessing
 
     attr_reader :dates
 
+    # Translate a known file destination as an environment variable key
+    # into the path via ENV or a default.
+    # @return [String] path to the directory
+    def self.directory_for(location:)
+      case location.to_sym
+      when :CATALOG_ARCHIVE
+        ENV["CATALOG_ARCHIVE"] || "/htapps/archive/catalog"
+      when :CATALOG_PREP
+        ENV["CATALOG_PREP"] || "/htsolr/catalog/prep/"
+      when :RIGHTS_DIR
+        ENV["RIGHTS_DIR"] || "/htapps/babel/feed/var/rights"
+      when :TMPDIR
+        ENV["TMPDIR"] || File.join(ENV["DATA_ROOT"], "work")
+      else
+        raise "Unknown location #{location}"
+      end
+    end
+
     # @param date [Date] the file datestamp date, not the "run date"
     def initialize(date: (Date.today - 1))
       @dates = Dates.new(date: date)
@@ -59,18 +84,6 @@ module PostZephirProcessing
     end
 
     private
-
-    # Translate a known file destination as an environment variable key
-    # into the path via ENV or a default.
-    # @return [String] path to the directory
-    def directory_for(location:)
-      case location.to_sym
-      when :CATALOG_PREP
-        ENV["CATALOG_PREP"] || "/htsolr/catalog/prep/"
-      when :RIGHTS_DIR
-        ENV["RIGHTS_DIR"] || "/htapps/babel/feed/var/rights"
-      end
-    end
 
     # Run regexp against the contents of dir and store matching files
     # that have datestamps in the period of interest.
@@ -92,7 +105,7 @@ module PostZephirProcessing
     # Given a name like :zephir_full, return an Array with the associated path,
     # and the archive path if it has one.
     def directories_named(name:)
-      [directory_for(location: DIR_DATA[name][:location])].tap do |dirs|
+      [self.class.directory_for(location: DIR_DATA[name][:location])].tap do |dirs|
         if DIR_DATA[name][:archive]
           dirs << File.join(dirs[0], "archive")
         end
