@@ -85,7 +85,7 @@ Data In
 -------
 * `ht_bib_export_incr_YYYY-MM-DD.json.gz` (incremental updates from Zephir, `ftps_zephir_get`)
 * `vufind_removed_cids_YYYY-MM-DD.txt.gz` (CIDs that have gone away, `ftps_zephir_get`)
-* `DATA_ROOT/rights_dbm`  (taken from `ht_rights.rights_current` table in the rights database)
+* `DATA_ROOT/rights_dbm` (local copy of Rights DB `ht_rights.rights_current`)
 * `ROOTDIR/data/us_cities.db` (dependency for `bib_rights.pm`)
 * `ENV[us_fed_pub_exception_file]` (optional dependency for `bib_rights.pm`)
 
@@ -101,7 +101,7 @@ AFAICT, Verifier should only be interested in files outside `TMPDIR`, with the p
 | File                                                     | Notes                                                                                        |
 | --------                                                 | -----                                                                                        |
 | `CATALOG_ARCHIVE/zephir_upd_YYYYMMDD.json.gz`            | From `postZephir.pm`: gzipped and copied (not moved) by shell script                         |
-| `CATALOG_PREP/zephir_upd_YYYYMMDD.json.gz`               | From `postZephir.pm`: gzipped and copied (not moved) by shell script                         |
+| `CATALOG_PREP/zephir_upd_YYYYMMDD.json.gz`               | Same file as above, removed from `TMPDIR` after being copied to the two destinations         |
 | `CATALOG_PREP/zephir_upd_YYYYMMDD_delete.txt.gz`         | Created as `TMPDIR/BASENAME_all_delete.txt.gz` combining two files (see below)               |
 | `RIGHTS_DIR/zephir_upd_YYYYMMDD.rights`                  | From `postZephir.pm`: moved from `TMPDIR`                                                    |
 | `ROOTDIR/data/zephir/debug_current.txt`                  | _Commented out at end of monthly script. Should be removed._                                 |
@@ -140,20 +140,28 @@ Previously generated the HTRC datasets. All that remains is the zephir_ingested_
 
 Data In
 -------
+* `ht_bib_export_full_YYYY-MM-DD.json.gz` (monthly updates from Zephir, `ftps_zephir_get`)
+  Note: this file is deleted by the `unpigz` command that splits it into smaller files to process in parallel.
+* Note: there is no monthly "removed CIDs" or "deletes" files, these are only in the daily updates.
 * US Fed Doc exception list `/htdata/govdocs/feddocs_oclc_filter/oclcs_removed_from_registry.txt`
-* `/tmp/rights_dbm`
+* `DATA_ROOT/rights_dbm` (local copy of Rights DB `ht_rights.rights_current`)
 * `groove_export_YYYY-MM-DD.tsv.gz` (ftps from cdlib)
-* `ht_bib_export_full_YYYY-MM-DD.json.gz`
+
 
 Data Out
 --------
-* `groove_export_YYYY-MM-DD.tsv.gz` will be moved to /htapps/babel/feed/var/bibrecords/groove_full.tsv.gz  
-* `zephir_full_${YESTERDAY}_vufind.json.gz` catalog archive. Indexed into catalog via the same process as for `run_process_zephir_incremental.sh`
-* `zephir_full_${YESTERDAY}.rights` moved to /htapps/babel/feed/var/rights/
-* `zephir_full_${YESTERDAY}.rights.debug`, doesn't appear to be used
-* `zephir_full_monthly_rpt.txt`moved to ../data/full/
-* `zephir_full_${YESTERDAY}.rights_rpt.tsv moved to ./data/full/
-* `zephir_ingested_items.txt.gz` - copied to `/htapps/babel/feed/var/bibrecords`. Used by https://github.com/hathitrust/feed_internal/blob/master/feed.monthly/zephir_diff.pl to refresh the full `feed_zephir_items` table on a monthly basis.
+| File                                                     | Notes                                                                                        |
+| --------                                                 | -----                                                                                        |
+| `INGEST_BIBRECORDS/groove_full.tsv.gz`                   | Downloaded as `groove_export_YYYY-MM-DD.tsv.gz` and moved, contents are not modified         |
+| `INGEST_BIBRECORDS/zephir_ingested_items.txt.gz`         | From `postZephir.pm`, TSV of {htid, source, collection, digitization_source, ia_id}          |
+| `CATALOG_ARCHIVE/zephir_full_YYYYMMDD_vufind.json.gz`    | Concatenated from parallel-processed files, gzipped and moved by shell script                |
+| `CATALOG_PREP/zephir_full_YYYYMMDD_vufind.json.gz`       | Same file as above, copied to `CATALOG_PREP` before being moved to `CATALOG_ARCHIVE`         |
+| `RIGHTS_DIR/zephir_full_YYYYMMDD.rights`                 | From `postZephir.pm`: moved from `TMPDIR`                                                    |
+| `TMPDIR/stderr.tmp.txt`                                  | Concatenated from subfiles' STDERR                                                           |
+| `TMPDIR/zephir_full_YYYYMMDD.rights.debug`               | From `postZephir.pm`, _if no one is using this it should be removed_                         |                                                                       |
+| `ZEPHIR_DATA/full/zephir_full_monthly_rpt.txt`           | Concatenated from subfiles and moved from `TMPDIR`                                           |
+| `ZEPHIR_DATA/full/zephir_full_YYYYMMDD.rights_rpt.tsv`   | Concatenated from subfiles and moved from `TMPDIR`                                           |
+
 
 Perl script dependencies
 ------------------------

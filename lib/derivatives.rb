@@ -49,17 +49,16 @@ module PostZephirProcessing
     # into the path via ENV or a default.
     # @return [String] path to the directory
     def self.directory_for(location:)
-      case location.to_sym
-      when :CATALOG_ARCHIVE
-        ENV["CATALOG_ARCHIVE"] || "/htapps/archive/catalog"
-      when :CATALOG_PREP
-        ENV["CATALOG_PREP"] || "/htsolr/catalog/prep/"
-      when :RIGHTS_ARCHIVE
-        ENV["RIGHTS_ARCHIVE"] || "/htapps/babel/feed/var/rights/archive"
-      when :TMPDIR
-        ENV["TMPDIR"] || File.join(ENV["DATA_ROOT"], "work")
+      location = location.to_s
+      case location
+      when "CATALOG_ARCHIVE", "CATALOG_PREP", "INGEST_BIBRECORDS", "RIGHTS_DIR", "ZEPHIR_DATA"
+        ENV.fetch location
+      when "RIGHTS_ARCHIVE"
+        ENV["RIGHTS_ARCHIVE"] || File.join(ENV.fetch("RIGHTS_DIR"), "archive")
+      when "TMPDIR"
+        ENV["TMPDIR"] || File.join(ENV.fetch("DATA_ROOT"), "work")
       else
-        raise "Unknown location #{location}"
+        raise "Unknown location #{location.inspect}"
       end
     end
 

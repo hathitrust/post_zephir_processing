@@ -1,8 +1,11 @@
 # frozen_string_literal: true
 
+require "dotenv"
 require "logger"
 require "simplecov"
 require "simplecov-lcov"
+
+Dotenv.load(File.join(ENV.fetch("ROOTDIR"), "config", "env"))
 
 SimpleCov.add_filter "spec"
 

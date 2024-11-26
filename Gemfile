@@ -3,6 +3,8 @@
 source "https://rubygems.org"
 
 gem "canister"
+gem "dotenv"
+gem "zinzout"
 
 group :development, :test do
   gem "climate_control"
