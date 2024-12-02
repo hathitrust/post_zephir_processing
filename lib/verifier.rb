@@ -10,7 +10,7 @@ require_relative "services"
 
 module PostZephirProcessing
   class Verifier
-    attr_reader :journal
+    attr_reader :journal, :errors
 
     def self.datestamped_file(name:, date:)
       name.sub(/YYYYMMDD/i, date.strftime("%Y%m%d"))
@@ -33,6 +33,8 @@ module PostZephirProcessing
     # Generally, needs a Journal in order to know what to look for.
     def initialize
       @journal = Journal.from_yaml
+      # Mainly for testing
+      @errors = []
     end
 
     # Main entrypoint
@@ -74,6 +76,7 @@ module PostZephirProcessing
     # I'm not sure if we're going to try to distinguish errors and warnings.
     # For now let's call everything an error.
     def error(message:)
+      @errors << message
       Services[:logger].error message
     end
   end

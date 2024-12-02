@@ -6,11 +6,8 @@ require "tmpdir"
 module PostZephirProcessing
   RSpec.describe(Journal) do
     around(:each) do |example|
-      Dir.mktmpdir do |tmpdir|
-        ClimateControl.modify DATA_ROOT: tmpdir do
-          @tmpdir = tmpdir
-          example.run
-        end
+      with_test_environment do |tmpdir|
+        example.run
       end
     end
 
@@ -19,14 +16,6 @@ module PostZephirProcessing
     let(:range_of_dates) { (Date.today..Date.today + 1) }
     let(:with_dates) { described_class.new(dates: unsorted_dates) }
     let(:with_range) { described_class.new(dates: range_of_dates) }
-    let(:test_yaml) {
-      <<~TEST_YAML
-        ---
-        - '20500101'
-        - '20500102'
-      TEST_YAML
-    }
-    let(:test_yaml_dates) { [Date.new("2050", "1", "1"), Date.new("2050", "1", "2")] }
 
     describe ".destination_path" do
       it "contains the current DATA_ROOT" do
@@ -36,8 +25,9 @@ module PostZephirProcessing
 
     describe ".from_yaml" do
       it "produces a Journal with the expected dates" do
-        File.write(described_class.destination_path, test_yaml)
+        File.write(described_class.destination_path, test_journal)
         expect(described_class.from_yaml).to be_an_instance_of(Journal)
+        expect(described_class.from_yaml.dates).to eq(test_journal_dates)
       end
     end
 

@@ -22,7 +22,34 @@ SimpleCov.start
 require_relative "../lib/dates"
 require_relative "../lib/derivatives"
 require_relative "../lib/journal"
+require_relative "../lib/verifier"
 
+def test_journal
+  <<~TEST_YAML
+    ---
+    - '20500101'
+    - '20500102'
+  TEST_YAML
+end
+
+def test_journal_dates
+  [Date.new(2050, 1, 1), Date.new(2050, 1, 2)]
+end
+
+def with_test_environment
+  Dir.mktmpdir do |tmpdir|
+    ClimateControl.modify(DATA_ROOT: tmpdir) do
+      File.open(File.join(tmpdir, "journal.yml"), "w") { |f| f.puts test_journal }
+      # Maybe we don't need to yield `tmpdir` since we're also assigning it to an
+      # instance variable. Leaving it for now in case the ivar approach leads to funny business.
+      @tmpdir = tmpdir
+      yield tmpdir
+    end
+  end
+end
+
+# TODO: the following ENV juggling routines are for the integration tests,
+# and should be integrated with the `with_test_environment` facility above.
 ENV["POST_ZEPHIR_LOGGER_LEVEL"] = Logger::WARN.to_s
 
 def catalog_prep_dir
