@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "zlib"
 require_relative "../verifier"
 require_relative "../derivatives"
 
@@ -45,10 +46,21 @@ module PostZephirProcessing
     #   readable
     #   TODO: deletes file is combination of two component files in TMPDIR?
     def verify_catalog_prep(date: current_date)
+      delete_file = self.class.dated_derivative(location: :CATALOG_PREP, name: "zephir_upd_YYYYMMDD_delete.txt.gz", date: date)
       verify_file(path: self.class.dated_derivative(location: :CATALOG_PREP, name: "zephir_upd_YYYYMMDD.json.gz", date: date))
-      verify_file(path: self.class.dated_derivative(location: :CATALOG_PREP, name: "zephir_upd_YYYYMMDD_delete.txt.gz", date: date))
+      verify_file(path: delete_file)
+      verify_deletes_contents(path: delete_file)
       if date.last_of_month?
         verify_file(path: self.class.dated_derivative(location: :CATALOG_PREP, name: "zephir_full_YYYYMMDD_vufind.json.gz", date: date))
+      end
+    end
+
+    # Verify contents of the given file consists of catalog record IDs (9 digits)
+    def verify_deletes_contents(path:)
+      Zlib::GzipReader.open(path).each_line do |line|
+        if !line.match?(/^\d{9}$/)
+          error message: "Unexpected line in #{path} (was '#{line.strip}'); expecting catalog record ID (9 digits)"
+        end
       end
     end
 
