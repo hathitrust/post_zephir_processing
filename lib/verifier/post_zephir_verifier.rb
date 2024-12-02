@@ -132,7 +132,7 @@ module PostZephirProcessing
               \t (ic|pd|pdus|und)    # col 2, one of these
               \t bib                 # col 3, exactly this
               \t bibrights           # col 4, exactly this
-              \t \w+(-\w+)*          # col 5, digitizer, e.g. 'ia', 'cornell-ms'
+              \t \w+(-\w+)*          # col 5, digitization source, e.g. 'ia', 'cornell-ms'
               $/x
 
       # This allows an empty file as well, which is possible.

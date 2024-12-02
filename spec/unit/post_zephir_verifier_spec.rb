@@ -160,22 +160,80 @@ module PostZephirProcessing
       end
 
       it "rejects a file with malformed volume id" do
+        cols_2_to_5 = ["ic", "bib", "bibrights", "aa"].join("\t")
         expect_not_ok(
           :verify_rights_file_format,
-          ["", "ic", "bib", "bibrights", "aa"].join("\t")
+          ["", cols_2_to_5].join("\t"),
+          /Rights file .+ contains malformed line/
         )
         expect_not_ok(
           :verify_rights_file_format,
-          ["x", "ic", "bib", "bibrights", "aa"].join("\t")
+          ["x", cols_2_to_5].join("\t"),
+          /Rights file .+ contains malformed line/
         )
         expect_not_ok(
           :verify_rights_file_format,
-          ["x.", "ic", "bib", "bibrights", "aa"].join("\t")
+          ["x.", cols_2_to_5].join("\t"),
+          /Rights file .+ contains malformed line/
         )
         expect_not_ok(
           :verify_rights_file_format,
-          [".x", "ic", "bib", "bibrights", "aa"].join("\t")
+          [".x", cols_2_to_5].join("\t"),
+          /Rights file .+ contains malformed line/
         )
+      end
+
+      it "rejects a file with malformed rights" do
+        cols = ["a.1", "ic", "bib", "bibrights", "aa"]
+        expect_ok(:verify_rights_file_format, cols.join("\t"))
+
+        cols[1] = ""
+        expect_not_ok(:verify_rights_file_format, cols.join("\t"))
+
+        cols[1] = "icus"
+        expect_not_ok(:verify_rights_file_format, cols.join("\t"))
+      end
+
+      it "rejects a file without bib in col 2" do
+        cols = ["a.1", "ic", "bib", "bibrights", "aa"]
+        expect_ok(:verify_rights_file_format, cols.join("\t"))
+
+        cols[2] = "BIB"
+        expect_not_ok(:verify_rights_file_format, cols.join("\t"))
+
+        cols[2] = ""
+        expect_not_ok(:verify_rights_file_format, cols.join("\t"))
+      end
+
+      it "rejects a file without bibrights in col 3" do
+        cols = ["a.1", "ic", "bib", "bibrights", "aa"]
+        expect_ok(:verify_rights_file_format, cols.join("\t"))
+
+        cols[3] = "BIBRIGHTS"
+        expect_not_ok(:verify_rights_file_format, cols.join("\t"))
+
+        cols[3] = ""
+        expect_not_ok(:verify_rights_file_format, cols.join("\t"))
+      end
+
+      it "rejects a file with malformed digitization source" do
+        cols = ["a.1", "ic", "bib", "bibrights", "aa"]
+        expect_ok(:verify_rights_file_format, cols.join("\t"))
+
+        cols[4] = "aa-aa"
+        expect_ok(:verify_rights_file_format, cols.join("\t"))
+
+        cols[4] = "-aa"
+        expect_not_ok(:verify_rights_file_format, cols.join("\t"))
+
+        cols[4] = "aa-"
+        expect_not_ok(:verify_rights_file_format, cols.join("\t"))
+
+        cols[4] = "AA"
+        expect_not_ok(:verify_rights_file_format, cols.join("\t"))
+
+        cols[4] = ""
+        expect_not_ok(:verify_rights_file_format, cols.join("\t"))
       end
     end
   end
