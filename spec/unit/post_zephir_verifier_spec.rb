@@ -8,29 +8,6 @@ require "logger"
 
 module PostZephirProcessing
   RSpec.describe(PostZephirVerifier) do
-    def with_temp_deletefile(contents)
-      Tempfile.create("deletefile") do |tmpfile|
-        gz = Zlib::GzipWriter.new(tmpfile)
-        gz.write(contents)
-        gz.close
-        yield tmpfile.path
-      end
-    end
-
-    def expect_not_ok(contents)
-      with_temp_deletefile(contents) do |tmpfile|
-        described_class.new.verify_deletes_contents(path: tmpfile)
-        expect(@log_str.string).to match(/ERROR.*deletefile.*expecting catalog record ID/)
-      end
-    end
-
-    def expect_ok(contents)
-      with_temp_deletefile(contents) do |tmpfile|
-        described_class.new.verify_deletes_contents(path: tmpfile)
-        expect(@log_str.string).not_to match(/ERROR/)
-      end
-    end
-
     around(:each) do |example|
       @log_str = StringIO.new
       old_logger = Services.logger
@@ -51,7 +28,59 @@ module PostZephirProcessing
       end
     end
 
+    # These helpers are based on the ones from
+    # #verify_deletes_contents but are more general
+
+    # overwrite with_temp_file if you need to treat temp files differently
+    def with_temp_file(contents)
+      tempfile = Tempfile.new("tempfile")
+      tempfile << contents
+      tempfile.close
+      yield tempfile.path
+    end
+
+    # the expect-methods take a method arg for the method under test,
+    # a contents string that's written to a tempfile and passed to the method,
+    # and an optional errmsg arg (as a regexp) for specific error checking
+
+    def expect_not_ok(method, contents, errmsg = /ERROR/)
+      with_temp_file(contents) do |tmpfile|
+        described_class.new.send(method, path: tmpfile)
+        expect(@log_str.string).to match(errmsg)
+      end
+    end
+
+    def expect_ok(method, contents, errmsg = /ERROR/)
+      with_temp_file(contents) do |tmpfile|
+        described_class.new.send(method, path: tmpfile)
+        expect(@log_str.string).not_to match(errmsg)
+      end
+    end
+
     describe "#verify_deletes_contents" do
+      def with_temp_deletefile(contents)
+        Tempfile.create("deletefile") do |tmpfile|
+          gz = Zlib::GzipWriter.new(tmpfile)
+          gz.write(contents)
+          gz.close
+          yield tmpfile.path
+        end
+      end
+
+      def expect_not_ok(contents)
+        with_temp_deletefile(contents) do |tmpfile|
+          described_class.new.verify_deletes_contents(path: tmpfile)
+          expect(@log_str.string).to match(/ERROR.*deletefile.*expecting catalog record ID/)
+        end
+      end
+
+      def expect_ok(contents)
+        with_temp_deletefile(contents) do |tmpfile|
+          described_class.new.verify_deletes_contents(path: tmpfile)
+          expect(@log_str.string).not_to match(/ERROR/)
+        end
+      end
+
       it "accepts a file with a newline and nothing else" do
         contents = "\n"
         expect_ok(contents)
@@ -96,7 +125,7 @@ module PostZephirProcessing
         contents = <<~EOT
           000001234
           000012345
-             
+
           \t
           000112345
         EOT
@@ -111,6 +140,42 @@ module PostZephirProcessing
         EOT
 
         expect_not_ok(contents)
+      end
+    end
+
+    describe "#verify_rights_file_format" do
+      it "accepts an empty file" do
+        expect_ok(:verify_rights_file_format, "")
+      end
+
+      it "accepts a well-formed file" do
+        contents = [
+          ["a.1", "ic", "bib", "bibrights", "aa"].join("\t"),
+          ["a.2", "pd", "bib", "bibrights", "bb"].join("\t"),
+          ["a.3", "pdus", "bib", "bibrights", "aa-bb"].join("\t"),
+          ["a.4", "und", "bib", "bibrights", "aa-bb"].join("\t")
+        ].join("\n")
+
+        expect_ok(:verify_rights_file_format, contents)
+      end
+
+      it "rejects a file with malformed volume id" do
+        expect_not_ok(
+          :verify_rights_file_format,
+          ["", "ic", "bib", "bibrights", "aa"].join("\t")
+        )
+        expect_not_ok(
+          :verify_rights_file_format,
+          ["x", "ic", "bib", "bibrights", "aa"].join("\t")
+        )
+        expect_not_ok(
+          :verify_rights_file_format,
+          ["x.", "ic", "bib", "bibrights", "aa"].join("\t")
+        )
+        expect_not_ok(
+          :verify_rights_file_format,
+          [".x", "ic", "bib", "bibrights", "aa"].join("\t")
+        )
       end
     end
   end

@@ -111,9 +111,38 @@ module PostZephirProcessing
     #   readable
     #   TODO: compare each line against a basic regex
     def verify_rights(date: current_date)
-      verify_file(path: self.class.dated_derivative(location: :RIGHTS_ARCHIVE, name: "zephir_upd_YYYYMMDD.rights", date: date))
+      upd_path = self.class.dated_derivative(location: :RIGHTS_ARCHIVE, name: "zephir_upd_YYYYMMDD.rights", date: date)
+      verify_file(path: upd_path)
+      verify_rights_file_format(path: upd_path)
+
       if date.last_of_month?
-        verify_file(path: self.class.dated_derivative(location: :RIGHTS_ARCHIVE, name: "zephir_full_YYYYMMDD.rights", date: date))
+        full_path = self.class.dated_derivative(location: :RIGHTS_ARCHIVE, name: "zephir_full_YYYYMMDD.rights", date: date)
+        verify_file(path: full_path)
+        verify_rights_file_format(path: full_path)
+      end
+    end
+
+    # Rights file must:
+    # * exist & be be readable (both covered by verify_rights)
+    # * either be empty, or all its lines must match regex.
+    def verify_rights_file_format(path:)
+      # A more readable version of:
+      # /^\w+\.[\w:\/\$\.]+\t(ic|pd|pdus|und)\tbib\tbibrights\t\w+(-\w+)*$/
+      regex = /^ \w+ \. [\w:\/\$\.]+ # col 1, namespace.objid
+              \t (ic|pd|pdus|und)    # col 2, one of these
+              \t bib                 # col 3, exactly this
+              \t bibrights           # col 4, exactly this
+              \t \w+(-\w+)*          # col 5, digitizer, e.g. 'ia', 'cornell-ms'
+              $/x
+
+      # This allows an empty file as well, which is possible.
+      File.open(path) do |f|
+        f.each_line do |line|
+          line.strip!
+          unless line.match?(regex)
+            error message: "Rights file #{path} contains malformed line: #{line}"
+          end
+        end
       end
     end
 
