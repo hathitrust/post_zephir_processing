@@ -4,10 +4,43 @@ require "climate_control"
 require "zlib"
 require "verifier/post_zephir_verifier"
 require "tempfile"
+require "logger"
 
 module PostZephirProcessing
 
+
   RSpec.describe(PostZephirVerifier) do
+    def with_temp_deletefile(contents)
+      Tempfile.create('deletefile') do |tmpfile|
+        gz = Zlib::GzipWriter.new(tmpfile)
+        gz.write(contents)
+        gz.close
+        yield tmpfile.path
+      end
+    end
+
+    def expect_not_ok(contents)
+      with_temp_deletefile(contents) do |tmpfile|
+        described_class.new.verify_deletes_contents(path: tmpfile)
+        expect(@log_str.string).to match(/ERROR.*deletefile.*expecting catalog record ID/)
+      end
+    end
+
+    def expect_ok(contents)
+      with_temp_deletefile(contents) do |tmpfile|
+        described_class.new.verify_deletes_contents(path: tmpfile)
+        expect(@log_str.string).not_to match(/ERROR/)
+      end
+    end
+
+    around(:each) do |example|
+      @log_str = StringIO.new
+      old_logger = Services.logger
+      Services.register(:logger) { Logger.new(@log_str, level: Logger::DEBUG) }
+      example.run
+      Services.register(:logger) { old_logger }
+    end
+
     around(:each) do |example|
       Dir.mktmpdir do |tmpdir|
         ClimateControl.modify DATA_ROOT: tmpdir do
@@ -22,19 +55,65 @@ module PostZephirProcessing
 
     describe "#verify_deletes_contents" do
       it "accepts a file with a newline and nothing else" do
-        Tempfile.create('pzp_test') do |tmpfile|
-          gz = Zlib::GzipWriter.new(tmpfile)
-          gz.write("\n")
-          gz.close
-          tmpfile.close
-          expect { described_class.new.verify_deletes_contents(path: tmpfile.path) }.not_to raise_exception
-        end
+        contents = "\n"
+        expect_ok(contents)
       end
-      it "accepts a file with one catalog record ID"
-      it "accepts a file with multiple catalog record IDs"
-      it "rejects a file with a truncated catalog record ID"
-      it "rejects a file with a mix of catalog record IDs and whitespace"
-      it "rejects a file with a mix of catalog record IDs and gibberish"
+
+      it "accepts a file with one catalog record ID" do
+        contents = <<~EOT
+          000123456
+        EOT
+
+        expect_ok(contents)
+      end
+
+      it "accepts a file with multiple catalog record IDs" do
+        contents = <<~EOT
+          000001234
+          000012345
+        EOT
+
+        expect_ok(contents)
+      end
+
+      it "accepts a file with a mix of catalog record IDs and blank lines" do
+        contents = <<~EOT
+          000000001
+
+          212345678
+        EOT
+
+        expect_ok(contents)
+      end
+
+      it "rejects a file with a truncated catalog record ID" do
+        contents = <<~EOT
+          12345
+        EOT
+
+        expect_not_ok(contents)
+      end
+
+      it "rejects a file with a mix of catalog record IDs and whitespace" do
+        contents = <<~EOT
+          000001234
+          000012345
+             
+          \t
+          000112345
+        EOT
+
+        expect_not_ok(contents)
+      end
+
+      it "rejects a file with a mix of catalog record IDs and gibberish" do
+        contents = <<~EOT
+          mashed potatoes
+          000001234
+        EOT
+
+        expect_not_ok(contents)
+      end
     end
   end
 end

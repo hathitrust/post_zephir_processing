@@ -55,10 +55,11 @@ module PostZephirProcessing
       end
     end
 
-    # Verify contents of the given file consists of catalog record IDs (9 digits)
+    # Verify contents of the given file consists of catalog record IDs (9 digits) 
+    # or blank lines
     def verify_deletes_contents(path:)
       Zlib::GzipReader.open(path).each_line do |line|
-        if !line.match?(/^\d{9}$/)
+        if line != "\n" && !line.match?(/^\d{9}$/)
           error message: "Unexpected line in #{path} (was '#{line.strip}'); expecting catalog record ID (9 digits)"
         end
       end
