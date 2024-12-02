@@ -55,7 +55,7 @@ module PostZephirProcessing
       end
     end
 
-    # Verify contents of the given file consists of catalog record IDs (9 digits) 
+    # Verify contents of the given file consists of catalog record IDs (9 digits)
     # or blank lines
     def verify_deletes_contents(path:)
       Zlib::GzipReader.open(path).each_line do |line|

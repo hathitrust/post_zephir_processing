@@ -7,11 +7,9 @@ require "tempfile"
 require "logger"
 
 module PostZephirProcessing
-
-
   RSpec.describe(PostZephirVerifier) do
     def with_temp_deletefile(contents)
-      Tempfile.create('deletefile') do |tmpfile|
+      Tempfile.create("deletefile") do |tmpfile|
         gz = Zlib::GzipWriter.new(tmpfile)
         gz.write(contents)
         gz.close
@@ -44,7 +42,7 @@ module PostZephirProcessing
     around(:each) do |example|
       Dir.mktmpdir do |tmpdir|
         ClimateControl.modify DATA_ROOT: tmpdir do
-          File.open(File.join(tmpdir,"journal.yml"),"w") do |f|
+          File.open(File.join(tmpdir, "journal.yml"), "w") do |f|
             # minimal yaml -- empty array
             f.puts("--- []")
           end
