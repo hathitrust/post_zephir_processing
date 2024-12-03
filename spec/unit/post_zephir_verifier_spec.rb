@@ -16,27 +16,31 @@ module PostZephirProcessing
     # #verify_deletes_contents but are more general
 
     # overwrite with_temp_file if you need to treat temp files differently
-    def with_temp_file(contents)
-      tempfile = Tempfile.new("tempfile")
-      tempfile << contents
-      tempfile.close
-      yield tempfile.path
+    def with_temp_file(contents, gzipped: false)
+      Tempfile.new("tempfile") do |tmpfile|
+        if gzipped
+          write_gzipped(tmpfile, contents)
+        else
+          tempfile.write(contents)
+        end
+        yield tempfile.path
+      end
     end
 
     # the expect-methods take a method arg for the method under test,
     # a contents string that's written to a tempfile and passed to the method,
     # and an optional errmsg arg (as a regexp) for specific error checking
 
-    def expect_not_ok(method, contents, errmsg = /.*/)
-      with_temp_file(contents) do |tmpfile|
+    def expect_not_ok(method, contents, errmsg: /.*/, gzipped: false)
+      with_temp_file(contents, gzipped: gzipped) do |tmpfile|
         verifier = described_class.new
         verifier.send(method, path: tmpfile)
         expect(verifier.errors).to include(errmsg)
       end
     end
 
-    def expect_ok(method, contents)
-      with_temp_file(contents) do |tmpfile|
+    def expect_ok(method, contents, gzipped: false)
+      with_temp_file(contents, gzipped: gzipped) do |tmpfile|
         verifier = described_class.new
         verifier.send(method, path: tmpfile)
         expect(verifier.errors).to be_empty
@@ -44,34 +48,20 @@ module PostZephirProcessing
     end
 
     describe "#verify_deletes_contents" do
-      def with_temp_deletefile(contents)
-        Tempfile.create("deletefile") do |tmpfile|
-          gz = Zlib::GzipWriter.new(tmpfile)
-          gz.write(contents)
-          gz.close
-          yield tmpfile.path
-        end
+      def expect_deletefile_error(contents)
+        expect_not_ok(:verify_deletes_contents,
+          contents,
+          gzipped: true,
+          errmsg: /.*tempfile.*expecting catalog record ID/)
       end
 
-      def expect_not_ok(contents)
-        with_temp_deletefile(contents) do |tmpfile|
-          verifier = described_class.new
-          verifier.verify_deletes_contents(path: tmpfile)
-          expect(verifier.errors).to include(/.*deletefile.*expecting catalog record ID/)
-        end
-      end
-
-      def expect_ok(contents)
-        with_temp_deletefile(contents) do |tmpfile|
-          verifier = described_class.new
-          verifier.verify_deletes_contents(path: tmpfile)
-          expect(verifier.errors).to be_empty
-        end
+      def expect_deletefile_ok(contents)
+        expect_ok(:verify_deletes_contents, contents, gzipped: true)
       end
 
       it "accepts a file with a newline and nothing else" do
         contents = "\n"
-        expect_ok(contents)
+        expect_deletefile_ok(contents)
       end
 
       it "accepts a file with one catalog record ID" do
@@ -79,7 +69,7 @@ module PostZephirProcessing
           000123456
         EOT
 
-        expect_ok(contents)
+        expect_deletefile_ok(contents)
       end
 
       it "accepts a file with multiple catalog record IDs" do
@@ -88,7 +78,7 @@ module PostZephirProcessing
           000012345
         EOT
 
-        expect_ok(contents)
+        expect_deletefile_ok(contents)
       end
 
       it "accepts a file with a mix of catalog record IDs and blank lines" do
@@ -98,7 +88,7 @@ module PostZephirProcessing
           212345678
         EOT
 
-        expect_ok(contents)
+        expect_deletefile_ok(contents)
       end
 
       it "rejects a file with a truncated catalog record ID" do
@@ -106,7 +96,7 @@ module PostZephirProcessing
           12345
         EOT
 
-        expect_not_ok(contents)
+        expect_deletefile_error(contents)
       end
 
       it "rejects a file with a mix of catalog record IDs and whitespace" do
@@ -118,7 +108,7 @@ module PostZephirProcessing
           000112345
         EOT
 
-        expect_not_ok(contents)
+        expect_deletefile_error(contents)
       end
 
       it "rejects a file with a mix of catalog record IDs and gibberish" do
@@ -127,7 +117,7 @@ module PostZephirProcessing
           000001234
         EOT
 
-        expect_not_ok(contents)
+        expect_deletefile_error(contents)
       end
     end
 
@@ -152,22 +142,22 @@ module PostZephirProcessing
         expect_not_ok(
           :verify_rights_file_format,
           ["", cols_2_to_5].join("\t"),
-          /Rights file .+ contains malformed line/
+          errmsg: /Rights file .+ contains malformed line/
         )
         expect_not_ok(
           :verify_rights_file_format,
           ["x", cols_2_to_5].join("\t"),
-          /Rights file .+ contains malformed line/
+          errmsg: /Rights file .+ contains malformed line/
         )
         expect_not_ok(
           :verify_rights_file_format,
           ["x.", cols_2_to_5].join("\t"),
-          /Rights file .+ contains malformed line/
+          errmsg: /Rights file .+ contains malformed line/
         )
         expect_not_ok(
           :verify_rights_file_format,
           [".x", cols_2_to_5].join("\t"),
-          /Rights file .+ contains malformed line/
+          errmsg: /Rights file .+ contains malformed line/
         )
       end
 
