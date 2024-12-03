@@ -15,18 +15,6 @@ module PostZephirProcessing
     # These helpers are based on the ones from
     # #verify_deletes_contents but are more general
 
-    # overwrite with_temp_file if you need to treat temp files differently
-    def with_temp_file(contents, gzipped: false)
-      Tempfile.new("tempfile") do |tmpfile|
-        if gzipped
-          write_gzipped(tmpfile, contents)
-        else
-          tempfile.write(contents)
-        end
-        yield tempfile.path
-      end
-    end
-
     # the expect-methods take a method arg for the method under test,
     # a contents string that's written to a tempfile and passed to the method,
     # and an optional errmsg arg (as a regexp) for specific error checking

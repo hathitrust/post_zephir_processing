@@ -4,6 +4,7 @@ require "dotenv"
 require "logger"
 require "simplecov"
 require "simplecov-lcov"
+require "zlib"
 
 Dotenv.load(File.join(ENV.fetch("ROOTDIR"), "config", "env"))
 
@@ -45,6 +46,24 @@ def with_test_environment
       @tmpdir = tmpdir
       yield tmpdir
     end
+  end
+end
+
+def write_gzipped(tmpfile, contents)
+  gz = Zlib::GzipWriter.new(tmpfile)
+  gz.write(contents)
+  gz.close
+end
+
+def with_temp_file(contents, gzipped: false)
+  Tempfile.create("tempfile") do |tmpfile|
+    if gzipped
+      write_gzipped(tmpfile, contents)
+    else
+      tmpfile.write(contents)
+    end
+    tmpfile.close()
+    yield tmpfile.path
   end
 end
 
