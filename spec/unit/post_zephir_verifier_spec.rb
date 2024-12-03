@@ -9,23 +9,7 @@ require "logger"
 module PostZephirProcessing
   RSpec.describe(PostZephirVerifier) do
     around(:each) do |example|
-      @log_str = StringIO.new
-      old_logger = Services.logger
-      Services.register(:logger) { Logger.new(@log_str, level: Logger::DEBUG) }
-      example.run
-      Services.register(:logger) { old_logger }
-    end
-
-    around(:each) do |example|
-      Dir.mktmpdir do |tmpdir|
-        ClimateControl.modify DATA_ROOT: tmpdir do
-          File.open(File.join(tmpdir, "journal.yml"), "w") do |f|
-            # minimal yaml -- empty array
-            f.puts("--- []")
-          end
-          example.run
-        end
-      end
+      with_test_environment { example.run }
     end
 
     # These helpers are based on the ones from
@@ -43,17 +27,19 @@ module PostZephirProcessing
     # a contents string that's written to a tempfile and passed to the method,
     # and an optional errmsg arg (as a regexp) for specific error checking
 
-    def expect_not_ok(method, contents, errmsg = /ERROR/)
+    def expect_not_ok(method, contents, errmsg = /.*/)
       with_temp_file(contents) do |tmpfile|
-        described_class.new.send(method, path: tmpfile)
-        expect(@log_str.string).to match(errmsg)
+        verifier = described_class.new
+        verifier.send(method, path: tmpfile)
+        expect(verifier.errors).to include(errmsg)
       end
     end
 
-    def expect_ok(method, contents, errmsg = /ERROR/)
+    def expect_ok(method, contents)
       with_temp_file(contents) do |tmpfile|
-        described_class.new.send(method, path: tmpfile)
-        expect(@log_str.string).not_to match(errmsg)
+        verifier = described_class.new
+        verifier.send(method, path: tmpfile)
+        expect(verifier.errors).to be_empty
       end
     end
 
@@ -69,15 +55,17 @@ module PostZephirProcessing
 
       def expect_not_ok(contents)
         with_temp_deletefile(contents) do |tmpfile|
-          described_class.new.verify_deletes_contents(path: tmpfile)
-          expect(@log_str.string).to match(/ERROR.*deletefile.*expecting catalog record ID/)
+          verifier = described_class.new
+          verifier.verify_deletes_contents(path: tmpfile)
+          expect(verifier.errors).to include(/.*deletefile.*expecting catalog record ID/)
         end
       end
 
       def expect_ok(contents)
         with_temp_deletefile(contents) do |tmpfile|
-          described_class.new.verify_deletes_contents(path: tmpfile)
-          expect(@log_str.string).not_to match(/ERROR/)
+          verifier = described_class.new
+          verifier.verify_deletes_contents(path: tmpfile)
+          expect(verifier.errors).to be_empty
         end
       end
 
