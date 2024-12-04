@@ -14,25 +14,25 @@ module PostZephirProcessing
     HATHIFILE_FIELDS_COUNT = 26
     HATHIFILE_FIELD_REGEXES = [
       # htid - required; lowercase alphanumeric namespace, period, non-whitespace ID
-      /^[a-z0-9]{2,4}\.\S+$/, 
+      /^[a-z0-9]{2,4}\.\S+$/,
       # access - required; allow or deny
-      /^(allow|deny)$/, 
+      /^(allow|deny)$/,
       # rights - required; lowercase alphanumeric plus dash and period
-      /^[a-z0-9\-.]+$/, 
+      /^[a-z0-9\-.]+$/,
       # ht_bib_key - required; 9 digits
-      /^\d{9}$/, 
+      /^\d{9}$/,
       # description (enumchron) - optional; anything goes
-      /^.*$/, 
+      /^.*$/,
       # source - required; NUC/MARC organization code, all upper-case
-      /^[A-Z]+$/, 
+      /^[A-Z]+$/,
       # source_bib_num - optional (see note) - no whitespace, anything else
       # allowed. Note that blank source bib nums are likely a bug in hathifiles
       # generation
-      /^\S*$/, 
+      /^\S*$/,
       # oclc_num - optional; zero or more comma-separated numbers
       /^(\d+)?(,\d+)*$/,
       # hathifiles doesn't validate/normalize what comes out of the record for
-      # isbn, issn, or lccn 
+      # isbn, issn, or lccn
       # isbn - optional; no whitespace, anything else goes
       /^\S*$/,
       # issn - optional; no whitespace, anything else goes
@@ -70,8 +70,8 @@ module PostZephirProcessing
       # access profile code - required, lowercase characters + plus
       /^[a-z+]+$/,
       # author - optional, anything goes
-      /^.*$/,
-    ] 
+      /^.*$/
+    ]
 
     attr_reader :file, :line_count
 
@@ -82,10 +82,10 @@ module PostZephirProcessing
     end
 
     def run
-      Zlib::GzipReader.open(file, encoding: 'utf-8').each_line do |line|
+      Zlib::GzipReader.open(file, encoding: "utf-8").each_line do |line|
         @line_count += 1
         # limit of -1 to ensure we don't drop trailing empty fields
-        fields = line.chomp.split("\t",-1)
+        fields = line.chomp.split("\t", -1)
 
         next unless verify_line_field_count(fields)
 
@@ -100,7 +100,7 @@ module PostZephirProcessing
     private
 
     def verify_fields(fields)
-      fields.each_with_index do |field,i|
+      fields.each_with_index do |field, i|
         regex = HATHIFILE_FIELD_REGEXES[i]
         if !fields[i].match?(regex)
           error(message: "Field #{i} at line #{line_count} in #{file} ('#{field}') does not match #{regex}")
@@ -109,7 +109,7 @@ module PostZephirProcessing
     end
 
     def verify_line_field_count(fields)
-      if fields.count == HATHIFILE_FIELDS_COUNT 
+      if fields.count == HATHIFILE_FIELDS_COUNT
         true
       else
         error(message: "Line #{line_count} in #{file} has only #{fields.count} columns, expected #{HATHIFILE_FIELDS_COUNT}")
@@ -147,7 +147,7 @@ module PostZephirProcessing
       end
     end
 
-    def verify_hathifile_contents(path: )
+    def verify_hathifile_contents(path:)
       verifier = HathifileContentsVerifier.new(path)
       verifier.run
       # FIXME: could be inefficient if verifier.errors is very long;
@@ -155,6 +155,5 @@ module PostZephirProcessing
       # HathifilesContentsVerifier directly.
       @errors.append(*verifier.errors)
     end
-
   end
 end

@@ -62,7 +62,7 @@ def with_temp_file(contents, gzipped: false)
     else
       tmpfile.write(contents)
     end
-    tmpfile.close()
+    tmpfile.close
     yield tmpfile.path
   end
 end
@@ -154,9 +154,9 @@ end
 
 # Returns the full path to the given fixture file.
 #
-# @param file [String] 
+# @param file [String]
 def fixture(file)
-  File.join(File.dirname(__FILE__),"fixtures",file)
+  File.join(File.dirname(__FILE__), "fixtures", file)
 end
 
 # The following RSpec boilerplate tends to recur across HathiTrust Ruby test suites.
