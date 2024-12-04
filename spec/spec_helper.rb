@@ -152,6 +152,13 @@ def setup_test_files(date:)
   end
 end
 
+# Returns the full path to the given fixture file.
+#
+# @param file [String] 
+def fixture(file)
+  File.join(File.dirname(__FILE__),"fixtures",file)
+end
+
 # The following RSpec boilerplate tends to recur across HathiTrust Ruby test suites.
 RSpec.configure do |config|
   # rspec-expectations config goes here. You can use an alternate

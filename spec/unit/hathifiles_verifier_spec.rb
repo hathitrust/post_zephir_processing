@@ -12,9 +12,6 @@ module PostZephirProcessing
       with_test_environment { example.run }
     end
 
-    def nil
-    end
-
     describe "#verify_hathifiles_count" do
       context "with a catalog json file with 5 records" do
         it "accepts a hathifile with 5 records"
@@ -23,8 +20,6 @@ module PostZephirProcessing
         it "rejects a hathifile with no records"
       end
     end
-
-    HATHIFILES_SAMPLE_LINE = "mdp.39015002678202      deny    ic      000000371               MIU     990000003710106381      36054 69011382 Short fiction; a critical collection, edited by James R. Frakes [and] Isadore Traschen. Prentice-Hall [c1969]  bib     2008-06-01 09:30:17     0       1969    nju     eng     BK      MIU     umich umich    google  google  Frakes, James R."
 
     HATHIFILES_FIELDS = [
       {
@@ -54,7 +49,6 @@ module PostZephirProcessing
       {
         name: 'description',
         good: 'Jun-Oct 1927',
-        bad: nil,
         optional: true,
       },
       {
@@ -84,26 +78,22 @@ module PostZephirProcessing
       {
         name: 'isbn',
         good: '9789679430011,9679430014',
-        bad: nil,
         optional: true,
       },
       {
         name: 'issn',
         good: '0084-9499,00113344',
-        bad: nil,
         optional: true,
       },
       {
         name: 'lccn',
         good: '',
-        bad: nil,
         optional: true,
       },
 
       {
         name: 'title',
         good: '',
-        bad: nil,
         # this can be empty if the record only has a 245$k. that's probably a bug in the
         # hathifiles which we should fix.
         optional: true
@@ -111,7 +101,6 @@ module PostZephirProcessing
       {
         name: 'imprint',
         good: 'Pergamon Press [1969]',
-        bad: nil,
         optional: true
       },
       {
@@ -142,7 +131,7 @@ module PostZephirProcessing
         name: 'pub_place',
         good: 'miu',
         bad: 'not a publication place',
-        optional: true
+        optional: false
       },
       {
         name: 'lang',
@@ -189,24 +178,56 @@ module PostZephirProcessing
       {
         name: 'author',
         good: 'Chaucer, Geoffrey, -1400.',
-        bad: nil,
         optional: true
       }
     ]
 
-    describe "#verify_hathifiles_contents" do
-      it "accepts a file with #{HATHIFILES_FIELDS.count} columns per line"
-      it "rejects a file where some lines have less than #{HATHIFILES_FIELDS.count} tab-separated columns"
+    describe "#verify_hathifile_contents" do
+      let(:sample_line) { File.read(fixture("sample_hathifile_line.txt"), encoding: "utf-8") }
+      let(:sample_fields) { sample_line.split("\t") }
 
-      HATHIFILES_FIELDS.each do |field|
-        it "accepts a file with #{field[:name]} matching the regex"
+      it "accepts a file with a single real hathifiles entry" do
+        expect_ok(:verify_hathifile_contents, sample_line, gzipped: true)
+      end
 
-        it "rejects a file with #{field[:name]} not matching the regex"
+      it "rejects a file where some lines have less than #{HATHIFILES_FIELDS.count} tab-separated columns" do
+        contents = sample_line + "mdp.35112100003484\tdeny\n"
+        expect_not_ok(:verify_hathifile_contents, contents, errmsg: /.*columns.*/, gzipped: true)
+      end
+
+      HATHIFILES_FIELDS.each_with_index do |field,i|
+        it "accepts a file with #{field[:name]} matching the regex" do
+          sample_fields[i] = field[:good]
+          contents = sample_fields.join("\t")
+
+          expect_ok(:verify_hathifile_contents, contents, gzipped: true)
+        end
+
+        if(field.has_key?(:bad))
+          it "rejects a file with #{field[:name]} not matching the regex" do
+            sample_fields[i] = field[:bad]
+            contents = sample_fields.join("\t")
+
+            expect_not_ok(:verify_hathifile_contents, contents, 
+                          errmsg: /Field #{i}.*does not match/, gzipped: true)
+          end
+        end
 
         if(field[:optional])
-          it "accepts a file with empty #{field[:name]}"
+          it "accepts a file with empty #{field[:name]}" do
+            sample_fields[i] = ""
+            contents = sample_fields.join("\t")
+
+            expect_ok(:verify_hathifile_contents, contents, gzipped: true)
+          end
         else
-          it "rejects a file with empty #{field[:name]}"
+          it "rejects a file with empty #{field[:name]}" do
+            sample_fields[i] = ""
+            contents = sample_fields.join("\t")
+
+            expect_not_ok(:verify_hathifile_contents, contents, 
+                          errmsg: /Field #{i}.*does not match/, gzipped: true)
+          end
         end
       end
 
