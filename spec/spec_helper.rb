@@ -67,6 +67,22 @@ def with_temp_file(contents, gzipped: false)
   end
 end
 
+def expect_not_ok(method, contents, errmsg: /.*/, gzipped: false)
+  with_temp_file(contents, gzipped: gzipped) do |tmpfile|
+    verifier = described_class.new
+    verifier.send(method, path: tmpfile)
+    expect(verifier.errors).to include(errmsg)
+  end
+end
+
+def expect_ok(method, contents, gzipped: false)
+  with_temp_file(contents, gzipped: gzipped) do |tmpfile|
+    verifier = described_class.new
+    verifier.send(method, path: tmpfile)
+    expect(verifier.errors).to be_empty
+  end
+end
+
 # TODO: the following ENV juggling routines are for the integration tests,
 # and should be integrated with the `with_test_environment` facility above.
 ENV["POST_ZEPHIR_LOGGER_LEVEL"] = Logger::WARN.to_s
