@@ -97,8 +97,6 @@ module PostZephirProcessing
       # also check linecount against corresponding catalog - hathifile must be >=
     end
 
-    private
-
     def verify_fields(fields)
       fields.each_with_index do |field, i|
         regex = HATHIFILE_FIELD_REGEXES[i]
