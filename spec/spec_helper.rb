@@ -30,15 +30,18 @@ def rights_dir
 end
 
 def rights_archive_dir
-  File.join(ENV["SPEC_TMPDIR"], "rights", "archive")
+  File.join(ENV["SPEC_TMPDIR"], "rights_archive")
 end
 
 # Set the all-important SPEC_TMPDIR and derivative env vars,
 # and populate test dir with the appropriate directories.
+# FIXME: RIGHTS_DIR should no longer be needed for testing Derivatives,
+# and may not be needed for testing Verifier and friends.
 def setup_test_dirs(parent_dir:)
   ENV["SPEC_TMPDIR"] = parent_dir
   ENV["CATALOG_PREP"] = catalog_prep_dir
   ENV["RIGHTS_DIR"] = rights_dir
+  ENV["RIGHTS_ARCHIVE"] = rights_archive_dir
   [catalog_prep_dir, rights_dir, rights_archive_dir].each do |loc|
     Dir.mkdir loc
   end
