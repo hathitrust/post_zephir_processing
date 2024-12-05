@@ -126,13 +126,11 @@ module PostZephirProcessing
     # * exist & be be readable (both covered by verify_rights)
     # * either be empty, or all its lines must match regex.
     def verify_rights_file_format(path:)
-      # A more readable version of:
-      # /^\w+\.[\w:\/\$\.]+\t(ic|pd|pdus|und)\tbib\tbibrights\t\w+(-\w+)*$/
-      regex = /^ \w+ \. [\w:\/\$\.]+ # col 1, namespace.objid
-              \t (ic|pd|pdus|und)    # col 2, one of these
-              \t bib                 # col 3, exactly this
-              \t bibrights           # col 4, exactly this
-              \t [a-z]+(-[a-z]+)*     # col 5, digitization source, e.g. 'ia', 'cornell-ms'
+      regex = /^ [a-z0-9]+ \. [a-z0-9:\/\$\.]+ # col 1, namespace.objid
+              \t (ic|pd|pdus|und)              # col 2, one of these
+              \t bib                           # col 3, exactly this
+              \t bibrights                     # col 4, exactly this
+              \t [a-z]+(-[a-z]+)*              # col 5, digitization source, e.g. 'ia', 'cornell-ms'
               $/x
 
       # This allows an empty file as well, which is possible.
