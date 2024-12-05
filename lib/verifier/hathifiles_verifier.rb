@@ -151,18 +151,21 @@ module PostZephirProcessing
       verifier = HathifileContentsVerifier.new(path)
       verifier.run
       @errors.append(verifier.errors)
-      return verifier.line_count
+      verifier.line_count
     end
 
     def verify_hathifile_linecount(linecount, catalog_path:)
       catalog_linecount = Zlib::GzipReader.open(catalog_path).count
+      if linecount < catalog_linecount
+        error(message: "#{catalog_path} has #{catalog_linecount} records but corresponding hathifile only has #{linecount}")
+      end
     end
 
     def catalog_file_for(date, full: false)
       filetype = full ? "full" : "upd"
       self.class.dated_derivative(
-        location: :CATALOG_ARCHIVE, 
-        name: "zephir_#{filetype}_YYYYMMDD.json.gz", 
+        location: :CATALOG_ARCHIVE,
+        name: "zephir_#{filetype}_YYYYMMDD.json.gz",
         date: date - 1
       )
     end
@@ -170,6 +173,5 @@ module PostZephirProcessing
     def errors
       super.flatten
     end
-
   end
 end
