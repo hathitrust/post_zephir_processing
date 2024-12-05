@@ -35,6 +35,8 @@ end
 
 # Set the all-important SPEC_TMPDIR and derivative env vars,
 # and populate test dir with the appropriate directories.
+# FIXME: RIGHTS_DIR should no longer be needed for testing Derivatives,
+# and may not be needed for testing Verifier and friends.
 def setup_test_dirs(parent_dir:)
   ENV["SPEC_TMPDIR"] = parent_dir
   ENV["CATALOG_PREP"] = catalog_prep_dir
