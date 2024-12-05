@@ -125,28 +125,16 @@ module PostZephirProcessing
         expect_ok(:verify_rights_file_format, contents)
       end
 
-      it "rejects a file with malformed volume id" do
-        cols_2_to_5 = ["ic", "bib", "bibrights", "aa"].join("\t")
-        expect_not_ok(
-          :verify_rights_file_format,
-          ["", cols_2_to_5].join("\t"),
-          errmsg: /Rights file .+ contains malformed line/
-        )
-        expect_not_ok(
-          :verify_rights_file_format,
-          ["x", cols_2_to_5].join("\t"),
-          errmsg: /Rights file .+ contains malformed line/
-        )
-        expect_not_ok(
-          :verify_rights_file_format,
-          ["x.", cols_2_to_5].join("\t"),
-          errmsg: /Rights file .+ contains malformed line/
-        )
-        expect_not_ok(
-          :verify_rights_file_format,
-          [".x", cols_2_to_5].join("\t"),
-          errmsg: /Rights file .+ contains malformed line/
-        )
+      volids_not_ok = ["", "x", "x.", ".x", "X.X"]
+      line_end = ["ic", "bib", "bibrights", "aa"].join("\t")
+      volids_not_ok.each do |volid|
+        it "rejects a file with malformed volume id" do
+          expect_not_ok(
+            :verify_rights_file_format,
+            [volid, line_end].join("\t"),
+            errmsg: /Rights file .+ contains malformed line/
+          )
+        end
       end
 
       it "rejects a file with malformed rights" do
@@ -182,24 +170,20 @@ module PostZephirProcessing
         expect_not_ok(:verify_rights_file_format, cols.join("\t"))
       end
 
-      it "rejects a file with malformed digitization source" do
+      it "accepts a file with OK digitization source" do
         cols = ["a.1", "ic", "bib", "bibrights", "aa"]
         expect_ok(:verify_rights_file_format, cols.join("\t"))
 
         cols[4] = "aa-aa"
         expect_ok(:verify_rights_file_format, cols.join("\t"))
+      end
 
-        cols[4] = "-aa"
-        expect_not_ok(:verify_rights_file_format, cols.join("\t"))
-
-        cols[4] = "aa-"
-        expect_not_ok(:verify_rights_file_format, cols.join("\t"))
-
-        cols[4] = "AA"
-        expect_not_ok(:verify_rights_file_format, cols.join("\t"))
-
-        cols[4] = ""
-        expect_not_ok(:verify_rights_file_format, cols.join("\t"))
+      not_ok_dig_src = ["", "-aa", "aa-", "AA"]
+      line_start = ["a.1", "ic", "bib", "bibrights"].join("\t")
+      not_ok_dig_src.each do |dig_src|
+        it "rejects a file with malformed digitization source (#{dig_src})" do
+          expect_not_ok(:verify_rights_file_format, [line_start, dig_src].join("\t"))
+        end
       end
     end
   end
