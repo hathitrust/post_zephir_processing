@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y \
     libmarc-perl \
     libmarc-record-perl \
     libmarc-xml-perl \
+    libmariadb-dev \
     libnet-ssleay-perl \
     libtest-output-perl \
     libwww-perl \
