@@ -133,25 +133,43 @@ module PostZephirProcessing
     # Verify:
     #   readable
     #   TODO: line count must be > than corresponding catalog file
-    def verify_hathifile_presence(date: current_date)
+    def verify_hathifile(date: current_date)
       update_file = self.class.dated_derivative(location: :HATHIFILE_ARCHIVE, name: "hathi_upd_YYYYMMDD.txt.gz", date: date)
       verify_file(path: update_file)
-      verify_hathifile_contents(path: update_file)
+      linecount = verify_hathifile_contents(path: update_file)
+      verify_hathifile_linecount(linecount, catalog_path: catalog_file_for(date))
 
       if date.first_of_month?
         full_file = self.class.dated_derivative(location: :HATHIFILE_ARCHIVE, name: "hathi_full_YYYYMMDD.txt.gz", date: date)
         verify_file(path: full_file)
-        verify_hathifile_contents(path: full_file)
+        linecount = verify_hathifile_contents(path: full_file)
+        verify_hathifile_linecount(linecount, catalog_path: catalog_file_for(date, full: true))
       end
     end
 
     def verify_hathifile_contents(path:)
       verifier = HathifileContentsVerifier.new(path)
       verifier.run
-      # FIXME: could be inefficient if verifier.errors is very long;
-      # unnecessary except for testing. Would be better to test
-      # HathifilesContentsVerifier directly.
-      @errors.append(*verifier.errors)
+      @errors.append(verifier.errors)
+      return verifier.line_count
     end
+
+    def verify_hathifile_linecount(linecount, catalog_path:)
+      catalog_linecount = Zlib::GzipReader.open(catalog_path).count
+    end
+
+    def catalog_file_for(date, full: false)
+      filetype = full ? "full" : "upd"
+      self.class.dated_derivative(
+        location: :CATALOG_ARCHIVE, 
+        name: "zephir_#{filetype}_YYYYMMDD.json.gz", 
+        date: date - 1
+      )
+    end
+
+    def errors
+      super.flatten
+    end
+
   end
 end
