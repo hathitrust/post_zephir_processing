@@ -7,35 +7,35 @@ module PostZephirProcessing
   # `earliest_missing_date` is the main entrypoint when constructing an agenda of Zephir
   # file dates to fetch for processing.
   class Derivatives
+    # Location data for the derivatives we care about when constructing our list of missing dates.
+    # A file that has multiple locations (rights vs rights_archive) need only exist in one
+    # of them.
+    # TODO: is it even necessary to consider RIGHTS_DIR any more? Rights files can be expected to
+    # be in rights_archive by the time any workflow step that uses this class executes.
     DIR_DATA = {
       zephir_full: {
-        location: :CATALOG_PREP,
+        locations: [:CATALOG_PREP],
         pattern: /^zephir_full_(\d{8})_vufind\.json\.gz$/,
-        archive: false,
         full: true
       },
       zephir_full_rights: {
-        location: :RIGHTS_DIR,
+        locations: [:RIGHTS_DIR, :RIGHTS_ARCHIVE],
         pattern: /^zephir_full_(\d{8})\.rights$/,
-        archive: true,
         full: true
       },
       zephir_update: {
-        location: :CATALOG_PREP,
+        locations: [:CATALOG_PREP],
         pattern: /^zephir_upd_(\d{8})\.json\.gz$/,
-        archive: false,
         full: false
       },
       zephir_update_rights: {
-        location: :RIGHTS_DIR,
+        locations: [:RIGHTS_DIR, :RIGHTS_ARCHIVE],
         pattern: /^zephir_upd_(\d{8})\.rights$/,
-        archive: true,
         full: false
       },
       zephir_update_delete: {
-        location: :CATALOG_PREP,
+        locations: [:CATALOG_PREP],
         pattern: /^zephir_upd_(\d{8})_delete\.txt\.gz$/,
-        archive: false,
         full: false
       }
     }.freeze
@@ -69,6 +69,8 @@ module PostZephirProcessing
         ENV["CATALOG_PREP"] || "/htsolr/catalog/prep/"
       when :RIGHTS_DIR
         ENV["RIGHTS_DIR"] || "/htapps/babel/feed/var/rights"
+      when :RIGHTS_ARCHIVE
+        ENV["RIGHTS_ARCHIVE"] || "/htapps/babel/feed/var/rights/archive"
       end
     end
 
@@ -89,14 +91,9 @@ module PostZephirProcessing
       inventory_dates.sort.uniq
     end
 
-    # Given a name like :zephir_full, return an Array with the associated path,
-    # and the archive path if it has one.
+    # Given a name like :zephir_full, return an Array with the associated paths
     def directories_named(name:)
-      [directory_for(location: DIR_DATA[name][:location])].tap do |dirs|
-        if DIR_DATA[name][:archive]
-          dirs << File.join(dirs[0], "archive")
-        end
-      end
+      DIR_DATA[name][:locations].map { |loc| directory_for(location: loc) }
     end
   end
 end
