@@ -10,6 +10,7 @@ WORKDIR $ROOTDIR
 RUN apt-get update && apt-get install -y \
     bsd-mailx \
     cpanminus \
+    curl \
     git \
     libcrypt-ssleay-perl \
     libdate-manip-perl \
