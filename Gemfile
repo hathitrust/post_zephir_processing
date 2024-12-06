@@ -15,4 +15,5 @@ group :development, :test do
   gem "simplecov"
   gem "simplecov-lcov"
   gem "standardrb"
+  gem "webmock"
 end
