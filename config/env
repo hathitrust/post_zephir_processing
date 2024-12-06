@@ -5,4 +5,5 @@ CATALOG_PREP=/usr/src/app/data/catalog_prep
 DATA_ROOT=/usr/src/app/data
 INGEST_BIBRECORDS=/usr/src/app/data/ingest_bibrecords
 RIGHTS_DIR=/usr/src/app/data/rights
+WWW_DIR=/usr/src/app/data/www
 ZEPHIR_DATA=/usr/src/app/data/zephir

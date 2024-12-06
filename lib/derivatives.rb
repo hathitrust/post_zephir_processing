@@ -11,7 +11,8 @@ module PostZephirProcessing
       :CATALOG_ARCHIVE,
       :CATALOG_PREP,
       :RIGHTS_ARCHIVE,
-      :TMPDIR
+      :TMPDIR,
+      :WWW_DIR
     ].freeze
     # Location data for the derivatives we care about when constructing our list of missing dates.
 
@@ -51,7 +52,8 @@ module PostZephirProcessing
     def self.directory_for(location:)
       location = location.to_s
       case location
-      when "CATALOG_ARCHIVE", "HATHIFILE_ARCHIVE", "CATALOG_PREP", "INGEST_BIBRECORDS", "RIGHTS_DIR", "ZEPHIR_DATA"
+
+      when "CATALOG_ARCHIVE", "HATHIFILE_ARCHIVE", "CATALOG_PREP", "INGEST_BIBRECORDS", "RIGHTS_DIR", "WWW_DIR", "ZEPHIR_DATA"
         ENV.fetch location
       when "RIGHTS_ARCHIVE"
         ENV["RIGHTS_ARCHIVE"] || File.join(ENV.fetch("RIGHTS_DIR"), "archive")

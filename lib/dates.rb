@@ -7,6 +7,10 @@ class Date
   def last_of_month?
     next_day.month != month
   end
+
+  def first_of_month?
+    day == 1
+  end
 end
 
 module PostZephirProcessing
