@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
+require "climate_control"
 require "dotenv"
 require "logger"
+require "tmpdir"
 require "simplecov"
 require "simplecov-lcov"
 require "zlib"

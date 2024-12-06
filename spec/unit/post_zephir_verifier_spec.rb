@@ -1,10 +1,6 @@
 # frozen_string_literal: true
 
-require "climate_control"
-require "zlib"
 require "verifier/post_zephir_verifier"
-require "tempfile"
-require "logger"
 
 module PostZephirProcessing
   RSpec.describe(PostZephirVerifier) do

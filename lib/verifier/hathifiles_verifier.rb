@@ -33,12 +33,12 @@ module PostZephirProcessing
       /^(\d+)?(,\d+)*$/,
       # hathifiles doesn't validate/normalize what comes out of the record for
       # isbn, issn, or lccn
-      # isbn - optional; no whitespace, anything else goes
-      /^\S*$/,
-      # issn - optional; no whitespace, anything else goes
-      /^\S*$/,
-      # lccn - optional; no whitespace, anything else goes
-      /^\S*$/,
+      # isbn - optional; anything goes
+      /^.*$/,
+      # issn - optional; anything goes
+      /^.*$/,
+      # lccn - optional; anything goes
+      /^.*$/,
       # title - optional (see note); anything goes
       # Note: currently blank for titles with only a 245$k; hathifiles
       # generation should likely be changed to include the k subfield.
@@ -135,15 +135,18 @@ module PostZephirProcessing
     #   TODO: line count must be > than corresponding catalog file
     def verify_hathifile(date: current_date)
       update_file = self.class.dated_derivative(location: :HATHIFILE_ARCHIVE, name: "hathi_upd_YYYYMMDD.txt.gz", date: date)
-      verify_file(path: update_file)
-      linecount = verify_hathifile_contents(path: update_file)
-      verify_hathifile_linecount(linecount, catalog_path: catalog_file_for(date))
+      if verify_file(path: update_file)
+        linecount = verify_hathifile_contents(path: update_file)
+        verify_hathifile_linecount(linecount, catalog_path: catalog_file_for(date))
+      end
 
-      if date.first_of_month?
+      # first of month
+      if date.day == 1
         full_file = self.class.dated_derivative(location: :HATHIFILE_ARCHIVE, name: "hathi_full_YYYYMMDD.txt.gz", date: date)
-        verify_file(path: full_file)
-        linecount = verify_hathifile_contents(path: full_file)
-        verify_hathifile_linecount(linecount, catalog_path: catalog_file_for(date, full: true))
+        if verify_file(path: full_file)
+          linecount = verify_hathifile_contents(path: full_file)
+          verify_hathifile_linecount(linecount, catalog_path: catalog_file_for(date, full: true))
+        end
       end
     end
 

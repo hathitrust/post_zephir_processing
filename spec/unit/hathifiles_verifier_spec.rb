@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "climate_control"
 require "zlib"
 require "verifier/hathifiles_verifier"
 require "tempfile"

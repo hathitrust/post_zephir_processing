@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
-require "climate_control"
-require "tmpdir"
+require "verifier"
 
 module PostZephirProcessing
   RSpec.describe(Verifier) do
