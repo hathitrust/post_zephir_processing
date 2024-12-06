@@ -19,7 +19,9 @@ services:
       mariadb: *healthy
       pushgateway: *healthy
     environment:
+      DATA_ROOT: "/usr/src/app/data"
       DB_CONNECTION_STRING: "mysql2://ht_rights:ht_rights@mariadb/ht"
+      POST_ZEPHIR_PROCESSING_LOGGER_LEVEL: "1"
       PUSHGATEWAY: "http://pushgateway:9091"
     command:
       - /bin/bash
@@ -33,7 +35,9 @@ services:
       mariadb: *healthy
       pushgateway: *healthy
     environment:
+      - DATA_ROOT=/usr/src/app/data
       - DB_CONNECTION_STRING="mysql2://ht_rights:ht_rights@mariadb/ht"
+      - POST_ZEPHIR_PROCESSING_LOGGER_LEVEL=1
       - PUSHGATEWAY="http://pushgateway:9091"
       # pass through info needed by coveralls uploader
       - GITHUB_TOKEN
