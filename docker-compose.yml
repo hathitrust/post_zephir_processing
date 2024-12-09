@@ -53,6 +53,7 @@ services:
     image: ghcr.io/hathitrust/db-image:latest
     volumes:
       - ./sql/ingest.sql:/docker-entrypoint-initdb.d/999-ingest.sql
+      - ./sql/hathifiles.sql:/docker-entrypoint-initdb.d/999-hathifiles.sql
     restart: always
     environment:
       # setting via MYSQL_ROOT_PASSWORD didn't work; this at least
