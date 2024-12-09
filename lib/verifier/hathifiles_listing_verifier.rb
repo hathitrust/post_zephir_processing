@@ -49,12 +49,12 @@ module PostZephirProcessing
     # Verify that the derivatives for the date are included in
     # "#{ENV['WWW_DIR']}/hathi_file_list.json"
     def verify_file_in_json(filename:)
-      json_path = "#{ENV['WWW_DIR']}/hathi_file_list.json"
+      json_path = "#{ENV["WWW_DIR"]}/hathi_file_list.json"
       listings = JSON.load_file(json_path)
       matches = []
 
       listings.each do |listing|
-        if listing['filename'] == filename
+        if listing["filename"] == filename
           matches << listing
           break
         end
