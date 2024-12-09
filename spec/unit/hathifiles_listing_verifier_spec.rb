@@ -1,10 +1,6 @@
 # frozen_string_literal: true
 
-require "climate_control"
-require "zlib"
 require "verifier/hathifiles_listing_verifier"
-require "tempfile"
-require "logger"
 
 module PostZephirProcessing
   RSpec.describe(HathifilesListingVerifier) do
@@ -16,19 +12,19 @@ module PostZephirProcessing
     firstday = Date.parse("2023-01-01")
     secondday = Date.parse("2023-01-02")
     missingday = Date.parse("2023-01-13")
-
     firstday_ymd = firstday.strftime("%Y%m%d")
     secondday_ymd = secondday.strftime("%Y%m%d")
     missingday_ymd = missingday.strftime("%Y%m%d")
-
     dir_path = ENV["WWW_DIR"]
 
     before(:all) do
-      FileUtils.cp("/usr/src/app/spec/fixtures/hathi_file_list.json", dir_path)
+      FileUtils.cp(fixture("hathi_file_list.json"), dir_path)
     end
 
     around(:each) do |example|
-      with_test_environment { example.run }
+      with_test_environment do
+        example.run
+      end
     end
 
     describe "#derivatives_for_date" do
