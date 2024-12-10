@@ -9,10 +9,10 @@ module PostZephirProcessing
     let(:redirects_file) { verifier.redirects_file(date: test_date) }
     let(:redirects_history_file) { verifier.redirects_history_file(date: test_date) }
     let(:mess) { "oops, messed up a line!" }
-    
+
     # Clean dir before each test
     before(:each) do
-      [ENV['REDIRECTS_DIR'], ENV['REDIRECTS_HISTORY_DIR']].each do |dir|
+      [ENV["REDIRECTS_DIR"], ENV["REDIRECTS_HISTORY_DIR"]].each do |dir|
         FileUtils.rm_rf(dir)
         FileUtils.mkdir_p(dir)
       end
@@ -23,13 +23,13 @@ module PostZephirProcessing
     end
 
     def stage_redirects_file
-      FileUtils.cp(fixture("redirects/redirects_202301.txt.gz"), ENV['REDIRECTS_DIR'])
+      FileUtils.cp(fixture("redirects/redirects_202301.txt.gz"), ENV["REDIRECTS_DIR"])
     end
 
     def stage_redirects_history_file
-      FileUtils.cp(fixture("redirects/202301.ndj.gz"), ENV['REDIRECTS_HISTORY_DIR'])
+      FileUtils.cp(fixture("redirects/202301.ndj.gz"), ENV["REDIRECTS_HISTORY_DIR"])
     end
-    
+
     describe "#verify_redirects" do
       it "will warn twice if both files missing" do
         verifier.verify_redirects(date: test_date)
@@ -54,7 +54,7 @@ module PostZephirProcessing
         stage_redirects_history_file
         verifier.verify_redirects(date: test_date)
         expect(verifier.errors).to be_empty
-      end      
+      end
     end
 
     describe "#verify_redirects_file" do
@@ -94,6 +94,5 @@ module PostZephirProcessing
         expect(verifier.errors).to include(/#{redirects_history_file} contains malformed line: #{mess}/)
       end
     end
-
   end
 end
