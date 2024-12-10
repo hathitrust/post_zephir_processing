@@ -36,22 +36,40 @@ module PostZephirProcessing
     private
 
     def verify_hathifiles_database_log
-      update_file = self.class.dated_derivative(location: :HATHIFILE_ARCHIVE, name: "hathi_upd_YYYYMMDD.txt.gz", date: current_date)
-      if !self.class.has_log?(hathifile: update_file)
-        error "no hf_log entry for #{update_file}"
+      # File missing? Not our problem, should be caught by earlier verifier.
+      if File.exist?(update_file)
+        if !self.class.has_log?(hathifile: update_file)
+          error message: "missing hf_log: no entry for daily #{update_file}"
+        end
+      end
+      if current_date.first_of_month?
+        full_file = self.class.dated_derivative(location: :HATHIFILE_ARCHIVE, name: "hathi_full_YYYYMMDD.txt.gz", date: current_date)
+        if File.exist?(full_file)
+          if !self.class.has_log?(hathifile: full_file)
+            error message: "missing hf_log: no entry for monthly #{full_file}"
+          end
+        end
       end
     end
 
     def verify_hathifiles_database_count
-      # first of month
-      if current_date.day == 1
-        full_file = self.class.dated_derivative(location: :HATHIFILE_ARCHIVE, name: "hathi_full_YYYYMMDD.txt.gz", date: current_date)
-        full_file_count = self.class.gzip_linecount(path: full_file)
-        db_count = self.class.db_count
-        if full_file_count < db_count
-          error "#{full_file} has #{full_file_count} rows but hathifiles.hf has #{db_count}"
+      if current_date.first_of_month?
+        if File.exist?(full_file)
+          full_file_count = self.class.gzip_linecount(path: full_file)
+          db_count = self.class.db_count
+          if full_file_count > db_count
+            error message: "hf count mismatch: #{full_file} (#{full_file_count}) vs hathifiles.hf (#{db_count})"
+          end
         end
       end
+    end
+
+    def update_file
+      self.class.dated_derivative(location: :HATHIFILE_ARCHIVE, name: "hathi_upd_YYYYMMDD.txt.gz", date: current_date)
+    end
+
+    def full_file
+      self.class.dated_derivative(location: :HATHIFILE_ARCHIVE, name: "hathi_full_YYYYMMDD.txt.gz", date: current_date)
     end
   end
 end
