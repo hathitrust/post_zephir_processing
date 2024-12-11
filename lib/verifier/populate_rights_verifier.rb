@@ -15,18 +15,22 @@ module PostZephirProcessing
   # run has made a change.
 
   # We may also look for errors in the output logs (postZephir.pm and/or populate_rights_data.pl?)
-  # but thsat is out of scope for now.
+  # but that is out of scope for now.
   class PopulateRightsVerifier < Verifier
     FULL_RIGHTS_TEMPLATE = "zephir_full_YYYYMMDD.rights"
     UPD_RIGHTS_TEMPLATE = "zephir_upd_YYYYMMDD.rights"
 
     def run_for_date(date:)
       upd_path = self.class.dated_derivative(location: :RIGHTS_ARCHIVE, name: UPD_RIGHTS_TEMPLATE, date: date)
-      verify_rights_file(path: upd_path)
+      if File.exist? upd_path
+        verify_rights_file(path: upd_path)
+      end
 
       if date.last_of_month?
         full_path = self.class.dated_derivative(location: :RIGHTS_ARCHIVE, name: FULL_RIGHTS_TEMPLATE, date: date)
-        verify_rights_file(path: full_path)
+        if File.exist? full_path
+          verify_rights_file(path: full_path)
+        end
       end
     end
 
@@ -42,7 +46,7 @@ module PostZephirProcessing
           htid = line.split("\t").first
           namespace, id = htid.split(".", 2)
           if db[:rights_current].where(namespace: namespace, id: id).count.zero?
-            error message: "no entry in rights_current for #{htid}"
+            error message: "missing rights_current for #{htid}"
           end
         end
       end
