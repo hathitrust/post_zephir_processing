@@ -22,3 +22,5 @@ compare_*
 *.jsonl
 t/fixtures/rights_dbm
 cover_db
+**/.*.sw?
+*~

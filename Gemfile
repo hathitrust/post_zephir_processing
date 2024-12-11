@@ -4,6 +4,7 @@ source "https://rubygems.org"
 
 gem "canister"
 gem "dotenv"
+gem "faraday"
 gem "mysql2"
 gem "sequel"
 gem "zinzout"
