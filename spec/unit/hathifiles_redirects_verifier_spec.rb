@@ -1,13 +1,15 @@
 # frozen_string_literal: true
 
 require "verifier/hathifiles_redirects_verifier"
+require "zinzout"
 
 module PostZephirProcessing
   RSpec.describe(HathifileRedirectsVerifier) do
-    let(:verifier) { described_class.new }
     let(:test_date) { Date.parse("2023-01-01") }
+    let(:verifier) { described_class.new(date: test_date) }
     let(:redirects_file) { verifier.redirects_file(date: test_date) }
     let(:redirects_history_file) { verifier.redirects_history_file(date: test_date) }
+    # Including this mess should invalidate either file
     let(:mess) { "oops, messed up a line!" }
 
     # Clean dir before each test
@@ -30,6 +32,33 @@ module PostZephirProcessing
       FileUtils.cp(fixture("redirects/202301.ndj.gz"), ENV["REDIRECTS_HISTORY_DIR"])
     end
 
+    # Intentionally add mess to an otherwise wellformed file to trigger errors
+    def malform(file)
+      Zinzout.zout(file) do |outfile|
+        outfile.puts mess
+      end
+    end
+
+    describe "#initialize" do
+      it "sets current_date (attr_reader) by default or by param" do
+        expect(described_class.new.current_date).to eq Date.today
+        expect(described_class.new(date: test_date).current_date).to eq test_date
+      end
+    end
+
+    describe "#redirects_file" do
+      it "returns path to dated file, based on date param or verifier's default date" do
+        expect(verifier.redirects_file).to end_with("redirects_#{test_date.strftime("%Y%m")}.txt.gz")
+        expect(verifier.redirects_file(date: Date.today)).to end_with("redirects_#{Date.today.strftime("%Y%m")}.txt.gz")
+      end
+    end
+    describe "#redirects_history_file" do
+      it "returns path to dated file, based on date param or verifier's default date" do
+        expect(verifier.redirects_history_file).to end_with("#{test_date.strftime("%Y%m")}.ndj.gz")
+        expect(verifier.redirects_history_file(date: Date.today)).to end_with("#{Date.today.strftime("%Y%m")}.ndj.gz")
+      end
+    end
+
     describe "#verify_redirects" do
       it "will warn twice if both files missing" do
         verifier.verify_redirects(date: test_date)
@@ -49,7 +78,17 @@ module PostZephirProcessing
         expect(verifier.errors.count).to eq 1
         expect(verifier.errors).to include(/not found: #{redirects_file}/)
       end
-      it "will not warn if both files are there" do
+      it "will warn if files are there but malformed" do
+        stage_redirects_file
+        stage_redirects_history_file
+        malform(redirects_file)
+        malform(redirects_history_file)
+        verifier.verify_redirects(date: test_date)
+        expect(verifier.errors.count).to eq 2
+        expect(verifier.errors).to include(/#{redirects_file} contains malformed line: #{mess}/)
+        expect(verifier.errors).to include(/#{redirects_history_file} contains malformed line: #{mess}/)
+      end
+      it "will not warn if both files are there & valid)" do
         stage_redirects_file
         stage_redirects_history_file
         verifier.verify_redirects(date: test_date)
@@ -60,16 +99,11 @@ module PostZephirProcessing
     describe "#verify_redirects_file" do
       it "accepts a well-formed file" do
         stage_redirects_file
-        verifier.current_date = test_date
         verifier.verify_redirects_file(path: redirects_file)
       end
       it "rejects a malformed file" do
         stage_redirects_file
-        # intentionally mess up the staged file
-        Zinzout.zout(redirects_file) do |outfile|
-          outfile.puts mess
-        end
-        verifier.current_date = test_date
+        malform(redirects_file)
         verifier.verify_redirects_file(path: redirects_file)
         expect(verifier.errors.count).to eq 1
         expect(verifier.errors).to include(/#{redirects_file} contains malformed line: #{mess}/)
@@ -79,16 +113,11 @@ module PostZephirProcessing
     describe "#verify_redirects_history_file" do
       it "accepts a well-formed file" do
         stage_redirects_history_file
-        verifier.current_date = test_date
         verifier.verify_redirects_history_file(path: redirects_history_file)
       end
       it "rejects a malformed file" do
         stage_redirects_history_file
-        # intentionally mess up the staged file
-        Zinzout.zout(redirects_history_file) do |outfile|
-          outfile.puts mess
-        end
-        verifier.current_date = test_date
+        malform(redirects_history_file)
         verifier.verify_redirects_history_file(path: redirects_history_file)
         expect(verifier.errors.count).to eq 1
         expect(verifier.errors).to include(/#{redirects_history_file} contains malformed line: #{mess}/)
