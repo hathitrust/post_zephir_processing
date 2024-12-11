@@ -89,12 +89,6 @@ module PostZephirProcessing
       end
     end
 
-    describe ".gzip_linecount" do
-      it "returns the correct number of lines" do
-        expect(described_class.gzip_linecount(path: TEST_UPDATE_FIXTURE)).to eq(TEST_UPDATE_LINECOUNT)
-      end
-    end
-
     describe "#run_for_date" do
       context "with upd hathifile" do
         context "with corresponding hf_log" do

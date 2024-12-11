@@ -73,6 +73,10 @@ module PostZephirProcessing
       end
     end
 
+    def gzip_linecount(path:)
+      Zlib::GzipReader.open(path, encoding: "utf-8") { |gz| gz.count }
+    end
+
     # I'm not sure if we're going to try to distinguish errors and warnings.
     # For now let's call everything an error.
     def error(message:)

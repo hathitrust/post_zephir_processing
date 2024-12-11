@@ -52,5 +52,11 @@ module PostZephirProcessing
         end
       end
     end
+
+    describe "#gzip_linecount" do
+      it "returns the correct number of lines" do
+        expect(verifier.gzip_linecount(path: TEST_UPDATE_FIXTURE)).to eq(TEST_UPDATE_LINECOUNT)
+      end
+    end
   end
 end

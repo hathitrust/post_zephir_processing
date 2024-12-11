@@ -18,10 +18,6 @@ module PostZephirProcessing
         .positive?
     end
 
-    def self.gzip_linecount(path:)
-      Zlib::GzipReader.open(path, encoding: "utf-8") { |gz| gz.count }
-    end
-
     # Count the number of entries in hathifiles.hf
     def self.db_count
       PostZephirProcessing::Services[:database][:hf].count
@@ -55,7 +51,7 @@ module PostZephirProcessing
     def verify_hathifiles_database_count
       if current_date.first_of_month?
         if File.exist?(full_file)
-          full_file_count = self.class.gzip_linecount(path: full_file)
+          full_file_count = gzip_linecount(path: full_file)
           db_count = self.class.db_count
           if full_file_count > db_count
             error message: "hf count mismatch: #{full_file} (#{full_file_count}) vs hathifiles.hf (#{db_count})"
