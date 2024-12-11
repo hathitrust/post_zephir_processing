@@ -1,34 +1,12 @@
 # frozen_string_literal: true
 
 require "verifier/post_zephir_verifier"
+require "zinzout"
 
 module PostZephirProcessing
   RSpec.describe(PostZephirVerifier) do
     around(:each) do |example|
       with_test_environment { example.run }
-    end
-
-    # These helpers are based on the ones from
-    # #verify_deletes_contents but are more general
-
-    # the expect-methods take a method arg for the method under test,
-    # a contents string that's written to a tempfile and passed to the method,
-    # and an optional errmsg arg (as a regexp) for specific error checking
-
-    def expect_not_ok(method, contents, errmsg: /.*/, gzipped: false)
-      with_temp_file(contents, gzipped: gzipped) do |tmpfile|
-        verifier = described_class.new
-        verifier.send(method, path: tmpfile)
-        expect(verifier.errors).to include(errmsg)
-      end
-    end
-
-    def expect_ok(method, contents, gzipped: false)
-      with_temp_file(contents, gzipped: gzipped) do |tmpfile|
-        verifier = described_class.new
-        verifier.send(method, path: tmpfile)
-        expect(verifier.errors).to be_empty
-      end
     end
 
     describe "#verify_deletes_contents" do
@@ -102,6 +80,51 @@ module PostZephirProcessing
         EOT
 
         expect_deletefile_error(contents)
+      end
+    end
+
+    describe "#verify_catalog_archive" do
+      it "requires input file to have same line count as output file" do
+        verifier = described_class.new
+        test_date = Date.parse("2023-01-31")
+
+        # Make a fake input file
+        FileUtils.mkdir_p(ENV["ZEPHIR_DATA"])
+        input_file_name = "ht_bib_export_full_#{test_date.strftime("%Y-%m-%d")}.json.gz"
+        input_file_path = File.join(ENV["ZEPHIR_DATA"], input_file_name)
+        Zinzout.zout(input_file_path) do |input_gz|
+          1.upto(3) do |i|
+            input_gz.puts "{ \"i\": #{i} }"
+          end
+        end
+
+        # Fake output files
+        FileUtils.mkdir_p(ENV["CATALOG_ARCHIVE"])
+        output_file_names = [
+          "zephir_full_#{test_date.strftime("%Y%m%d")}_vufind.json.gz",
+          "zephir_upd_#{test_date.strftime("%Y%m%d")}.json.gz"
+        ]
+        output_file_names.each do |output_file_name|
+          output_file_path = File.join(ENV["CATALOG_ARCHIVE"], output_file_name)
+          Zinzout.zout(output_file_path) do |output_gz|
+            1.upto(3) do |i|
+              output_gz.puts "{ \"i\": #{i} }"
+            end
+          end
+        end
+
+        # Expect no warnings when line counts match.
+        verifier.verify_catalog_archive(date: test_date)
+        expect(verifier.errors).to be_empty
+
+        # Change line count in input file and expect a warning
+        Zinzout.zout(input_file_path) do |input_gz|
+          input_gz.puts "{ \"i\": \"one line too many\" }"
+        end
+
+        verifier.verify_catalog_archive(date: test_date)
+        expect(verifier.errors.count).to eq 1
+        expect(verifier.errors).to include(/output line count .+ != input line count/)
       end
     end
 

@@ -34,7 +34,15 @@ module PostZephirProcessing
     def verify_catalog_archive(date: current_date)
       verify_file(path: self.class.dated_derivative(location: :CATALOG_ARCHIVE, name: "zephir_upd_YYYYMMDD.json.gz", date: date))
       if date.last_of_month?
-        verify_file(path: self.class.dated_derivative(location: :CATALOG_ARCHIVE, name: "zephir_full_YYYYMMDD_vufind.json.gz", date: date))
+        output_path = self.class.dated_derivative(location: :CATALOG_ARCHIVE, name: "zephir_full_YYYYMMDD_vufind.json.gz", date: date)
+        verify_file(path: output_path)
+        output_linecount = gzip_linecount(path: output_path)
+        input_path = File.join([ENV["ZEPHIR_DATA"], "ht_bib_export_full_#{date.strftime("%Y-%m-%d")}.json.gz"])
+        input_linecount = gzip_linecount(path: input_path)
+
+        if output_linecount != input_linecount
+          error message: "output line count (#{output_path} = #{output_linecount}) != input line count (#{input_path} = #{input_linecount})"
+        end
       end
     end
 
