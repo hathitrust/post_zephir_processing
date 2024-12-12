@@ -18,7 +18,6 @@ module PostZephirProcessing
       verify_catalog_archive
       verify_catalog_prep
       verify_dollar_dup
-      verify_groove_export
       verify_ingest_bibrecords
       verify_rights
       verify_zephir_data
@@ -124,17 +123,9 @@ module PostZephirProcessing
     end
 
     # Frequency: MONTHLY
-    # Files: INGEST_BIBRECORDS/groove_full.tsv.gz
-    # Contents: TODO
-    # Verify: readable
-    def verify_groove_export(date: current_date)
-      if date.last_of_month?
-        verify_file(path: self.class.derivative(location: :INGEST_BIBRECORDS, name: "groove_full.tsv.gz"))
-      end
-    end
-
-    # Frequency: MONTHLY
-    # Files: INGEST_BIBRECORDS/groove_full.tsv.gz, INGEST_BIBRECORDS/zephir_ingested_items.txt.gz
+    # Files:
+    #   INGEST_BIBRECORDS/groove_full.tsv.gz
+    #   INGEST_BIBRECORDS/zephir_ingested_items.txt.gz
     # Contents: TODO
     # Verify: readable
     def verify_ingest_bibrecords(date: current_date)
@@ -145,21 +136,24 @@ module PostZephirProcessing
     end
 
     # Frequency: BOTH
-    # Files: RIGHTS_ARCHIVE/zephir_upd_YYYYMMDD.rights
-    #   and potentially RIGHTS_ARCHIVE/zephir_full_YYYYMMDD.rights
-    # Contents: TODO
+    # Files:
+    #   RIGHTS_ARCHIVE/zephir_upd_YYYYMMDD.rights (daily)
+    #   RIGHTS_ARCHIVE/zephir_full_YYYYMMDD.rights (monthly)
+    # Contents: see verify_rights_file_format
     # Verify:
     #   readable
-    #   TODO: compare each line against a basic regex
+    #   accepted by verify_rights_file_format
     def verify_rights(date: current_date)
       upd_path = self.class.dated_derivative(location: :RIGHTS_ARCHIVE, name: "zephir_upd_YYYYMMDD.rights", date: date)
-      verify_file(path: upd_path)
-      verify_rights_file_format(path: upd_path)
+      if verify_file(path: upd_path)
+        verify_rights_file_format(path: upd_path)
+      end
 
       if date.last_of_month?
         full_path = self.class.dated_derivative(location: :RIGHTS_ARCHIVE, name: "zephir_full_YYYYMMDD.rights", date: date)
-        verify_file(path: full_path)
-        verify_rights_file_format(path: full_path)
+        if verify_file(path: full_path)
+          verify_rights_file_format(path: full_path)
+        end
       end
     end
 

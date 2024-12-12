@@ -14,6 +14,15 @@ module PostZephirProcessing
       end
     end
 
+    let(:well_formed_rights_file_content) do
+      [
+        ["a.1", "ic", "bib", "bibrights", "aa"].join("\t"),
+        ["a.2", "pd", "bib", "bibrights", "bb"].join("\t"),
+        ["a.3", "pdus", "bib", "bibrights", "aa-bb"].join("\t"),
+        ["a.4", "und", "bib", "bibrights", "aa-bb"].join("\t")
+      ].join("\n")
+    end
+
     describe "#verify_deletes_contents" do
       def expect_deletefile_error(contents)
         expect_not_ok(:verify_deletes_contents,
@@ -192,20 +201,124 @@ module PostZephirProcessing
       end
     end
 
+    describe "#verify_ingest_bibrecords" do
+      context "last day of month" do
+        test_date = Date.parse("2024-11-30")
+        context "with expected groove_full and zephir_ingested_items files" do
+          it "reports no errors" do
+            ClimateControl.modify(INGEST_BIBRECORDS: @tmpdir) do
+              FileUtils.touch(File.join(@tmpdir, "groove_full.tsv.gz"))
+              FileUtils.touch(File.join(@tmpdir, "zephir_ingested_items.txt.gz"))
+              verifier = described_class.new
+              verifier.verify_ingest_bibrecords(date: test_date)
+              expect(verifier.errors.count).to eq 0
+            end
+          end
+        end
+
+        context "missing zephir_ingested_items" do
+          it "reports one `not found` error" do
+            ClimateControl.modify(INGEST_BIBRECORDS: @tmpdir) do
+              FileUtils.touch(File.join(@tmpdir, "groove_full.tsv.gz"))
+              verifier = described_class.new
+              verifier.verify_ingest_bibrecords(date: test_date)
+              expect(verifier.errors.count).to eq 1
+              expect(verifier.errors).to include(/^not found/)
+            end
+          end
+        end
+
+        context "missing groove_full" do
+          it "reports one `not found` error" do
+            ClimateControl.modify(INGEST_BIBRECORDS: @tmpdir) do
+              FileUtils.touch(File.join(@tmpdir, "zephir_ingested_items.txt.gz"))
+              verifier = described_class.new
+              verifier.verify_ingest_bibrecords(date: test_date)
+              expect(verifier.errors.count).to eq 1
+              expect(verifier.errors).to include(/^not found/)
+            end
+          end
+        end
+      end
+
+      context "non-last day of month" do
+        test_date = Date.parse("2024-12-01")
+        it "reports no errors" do
+          verifier = described_class.new
+          verifier.verify_ingest_bibrecords(date: test_date)
+          expect(verifier.errors.count).to eq 0
+        end
+      end
+    end
+
+    describe "#verify_rights" do
+      context "last day of month" do
+        test_date = Date.parse("2024-11-30")
+        context "with full and update rights files" do
+          it "reports no errors" do
+            ClimateControl.modify(RIGHTS_ARCHIVE: @tmpdir) do
+              verifier = described_class.new
+              upd_rights_file = "zephir_upd_YYYYMMDD.rights".gsub("YYYYMMDD", test_date.strftime("%Y%m%d"))
+              upd_rights_path = File.join(@tmpdir, upd_rights_file)
+              File.write(upd_rights_path, well_formed_rights_file_content)
+              full_rights_file = "zephir_full_YYYYMMDD.rights".gsub("YYYYMMDD", test_date.strftime("%Y%m%d"))
+              full_rights_path = File.join(@tmpdir, full_rights_file)
+              File.write(full_rights_path, well_formed_rights_file_content)
+              verifier.verify_rights(date: test_date)
+              expect(verifier.errors.count).to eq 0
+            end
+          end
+        end
+
+        context "with no rights files" do
+          it "reports two `not found` errors" do
+            ClimateControl.modify(RIGHTS_ARCHIVE: @tmpdir) do
+              verifier = described_class.new
+              verifier.verify_rights(date: test_date)
+              expect(verifier.errors.count).to eq 2
+              verifier.errors.each do |err|
+                expect(err).to include(/^not found/)
+              end
+            end
+          end
+        end
+      end
+
+      context "non-last day of month" do
+        test_date = Date.parse("2024-12-01")
+        context "with update rights file" do
+          it "reports no errors" do
+            ClimateControl.modify(RIGHTS_ARCHIVE: @tmpdir) do
+              verifier = described_class.new
+              rights_file = "zephir_upd_YYYYMMDD.rights".gsub("YYYYMMDD", test_date.strftime("%Y%m%d"))
+              rights_path = File.join(@tmpdir, rights_file)
+              File.write(rights_path, well_formed_rights_file_content)
+              verifier.verify_rights(date: test_date)
+              expect(verifier.errors.count).to eq 0
+            end
+          end
+        end
+
+        context "missing update rights file" do
+          it "reports one `not found` error" do
+            ClimateControl.modify(RIGHTS_ARCHIVE: @tmpdir) do
+              verifier = described_class.new
+              verifier.verify_rights(date: test_date)
+              expect(verifier.errors.count).to eq 1
+              expect(verifier.errors).to include(/^not found/)
+            end
+          end
+        end
+      end
+    end
+
     describe "#verify_rights_file_format" do
       it "accepts an empty file" do
         expect_ok(:verify_rights_file_format, "")
       end
 
       it "accepts a well-formed file" do
-        contents = [
-          ["a.1", "ic", "bib", "bibrights", "aa"].join("\t"),
-          ["a.2", "pd", "bib", "bibrights", "bb"].join("\t"),
-          ["a.3", "pdus", "bib", "bibrights", "aa-bb"].join("\t"),
-          ["a.4", "und", "bib", "bibrights", "aa-bb"].join("\t")
-        ].join("\n")
-
-        expect_ok(:verify_rights_file_format, contents)
+        expect_ok(:verify_rights_file_format, well_formed_rights_file_content)
       end
 
       volids_not_ok = ["", "x", "x.", ".x", "X.X"]
