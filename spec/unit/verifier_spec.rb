@@ -69,7 +69,7 @@ module PostZephirProcessing
       end
       it "warns if it sees an unparseable line" do
         content = "oops\n{}\n[]\n"
-        expect_not_ok(:verify_parseable_ndj, content, /unparseable JSON/)
+        expect_not_ok(:verify_parseable_ndj, content, errmsg: /unparseable JSON/)
       end
     end
   end
