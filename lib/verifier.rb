@@ -3,6 +3,7 @@
 require_relative "derivatives"
 require_relative "journal"
 require_relative "services"
+require "zinzout"
 
 # Common superclass for all things Verifier.
 # Right now the only thing I can think of to put here is shared
@@ -83,8 +84,8 @@ module PostZephirProcessing
         infile.each do |line|
           JSON.parse(line)
         end
-      rescue
-        error(message: "File #{path} contains unparseable JSON: #{line}")
+      rescue JSON::ParserError
+        error(message: "File #{path} contains unparseable JSON")
       end
     end
 

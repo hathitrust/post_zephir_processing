@@ -61,5 +61,16 @@ module PostZephirProcessing
         expect(verifier.gzip_linecount(path: test_update_fixture)).to eq(test_update_linecount)
       end
     end
+
+    describe "#verify_parseable_ndj" do
+      it "checks if a .ndj file contains only parseable lines" do
+        content = "{}\n[]"
+        expect_ok(:verify_parseable_ndj, content)
+      end
+      it "warns if it sees an unparseable line" do
+        content = "oops\n{}\n[]\n"
+        expect_not_ok(:verify_parseable_ndj, content, /unparseable JSON/)
+      end
+    end
   end
 end
