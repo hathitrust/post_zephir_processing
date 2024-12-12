@@ -114,6 +114,84 @@ module PostZephirProcessing
       end
     end
 
+    describe "#verify_catalog_prep" do
+      test_date = Date.parse("2024-11-30")
+      context "with all the expected files" do
+        it "reports no errors" do
+          # Create and test upd, full, and deletes in @tmpdir/catalog_prep
+          ClimateControl.modify(CATALOG_PREP: @tmpdir) do
+            FileUtils.cp(fixture(File.join("catalog_archive", "zephir_full_20241130_vufind.json.gz")), @tmpdir)
+            FileUtils.cp(fixture(File.join("catalog_archive", "zephir_upd_20241130.json.gz")), @tmpdir)
+            FileUtils.cp(fixture(File.join("catalog_prep", "zephir_upd_20241130_delete.txt.gz")), @tmpdir)
+            verifier = described_class.new
+            verifier.verify_catalog_prep(date: test_date)
+            expect(verifier.errors.count).to eq 0
+          end
+        end
+      end
+
+      context "without any of the expected files" do
+        it "reports no errors" do
+          ClimateControl.modify(CATALOG_PREP: @tmpdir) do
+            verifier = described_class.new
+            verifier.verify_catalog_prep(date: test_date)
+            expect(verifier.errors.count).to eq 3
+          end
+        end
+      end
+    end
+
+    describe "#verify_dollar_dup" do
+      test_date = Date.parse("2024-12-01")
+      context "with empty file" do
+        it "reports no errors" do
+          ClimateControl.modify(TMPDIR: @tmpdir) do
+            dollar_dup_path = File.join(@tmpdir, "vufind_incremental_2024-12-01_dollar_dup.txt.gz")
+            Zinzout.zout(dollar_dup_path) { |output_gz| }
+            verifier = described_class.new
+            verifier.verify_dollar_dup(date: test_date)
+            expect(verifier.errors).to eq []
+          end
+        end
+      end
+
+      context "with nonempty file" do
+        it "reports one `spurious dollar_dup lines` error" do
+          ClimateControl.modify(TMPDIR: @tmpdir) do
+            dollar_dup_path = File.join(@tmpdir, "vufind_incremental_2024-12-01_dollar_dup.txt.gz")
+            Zinzout.zout(dollar_dup_path) do |output_gz|
+              output_gz.puts <<~GZ
+                uc1.b275234
+                uc1.b85271
+                uc1.b312920
+                uc1.b257214
+                uc1.b316327
+                uc1.b23918
+                uc1.b95355
+                uc1.b183819
+                uc1.b197217
+              GZ
+            end
+            verifier = described_class.new
+            verifier.verify_dollar_dup(date: test_date)
+            expect(verifier.errors.count).to eq 1
+            expect(verifier.errors).to include(/spurious dollar_dup lines/)
+          end
+        end
+      end
+
+      context "with missing file" do
+        it "reports one `not found` error" do
+          ClimateControl.modify(TMPDIR: @tmpdir) do
+            verifier = described_class.new
+            verifier.verify_dollar_dup(date: test_date)
+            expect(verifier.errors.count).to eq 1
+            expect(verifier.errors).to include(/^not found/)
+          end
+        end
+      end
+    end
+
     describe "#verify_rights_file_format" do
       it "accepts an empty file" do
         expect_ok(:verify_rights_file_format, "")

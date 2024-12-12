@@ -25,11 +25,12 @@ module PostZephirProcessing
     end
 
     # Frequency: ALL
-    # Files: CATALOG_PREP/zephir_upd_YYYYMMDD.json.gz
+    # Files: CATALOG_ARCHIVE/zephir_upd_YYYYMMDD.json.gz
     #   and potentially CATALOG_ARCHIVE/zephir_full_YYYYMMDD_vufind.json.gz
-    # Contents: TODO
+    # Contents: ndj file with one catalog record per line
     # Verify:
     #   readable
+    #   line count must be the same as input JSON
     def verify_catalog_archive(date: current_date)
       zephir_update_derivative_params = {
         location: :CATALOG_ARCHIVE,
@@ -52,7 +53,6 @@ module PostZephirProcessing
           name: "ht_bib_export_full_YYYY-MM-DD.json.gz",
           date: date
         }
-
         output_path = self.class.dated_derivative(**zephir_full_derivative_params)
         verify_file(path: output_path)
         verify_parseable_ndj(path: output_path)
@@ -80,15 +80,18 @@ module PostZephirProcessing
     # Frequency: ALL
     # Files: CATALOG_PREP/zephir_upd_YYYYMMDD.json.gz and CATALOG_PREP/zephir_upd_YYYYMMDD_delete.txt.gz
     #   and potentially CATALOG_PREP/zephir_full_YYYYMMDD_vufind.json.gz
-    # Contents: TODO
+    # Contents:
+    #   json.gz files: ndj with one catalog record per line
+    #   delete.txt.gz: see `#verify_deletes_contents`
     # Verify:
     #   readable
     #   TODO: deletes file is combination of two component files in TMPDIR?
     def verify_catalog_prep(date: current_date)
       delete_file = self.class.dated_derivative(location: :CATALOG_PREP, name: "zephir_upd_YYYYMMDD_delete.txt.gz", date: date)
       verify_file(path: self.class.dated_derivative(location: :CATALOG_PREP, name: "zephir_upd_YYYYMMDD.json.gz", date: date))
-      verify_file(path: delete_file)
-      verify_deletes_contents(path: delete_file)
+      if verify_file(path: delete_file)
+        verify_deletes_contents(path: delete_file)
+      end
       if date.last_of_month?
         verify_file(path: self.class.dated_derivative(location: :CATALOG_PREP, name: "zephir_full_YYYYMMDD_vufind.json.gz", date: date))
       end
@@ -106,17 +109,16 @@ module PostZephirProcessing
 
     # Frequency: DAILY
     # Files: TMPDIR/vufind_incremental_YYYY-MM-DD_dollar_dup.txt.gz
-    # Contents: TODO
+    # Contents: historically undallarized uc1 HTIDs (e.g., uc1.b312920) one per line
     # Verify:
     #  readable
     #  empty
     def verify_dollar_dup(date: current_date)
       dollar_dup = self.class.dated_derivative(location: :TMPDIR, name: "vufind_incremental_YYYY-MM-DD_dollar_dup.txt.gz", date: date)
       if verify_file(path: dollar_dup)
-        Zinzout.zin(dollar_dup) do |infile|
-          if infile.count.positive?
-            error "#{dollar_dup} has #{infile.count} lines, should be 0"
-          end
+        gz_count = gzip_linecount(path: dollar_dup)
+        if gz_count.positive?
+          error message: "spurious dollar_dup lines: #{dollar_dup} should be empty (found #{gz_count} lines)"
         end
       end
     end
