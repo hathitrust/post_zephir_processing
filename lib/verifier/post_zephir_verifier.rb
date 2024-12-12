@@ -30,18 +30,45 @@ module PostZephirProcessing
     # Contents: TODO
     # Verify:
     #   readable
-    #   TODO: line count must be the same as input JSON
     def verify_catalog_archive(date: current_date)
-      verify_file(path: self.class.dated_derivative(location: :CATALOG_ARCHIVE, name: "zephir_upd_YYYYMMDD.json.gz", date: date))
+      zephir_update_derivative_params = {
+        location: :CATALOG_ARCHIVE,
+        name: "zephir_upd_YYYYMMDD.json.gz",
+        date: date
+      }
+      verify_file(path: self.class.dated_derivative(**zephir_update_derivative_params))
+
       if date.last_of_month?
-        output_path = self.class.dated_derivative(location: :CATALOG_ARCHIVE, name: "zephir_full_YYYYMMDD_vufind.json.gz", date: date)
+        zephir_full_derivative_params = {
+          location: :CATALOG_ARCHIVE,
+          name: "zephir_full_YYYYMMDD_vufind.json.gz",
+          date: date
+        }
+
+        ht_bib_export_derivative_params = {
+          location: :ZEPHIR_DATA,
+          name: "ht_bib_export_full_YYYY-MM-DD.json.gz",
+          date: date
+        }
+
+        output_path = self.class.dated_derivative(**zephir_full_derivative_params)
         verify_file(path: output_path)
         output_linecount = gzip_linecount(path: output_path)
-        input_path = File.join([ENV["ZEPHIR_DATA"], "ht_bib_export_full_#{date.strftime("%Y-%m-%d")}.json.gz"])
+
+        input_path = self.class.dated_derivative(**ht_bib_export_derivative_params)
+        verify_file(path: input_path)
         input_linecount = gzip_linecount(path: input_path)
 
         if output_linecount != input_linecount
-          error message: "output line count (#{output_path} = #{output_linecount}) != input line count (#{input_path} = #{input_linecount})"
+          error(
+            message: sprintf(
+              "output line count (%s = %s) != input line count (%s = %s)",
+              output_path,
+              output_linecount,
+              input_path,
+              input_linecount
+            )
+          )
         end
       end
     end
