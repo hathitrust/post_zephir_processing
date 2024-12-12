@@ -36,7 +36,9 @@ module PostZephirProcessing
         name: "zephir_upd_YYYYMMDD.json.gz",
         date: date
       }
-      verify_file(path: self.class.dated_derivative(**zephir_update_derivative_params))
+      zephir_update_path = self.class.dated_derivative(**zephir_update_derivative_params)
+      verify_file(path: zephir_update_path)
+      verify_parseable_ndj(path: zephir_update_path)
 
       if date.last_of_month?
         zephir_full_derivative_params = {
@@ -53,10 +55,12 @@ module PostZephirProcessing
 
         output_path = self.class.dated_derivative(**zephir_full_derivative_params)
         verify_file(path: output_path)
+        verify_parseable_ndj(path: output_path)
         output_linecount = gzip_linecount(path: output_path)
 
         input_path = self.class.dated_derivative(**ht_bib_export_derivative_params)
         verify_file(path: input_path)
+        verify_parseable_ndj(path: input_path)
         input_linecount = gzip_linecount(path: input_path)
 
         if output_linecount != input_linecount

@@ -77,6 +77,17 @@ module PostZephirProcessing
       Zlib::GzipReader.open(path, encoding: "utf-8") { |gz| gz.count }
     end
 
+    # Take a .ndj(.gz) file and check that each line is indeed parseable json
+    def verify_parseable_ndj(path:)
+      Zinzout.zin(path) do |infile|
+        infile.each do |line|
+          JSON.parse(line)
+        end
+      rescue
+        error(message: "File #{path} contains unparseable JSON: #{line}")
+      end
+    end
+
     # I'm not sure if we're going to try to distinguish errors and warnings.
     # For now let's call everything an error.
     def error(message:)
