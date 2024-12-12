@@ -131,7 +131,7 @@ module PostZephirProcessing
       end
 
       context "without any of the expected files" do
-        it "reports no errors" do
+        it "reports an error for each of the three missing files" do
           ClimateControl.modify(CATALOG_PREP: @tmpdir) do
             verifier = described_class.new
             verifier.verify_catalog_prep(date: test_date)
