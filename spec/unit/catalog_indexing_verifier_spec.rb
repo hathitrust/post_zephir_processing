@@ -15,6 +15,29 @@ module PostZephirProcessing
       end
     end
 
+    def stub_catalog_record_count(result_count)
+      WebMock.enable!
+
+      url = "#{solr_url}/select?fq=deleted:false&q=*:*&rows=0&wt=json"
+
+      result = {
+        "responseHeader" => {
+          "status" => 0,
+          "QTime" => 0,
+          "params" => {
+            "q" => "*=>*",
+            "fq" => "deleted:false",
+            "rows" => "0",
+            "wt" => "json"
+          }
+        },
+        "response" => {"numFound" => result_count, "start" => 0, "docs" => []}
+      }.to_json
+
+      WebMock::API.stub_request(:get, url)
+        .to_return(body: result, headers: {"Content-Type" => "application/json"})
+    end
+
     def stub_catalog_timerange(date, result_count)
       # must be like YYYY-mm-ddTHH:MM:SSZ - iso8601 with a 'Z' for time zone -
       # time zone offsets like DateTime.iso8601 produce by default are't
@@ -66,20 +89,42 @@ module PostZephirProcessing
         it "rejects a catalog with no recent updates" do
           stub_catalog_timerange(catalog_index_date, 0)
           verifier.verify_index_count(path: catalog_update)
-          expect(verifier.errors).not_to be_empty
+          expect(verifier.errors).to include(/only 0 .* in solr/)
         end
         it "rejects a catalog with 2 recent updates" do
           stub_catalog_timerange(catalog_index_date, 2)
           verifier.verify_index_count(path: catalog_update)
-          expect(verifier.errors).not_to be_empty
+          expect(verifier.errors).to include(/only 2 .* in solr/)
         end
       end
 
       context "with a catalog full file with 5 records" do
-        it "accepts a catalog with 5 records"
-        it "accepts a catalog with 6 records"
-        it "rejects a catalog with no records"
-        it "rejects a catalog with 2 records"
+        let(:catalog_full) { fixture("catalog_archive/zephir_full_20241130_vufind.json.gz") }
+
+        it "accepts a catalog with 5 records" do
+          stub_catalog_record_count(5)
+          verifier.verify_index_count(path: catalog_full)
+          expect(verifier.errors).to be_empty
+        end
+        it "accepts a catalog with 6 records" do
+          stub_catalog_record_count(6)
+          verifier.verify_index_count(path: catalog_full)
+          expect(verifier.errors).to be_empty
+        end
+        it "rejects a catalog with no records" do
+          stub_catalog_record_count(0)
+          verifier.verify_index_count(path: catalog_full)
+          expect(verifier.errors).to include(/only 0 .* in solr/)
+        end
+        it "rejects a catalog with 2 records" do
+          stub_catalog_record_count(2)
+          verifier.verify_index_count(path: catalog_full)
+          expect(verifier.errors).to include(/only 2 .* in solr/)
+        end
+      end
+
+      it "raises an exception when given some other file" do
+        expect { verifier.verify_index_count(path: fixture("zephir_data/ht_bib_export_full_2024-11-30.json.gz")) }.to raise_exception(ArgumentError)
       end
     end
   end
