@@ -11,6 +11,9 @@ module PostZephirProcessing
     end
 
     let(:verifier) { described_class.new }
+    let(:test_update_file) { "zephir_upd_20241202.json.gz" }
+    let(:test_update_fixture) { fixture(File.join("catalog_archive", test_update_file)) }
+    let(:test_update_linecount) { 3 }
 
     describe ".new" do
       it "creates a Verifier" do
@@ -55,7 +58,7 @@ module PostZephirProcessing
 
     describe "#gzip_linecount" do
       it "returns the correct number of lines" do
-        expect(verifier.gzip_linecount(path: TEST_UPDATE_FIXTURE)).to eq(TEST_UPDATE_LINECOUNT)
+        expect(verifier.gzip_linecount(path: test_update_fixture)).to eq(test_update_linecount)
       end
     end
   end

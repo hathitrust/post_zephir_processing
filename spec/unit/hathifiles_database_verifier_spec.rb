@@ -3,11 +3,6 @@
 require "verifier/hathifiles_database_verifier"
 
 module PostZephirProcessing
-  TEST_UPDATE_FILE = "hathi_upd_20241202.txt.gz"
-  TEST_UPDATE_FIXTURE = fixture(File.join("hathifile_archive", TEST_UPDATE_FILE))
-  TEST_FULL_FILE = "hathi_full_20241201.txt.gz"
-  TEST_UPDATE_LINECOUNT = 8
-
   RSpec.describe(HathifilesDatabaseVerifier) do
     around(:each) do |example|
       with_test_environment do
@@ -18,6 +13,9 @@ module PostZephirProcessing
     end
 
     let(:verifier) { described_class.new }
+    let(:test_update_file) { "hathi_upd_20241202.txt.gz" }
+    let(:test_update_fixture) { fixture(File.join("hathifile_archive", test_update_file)) }
+    let(:test_full_file) { "hathi_full_20241201.txt.gz" }
 
     def delete_hf_logs
       Services[:database][:hf_log].delete
@@ -50,7 +48,7 @@ module PostZephirProcessing
     # of them.
     def with_fake_full_hathifile
       ClimateControl.modify(HATHIFILE_ARCHIVE: @tmpdir) do
-        FileUtils.cp(TEST_UPDATE_FIXTURE, File.join(@tmpdir, TEST_FULL_FILE))
+        FileUtils.cp(test_update_fixture, File.join(@tmpdir, test_full_file))
         yield
       end
     end
@@ -59,14 +57,14 @@ module PostZephirProcessing
       context "with corresponding hf_log" do
         it "returns `true`" do
           with_fake_hf_log_entry(hathifile: "hathi_upd_20241202.txt.gz") do
-            expect(described_class.has_log?(hathifile: TEST_UPDATE_FIXTURE)).to eq(true)
+            expect(described_class.has_log?(hathifile: test_update_fixture)).to eq(true)
           end
         end
       end
 
       context "without corresponding hf_log" do
         it "returns `false`" do
-          expect(described_class.has_log?(hathifile: TEST_UPDATE_FIXTURE)).to eq(false)
+          expect(described_class.has_log?(hathifile: test_update_fixture)).to eq(false)
         end
       end
     end
@@ -112,7 +110,7 @@ module PostZephirProcessing
       context "with full hathifile" do
         context "with corresponding hf_log" do
           it "reports no `missing hf_log` errors" do
-            with_fake_hf_log_entry(hathifile: TEST_FULL_FILE) do
+            with_fake_hf_log_entry(hathifile: test_full_file) do
               with_fake_full_hathifile do
                 verifier.run_for_date(date: Date.new(2024, 12, 1))
                 expect(verifier.errors).not_to include(/missing hf_log/)
@@ -132,7 +130,7 @@ module PostZephirProcessing
 
         context "with the expected `hf` rows" do
           it "reports no `hf count mismatch` errors" do
-            with_fake_hf_log_entry(hathifile: TEST_FULL_FILE) do
+            with_fake_hf_log_entry(hathifile: test_full_file) do
               with_fake_full_hathifile do
                 fake_htids = ["test.001", "test.002", "test.003", "test.004", "test.005", "test.006", "test.007", "test.008"]
                 with_fake_hf_entries(htids: fake_htids) do
@@ -146,7 +144,7 @@ module PostZephirProcessing
 
         context "without the expected `hf` rows" do
           it "reports `hf count mismatch` error" do
-            with_fake_hf_log_entry(hathifile: TEST_FULL_FILE) do
+            with_fake_hf_log_entry(hathifile: test_full_file) do
               with_fake_full_hathifile do
                 verifier.run_for_date(date: Date.new(2024, 12, 1))
                 expect(verifier.errors).to include(/hf count mismatch/)
