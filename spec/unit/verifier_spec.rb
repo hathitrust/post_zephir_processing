@@ -63,13 +63,13 @@ module PostZephirProcessing
     end
 
     describe "#verify_parseable_ndj" do
-      it "checks if a .ndj file contains only parseable lines" do
+      it "returns `true` and no errors if a .ndj file contains only parseable lines" do
         content = "{}\n[]"
-        expect_ok(:verify_parseable_ndj, content)
+        expect_ok(:verify_parseable_ndj, content, gzipped: true, check_return: true)
       end
-      it "warns if it sees an unparseable line" do
+      it "warns and returns `false` if it sees an unparseable line" do
         content = "oops\n{}\n[]\n"
-        expect_not_ok(:verify_parseable_ndj, content, errmsg: /unparseable JSON/)
+        expect_not_ok(:verify_parseable_ndj, content, errmsg: /unparseable JSON/, gzipped: true, check_return: true)
       end
     end
   end

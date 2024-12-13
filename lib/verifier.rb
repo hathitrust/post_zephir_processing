@@ -3,7 +3,6 @@
 require_relative "derivatives"
 require_relative "journal"
 require_relative "services"
-require "zinzout"
 
 # Common superclass for all things Verifier.
 # Right now the only thing I can think of to put here is shared
@@ -54,20 +53,19 @@ module PostZephirProcessing
     end
 
     # Basic checks for the existence and readability of the file at `path`.
-    # We should do whatever logging/warning we want to do if the file does
-    # not pass muster.
-    # Verifying contents is out of scope.
-    # Returns `true` if verified.
+    # @return [Boolean] `true` if verified, `false` if error was reported.
     def verify_file(path:)
       verify_file_exists(path: path) && verify_file_readable(path: path)
     end
 
+    # @return [Boolean] `true` if verified, `false` if error was reported.
     def verify_file_exists(path:)
       File.exist?(path).tap do |exists|
         error(message: "not found: #{path}") unless exists
       end
     end
 
+    # @return [Boolean] `true` if verified, `false` if error was reported.
     def verify_file_readable(path:)
       File.readable?(path).tap do |readable|
         error(message: "not readable: #{path}") unless readable
@@ -78,15 +76,18 @@ module PostZephirProcessing
       Zlib::GzipReader.open(path, encoding: "utf-8") { |gz| gz.count }
     end
 
-    # Take a .ndj(.gz) file and check that each line is indeed parseable json
+    # Take a .ndj.gz file and check that each line is indeed parseable json
+    # @return [Boolean] `true` if verified, `false` if error was reported.
     def verify_parseable_ndj(path:)
-      Zinzout.zin(path) do |infile|
-        infile.each do |line|
+      Zlib::GzipReader.open(path, encoding: "utf-8") do |gz|
+        gz.each_line do |line|
           JSON.parse(line)
         end
       rescue JSON::ParserError
         error(message: "File #{path} contains unparseable JSON")
+        return false
       end
+      true
     end
 
     # I'm not sure if we're going to try to distinguish errors and warnings.

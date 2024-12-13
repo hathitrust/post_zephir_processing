@@ -75,19 +75,25 @@ def with_temp_file(contents, gzipped: false)
   end
 end
 
-def expect_not_ok(method, contents, errmsg: /.*/, gzipped: false)
+def expect_not_ok(method, contents, errmsg: /.*/, gzipped: false, check_return: false)
   with_temp_file(contents, gzipped: gzipped) do |tmpfile|
     verifier = described_class.new
-    verifier.send(method, path: tmpfile)
+    result = verifier.send(method, path: tmpfile)
     expect(verifier.errors).to include(errmsg)
+    if check_return
+      expect(result).to be false
+    end
   end
 end
 
-def expect_ok(method, contents, gzipped: false)
+def expect_ok(method, contents, gzipped: false, check_return: false)
   with_temp_file(contents, gzipped: gzipped) do |tmpfile|
     verifier = described_class.new
-    verifier.send(method, path: tmpfile)
+    result = verifier.send(method, path: tmpfile)
     expect(verifier.errors).to be_empty
+    if check_return
+      expect(result).to be true
+    end
   end
 end
 
