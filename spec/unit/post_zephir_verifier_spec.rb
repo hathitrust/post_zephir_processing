@@ -23,6 +23,22 @@ module PostZephirProcessing
       ].join("\n")
     end
 
+    describe "#run_for_date" do
+      context "last day of month" do
+        test_date = Date.parse("2024-11-30")
+        it "runs" do
+          described_class.new.run_for_date(date: test_date)
+        end
+      end
+
+      context "non-last day of month" do
+        test_date = Date.parse("2024-12-01")
+        it "runs" do
+          described_class.new.run_for_date(date: test_date)
+        end
+      end
+    end
+
     describe "#verify_deletes_contents" do
       def expect_deletefile_error(contents)
         expect_not_ok(:verify_deletes_contents,
@@ -379,6 +395,47 @@ module PostZephirProcessing
       not_ok_dig_src.each do |dig_src|
         it "rejects a file with malformed digitization source (#{dig_src})" do
           expect_not_ok(:verify_rights_file_format, [line_start, dig_src].join("\t"))
+        end
+      end
+    end
+
+    describe "verify_zephir_data" do
+      context "last day of month" do
+        test_date = Date.parse("2024-11-30")
+        context "with both files present" do
+          it "reports no errors" do
+            ClimateControl.modify(ZEPHIR_DATA: @tmpdir) do
+              FileUtils.mkdir(File.join(@tmpdir, "full"))
+              FileUtils.touch(File.join(@tmpdir, "full", "zephir_full_monthly_rpt.txt"))
+              zephir_full_file = "zephir_full_YYYYMMDD.rights_rpt.tsv".gsub("YYYYMMDD", test_date.strftime("%Y%m%d"))
+              FileUtils.touch(File.join(@tmpdir, "full", zephir_full_file))
+              verifier = described_class.new
+              verifier.verify_zephir_data(date: test_date)
+              expect(verifier.errors.count).to eq 0
+            end
+          end
+        end
+
+        context "with both files absent" do
+          it "reports two `not found` errors" do
+            ClimateControl.modify(ZEPHIR_DATA: @tmpdir) do
+              verifier = described_class.new
+              verifier.verify_zephir_data(date: test_date)
+              expect(verifier.errors.count).to eq 2
+              verifier.errors.each do |err|
+                expect(err).to include(/^not found/)
+              end
+            end
+          end
+        end
+      end
+
+      context "non-last day of month" do
+        test_date = Date.parse("2024-12-01")
+        it "reports no errors" do
+          verifier = described_class.new
+          verifier.verify_zephir_data(date: test_date)
+          expect(verifier.errors.count).to eq 0
         end
       end
     end

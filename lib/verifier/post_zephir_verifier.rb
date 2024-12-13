@@ -180,7 +180,9 @@ module PostZephirProcessing
     end
 
     # Frequency: MONTHLY
-    # Files: ZEPHIR_DATA/full/zephir_full_monthly_rpt.txt, ZEPHIR_DATA/full/zephir_full_YYYYMMDD.rights_rpt.tsv
+    # Files:
+    #   ZEPHIR_DATA/full/zephir_full_monthly_rpt.txt
+    #   ZEPHIR_DATA/full/zephir_full_YYYYMMDD.rights_rpt.tsv
     # Contents: TODO
     # Verify: readable
     def verify_zephir_data(date: current_date)
