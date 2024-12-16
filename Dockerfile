@@ -39,7 +39,7 @@ RUN cpanm --notest \
 # Ruby setup
 ENV BUNDLE_PATH /gems
 ENV RUBYLIB /usr/src/app/lib
-RUN gem install bundler
+RUN gem install bundler --version "~> 2.5.23"
 RUN bundle config --global silence_root_warning 1
 RUN bundle install
 
