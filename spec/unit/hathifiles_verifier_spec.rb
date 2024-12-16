@@ -44,9 +44,6 @@ module PostZephirProcessing
       end
     end
 
-    # the whole enchilada
-    describe "#verify_hathifile"
-
     describe "#verify_hathifile_contents" do
       it "accepts a file with a single real hathifiles entry" do
         expect_ok(:verify_hathifile_contents, sample_line, gzipped: true)

@@ -6,6 +6,7 @@ require "webmock"
 module PostZephirProcessing
   RSpec.describe(CatalogIndexVerifier) do
     let(:solr_url) { "http://solr-sdr-catalog:9033/solr/catalog" }
+    let(:verifier) { described_class.new }
 
     around(:each) do |example|
       with_test_environment do
@@ -70,7 +71,6 @@ module PostZephirProcessing
     end
 
     describe "#verify_index_count" do
-      let(:verifier) { described_class.new }
       context "with a catalog update file with 3 records" do
         let(:catalog_update) { fixture("catalog_archive/zephir_upd_20241202.json.gz") }
         # indexed the day after the date in the filename
@@ -127,10 +127,16 @@ module PostZephirProcessing
         expect { verifier.verify_index_count(path: fixture("zephir_data/ht_bib_export_full_2024-11-30.json.gz")) }.to raise_exception(ArgumentError)
       end
     end
-  end
 
-  describe "#run" do
-    it "checks the full file on the last day of the month"
-    it "checks the file corresponding to today's date"
+    describe "#run_for_date" do
+      it "checks the full file on the first day of the month" do
+        verifier.run_for_date(date: Date.parse("2024-03-01"))
+        expect(verifier.errors).to include(/.*not found.*zephir_full_20240229_vufind.json.gz.*/)
+      end
+      it "checks the update file corresponding to today's date" do
+        verifier.run_for_date(date: Date.parse("2024-03-02"))
+        expect(verifier.errors).to include(/.*not found.*zephir_upd_20240301.json.gz.*/)
+      end
+    end
   end
 end

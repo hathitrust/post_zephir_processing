@@ -9,6 +9,8 @@ require_relative "../derivatives"
 module PostZephirProcessing
   class CatalogIndexVerifier < Verifier
     def verify_index_count(path:)
+      # TODO: we compute this path based on full/update in run_for_date -- avoid logic twice
+      # by using (todo) Derivative class
       filename = File.basename(path)
       if (m = filename.match(/^zephir_upd_(\d+)\.json\.gz/))
         # in normal operation, we _should_ have indexed this the day after the
@@ -47,6 +49,24 @@ module PostZephirProcessing
       url = "#{ENV["SOLR_URL"]}/select?fq=#{filter_query}&q=*:*&rows=0&wt=json"
 
       JSON.parse(Faraday.get(url).body)["response"]["numFound"]
+    end
+
+    def run_for_date(date:)
+      # TODO: The dates on the files are the previous day, but the indexing
+      # happens on the current day -- not sure the logic here makes sense?
+      @current_date = date
+      update_file = self.class.dated_derivative(location: :CATALOG_ARCHIVE, name: "zephir_upd_YYYYMMDD.json.gz", date: date - 1)
+      if(verify_file(path: update_file)) 
+        verify_index_count(path: update_file)
+      end
+
+      # first of month
+      if date.first_of_month?
+        full_file = self.class.dated_derivative(location: :CATALOG_ARCHIVE, name: "zephir_full_YYYYMMDD_vufind.json.gz", date: date - 1)
+        if(verify_file(path: full_file))
+          verify_index_count(path: full_file)
+        end
+      end
     end
   end
 end
