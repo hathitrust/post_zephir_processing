@@ -21,10 +21,9 @@ module PostZephirProcessing
     # Frequency: ALL
     # Files: CATALOG_PREP/hathi_upd_YYYYMMDD.txt.gz
     #   and potentially HATHIFILE_ARCHIVE/hathi_full_YYYYMMDD.txt.gz
-    # Contents: TODO
+    # Contents: verified with HathifileContentsVerifier with regexes for each line/field
     # Verify:
     #   readable
-    #   TODO: line count must be > than corresponding catalog file
     def verify_hathifile(date: current_date)
       update_file = self.class.dated_derivative(location: :HATHIFILE_ARCHIVE, name: "hathi_upd_YYYYMMDD.txt.gz", date: date)
       if verify_file(path: update_file)
@@ -33,7 +32,7 @@ module PostZephirProcessing
       end
 
       # first of month
-      if date.day == 1
+      if date.first_of_month?
         full_file = self.class.dated_derivative(location: :HATHIFILE_ARCHIVE, name: "hathi_full_YYYYMMDD.txt.gz", date: date)
         if verify_file(path: full_file)
           linecount = verify_hathifile_contents(path: full_file)
@@ -50,17 +49,24 @@ module PostZephirProcessing
     end
 
     def verify_hathifile_linecount(linecount, catalog_path:)
-      catalog_linecount = Zlib::GzipReader.open(catalog_path).count
+      catalog_linecount = gzip_linecount(path: catalog_path)
       if linecount < catalog_linecount
         error(message: "#{catalog_path} has #{catalog_linecount} records but corresponding hathifile only has #{linecount}")
       end
     end
 
     def catalog_file_for(date, full: false)
-      filetype = full ? "full" : "upd"
+      # TODO address this somehow with Derivative. Maybe Derivative should know
+      # how to construct the filenames?
+      name = if full
+        "zephir_full_YYYYMMDD_vufind.json.gz"
+      else
+        "zephir_upd_YYYYMMDD.json.gz"
+      end
+
       self.class.dated_derivative(
         location: :CATALOG_ARCHIVE,
-        name: "zephir_#{filetype}_YYYYMMDD.json.gz",
+        name: name,
         date: date - 1
       )
     end

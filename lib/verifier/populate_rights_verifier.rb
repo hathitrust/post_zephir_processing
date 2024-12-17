@@ -22,13 +22,13 @@ module PostZephirProcessing
 
     def run_for_date(date:)
       upd_path = self.class.dated_derivative(location: :RIGHTS_ARCHIVE, name: UPD_RIGHTS_TEMPLATE, date: date)
-      if File.exist? upd_path
+      if verify_file(path: upd_path)
         verify_rights_file(path: upd_path)
       end
 
       if date.last_of_month?
         full_path = self.class.dated_derivative(location: :RIGHTS_ARCHIVE, name: FULL_RIGHTS_TEMPLATE, date: date)
-        if File.exist? full_path
+        if verify_file(path: full_path)
           verify_rights_file(path: full_path)
         end
       end

@@ -63,7 +63,7 @@ module PostZephirProcessing
 
       it "computes a full source catalog file based on date - 1" do
         expect(described_class.new.catalog_file_for(Date.parse("2024-12-01"), full: true))
-          .to eq("#{ENV["CATALOG_ARCHIVE"]}/zephir_full_20241130.json.gz")
+          .to eq("#{ENV["CATALOG_ARCHIVE"]}/zephir_full_20241130_vufind.json.gz")
       end
     end
   end

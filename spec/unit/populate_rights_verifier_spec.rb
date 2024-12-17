@@ -12,7 +12,7 @@ module PostZephirProcessing
       end
     end
 
-    let(:test_rights) { 10.times.collect { |n| "test.%03d" % n } }
+    let(:test_rights) { (0..9).map { |n| "test.%03d" % n } }
     let(:test_rights_file_contents) do
       test_rights.map do |rights|
         [rights, "ic", "bib", "bibrights", "aa"].join("\t")

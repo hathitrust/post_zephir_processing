@@ -36,22 +36,26 @@ module PostZephirProcessing
 
     describe "#verify_file" do
       # Note: since the tests currently run as root, no way to test unreadable file
+
+      it "starts with no errors" do
+        expect(verifier.errors).to be_empty
+      end
+
       context "with readable file" do
         it "does not report an error" do
-          errors_before = verifier.errors.count
           tmpfile = File.join(@tmpdir, "tmpfile.txt")
           File.open(tmpfile, "w") { |f| f.puts "blah" }
           verifier.verify_file(path: tmpfile)
-          expect(verifier.errors.count).to eq(errors_before)
+          expect(verifier.errors).to be_empty
         end
       end
 
       context "with nonexistent file" do
         it "reports an error" do
-          errors_before = verifier.errors.count
+          verifier.errors.count
           tmpfile = File.join(@tmpdir, "no_such_tmpfile.txt")
           verifier.verify_file(path: tmpfile)
-          expect(verifier.errors.count).to be > errors_before
+          expect(verifier.errors).not_to be_empty
         end
       end
     end

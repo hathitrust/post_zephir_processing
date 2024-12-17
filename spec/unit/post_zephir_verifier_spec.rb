@@ -329,6 +329,8 @@ module PostZephirProcessing
     end
 
     describe "#verify_rights_file_format" do
+      let(:rights_cols) { ["a.1", "ic", "bib", "bibrights", "aa"] }
+
       it "accepts an empty file" do
         expect_ok(:verify_rights_file_format, "")
       end
@@ -337,64 +339,64 @@ module PostZephirProcessing
         expect_ok(:verify_rights_file_format, well_formed_rights_file_content)
       end
 
+      it "accepts a well-formed line" do
+        expect_ok(:verify_rights_file_format, rights_cols.join("\t"))
+      end
+
       volids_not_ok = ["", "x", "x.", ".x", "X.X"]
-      line_end = ["ic", "bib", "bibrights", "aa"].join("\t")
-      volids_not_ok.each do |volid|
+      volids_not_ok.each do |bad_volume_id|
         it "rejects a file with malformed volume id" do
+          rights_cols[0] = bad_volume_id
+
           expect_not_ok(
             :verify_rights_file_format,
-            [volid, line_end].join("\t"),
+            rights_cols.join("\t"),
             errmsg: /Rights file .+ contains malformed line/
           )
         end
       end
 
-      it "rejects a file with malformed rights" do
-        cols = ["a.1", "ic", "bib", "bibrights", "aa"]
-        expect_ok(:verify_rights_file_format, cols.join("\t"))
-
-        cols[1] = ""
-        expect_not_ok(:verify_rights_file_format, cols.join("\t"))
-
-        cols[1] = "icus"
-        expect_not_ok(:verify_rights_file_format, cols.join("\t"))
+      it "rejects a file with no rights" do
+        rights_cols[1] = ""
+        expect_not_ok(:verify_rights_file_format, rights_cols.join("\t"))
       end
 
-      it "rejects a file without bib in col 2" do
-        cols = ["a.1", "ic", "bib", "bibrights", "aa"]
-        expect_ok(:verify_rights_file_format, cols.join("\t"))
-
-        cols[2] = "BIB"
-        expect_not_ok(:verify_rights_file_format, cols.join("\t"))
-
-        cols[2] = ""
-        expect_not_ok(:verify_rights_file_format, cols.join("\t"))
+      it "rejects a file with unexpected (icus) rights" do
+        rights_cols[1] = "icus"
+        expect_not_ok(:verify_rights_file_format, rights_cols.join("\t"))
       end
 
-      it "rejects a file without bibrights in col 3" do
-        cols = ["a.1", "ic", "bib", "bibrights", "aa"]
-        expect_ok(:verify_rights_file_format, cols.join("\t"))
+      it "rejects a file without 'bib' (lowercase) in col 2" do
+        rights_cols[2] = "BIB"
+        expect_not_ok(:verify_rights_file_format, rights_cols.join("\t"))
+      end
 
-        cols[3] = "BIBRIGHTS"
-        expect_not_ok(:verify_rights_file_format, cols.join("\t"))
+      it "rejects a file with no reason in col 2" do
+        rights_cols[2] = ""
+        expect_not_ok(:verify_rights_file_format, rights_cols.join("\t"))
+      end
 
-        cols[3] = ""
-        expect_not_ok(:verify_rights_file_format, cols.join("\t"))
+      it "rejects a file without 'bibrights' (lowercase) in col 3" do
+        rights_cols[3] = "BIBRIGHTS"
+        expect_not_ok(:verify_rights_file_format, rights_cols.join("\t"))
+      end
+
+      it "rejects a file with no user in col 3" do
+        rights_cols[3] = ""
+        expect_not_ok(:verify_rights_file_format, rights_cols.join("\t"))
       end
 
       it "accepts a file with OK digitization source" do
-        cols = ["a.1", "ic", "bib", "bibrights", "aa"]
-        expect_ok(:verify_rights_file_format, cols.join("\t"))
-
-        cols[4] = "aa-aa"
-        expect_ok(:verify_rights_file_format, cols.join("\t"))
+        rights_cols[4] = "aa-aa"
+        expect_ok(:verify_rights_file_format, rights_cols.join("\t"))
       end
 
-      not_ok_dig_src = ["", "-aa", "aa-", "AA"]
-      line_start = ["a.1", "ic", "bib", "bibrights"].join("\t")
-      not_ok_dig_src.each do |dig_src|
-        it "rejects a file with malformed digitization source (#{dig_src})" do
-          expect_not_ok(:verify_rights_file_format, [line_start, dig_src].join("\t"))
+      not_ok_dig_sources = ["", "-aa", "aa-", "AA"]
+      not_ok_dig_sources.each do |bad_dig_source|
+        it "rejects a file with malformed digitization source (#{bad_dig_source})" do
+          rights_cols[4] = bad_dig_source
+
+          expect_not_ok(:verify_rights_file_format, rights_cols.join("\t"))
         end
       end
     end

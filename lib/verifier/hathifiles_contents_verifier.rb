@@ -87,10 +87,6 @@ module PostZephirProcessing
 
         verify_fields(fields)
       end
-      # open file
-      # check each line against a regex
-      # count lines
-      # also check linecount against corresponding catalog - hathifile must be >=
     end
 
     def verify_fields(fields)

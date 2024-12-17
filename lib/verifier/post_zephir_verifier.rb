@@ -6,9 +6,6 @@ require_relative "../derivatives"
 
 # Verifies that post_zephir workflow stage did what it was supposed to.
 
-# TODO: document and verify the files written by monthly process.
-# They should be mostly the same but need to be accounted for.
-
 module PostZephirProcessing
   class PostZephirVerifier < Verifier
     attr_reader :current_date
@@ -171,7 +168,7 @@ module PostZephirProcessing
       # This allows an empty file as well, which is possible.
       File.open(path) do |f|
         f.each_line do |line|
-          line.strip!
+          line.chomp!
           unless line.match?(regex)
             error message: "Rights file #{path} contains malformed line: #{line}"
           end
