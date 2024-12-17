@@ -191,7 +191,7 @@ module PostZephirProcessing
           sample_fields[i] = field[:bad]
 
           verifier.verify_fields(sample_fields)
-          expect(verifier.errors).to include(/Field #{i}.*does not match/)
+          expect(verifier.errors).to include(/Field #{field[:name]}.*does not match/)
         end
 
         if field[:optional]
@@ -206,7 +206,7 @@ module PostZephirProcessing
             sample_fields[i] = ""
 
             verifier.verify_fields(sample_fields)
-            expect(verifier.errors).to include(/Field #{i}.*does not match/)
+            expect(verifier.errors).to include(/Field #{field[:name]}.*does not match/)
           end
         end
       end

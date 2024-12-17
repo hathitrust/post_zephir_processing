@@ -7,66 +7,65 @@ require_relative "../verifier"
 
 module PostZephirProcessing
   class HathifileContentsVerifier < Verifier
-    HATHIFILE_FIELDS_COUNT = 26
-    HATHIFILE_FIELD_REGEXES = [
+    HATHIFILE_FIELD_SPECS = [
       # htid - required; lowercase alphanumeric namespace, period, non-whitespace ID
-      /^[a-z0-9]{2,4}\.\S+$/,
+      {name: "htid", regex: /^[a-z0-9]{2,4}\.\S+$/},
       # access - required; allow or deny
-      /^(allow|deny)$/,
+      {name: "access", regex: /^(allow|deny)$/},
       # rights - required; lowercase alphanumeric plus dash and period
-      /^[a-z0-9\-.]+$/,
+      {name: "rights", regex: /^[a-z0-9\-.]+$/},
       # ht_bib_key - required; 9 digits
-      /^\d{9}$/,
+      {name: "ht_bib_key", regex: /^\d{9}$/},
       # description (enumchron) - optional; anything goes
-      /^.*$/,
+      {name: "description", regex: /^.*$/},
       # source - required; NUC/MARC organization code, all upper-case
-      /^[A-Z]+$/,
+      {name: "source", regex: /^[A-Z]+$/},
       # source_bib_num - optional (see note) - no whitespace, anything else
       # allowed. Note that blank source bib nums are likely a bug in hathifiles
       # generation
-      /^\S*$/,
+      {name: "source_bib_num", regex: /^\S*$/},
       # oclc_num - optional; zero or more comma-separated numbers
-      /^(\d+)?(,\d+)*$/,
+      {name: "oclc_num", regex: /^(\d+)?(,\d+)*$/},
       # hathifiles doesn't validate/normalize what comes out of the record for
       # isbn, issn, or lccn
       # isbn - optional; anything goes
-      /^.*$/,
+      {name: "hathifiles", regex: /^.*$/},
       # issn - optional; anything goes
-      /^.*$/,
+      {name: "issn", regex: /^.*$/},
       # lccn - optional; anything goes
-      /^.*$/,
+      {name: "lccn", regex: /^.*$/},
       # title - optional (see note); anything goes
       # Note: currently blank for titles with only a 245$k; hathifiles
       # generation should likely be changed to include the k subfield.
-      /^.*$/,
+      {name: "title", regex: /^.*$/},
       # imprint - optional; anything goes
-      /^.*$/,
+      {name: "imprint", regex: /^.*$/},
       # rights_reason_code - required; lowercase alphabetical
-      /^[a-z]+$/,
+      {name: "rights_reason_code", regex: /^[a-z]+$/},
       # rights_timestamp - required; %Y-%m-%d %H:%M:%S
-      /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/,
+      {name: "rights_timestamp", regex: /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/},
       # us_gov_doc_flag - required; 0 or 1
-      /^[01]$/,
+      {name: "us_gov_doc_flag", regex: /^[01]$/},
       # rights_date_used - required - numeric
-      /^\d+$/,
+      {name: "rights_date_used", regex: /^\d+$/},
       # publication place - required, 2 or 3 characters (but can be whitespace)
-      /^.{2,3}$/,
+      {name: "pub_place", regex: /^.{2,3}$/},
       # lang - optional, at most 3 characters
-      /^.{0,3}$/,
+      {name: "lang", regex: /^.{0,3}$/},
       # bib_fmt - required, uppercase characters
-      /^[A-Z]+$/,
+      {name: "bib_fmt", regex: /^[A-Z]+$/},
       # collection code - required, uppercase characters
-      /^[A-Z]+$/,
+      {name: "collection_code", regex: /^[A-Z]+$/},
       # content provider - required, lowercase characters + dash
-      /^[a-z\-]+$/,
+      {name: "content_provider_code", regex: /^[a-z\-]+$/},
       # responsible entity code - required, lowercase characters + dash
-      /^[a-z\-]+$/,
+      {name: "responsible_entity_code", regex: /^[a-z\-]+$/},
       # digitization agent code - required, lowercase characters + dash
-      /^[a-z\-]+$/,
+      {name: "digitization_agent_code", regex: /^[a-z\-]+$/},
       # access profile code - required, lowercase characters + plus
-      /^[a-z+]+$/,
+      {name: "access_profile_code", regex: /^[a-z+]+$/},
       # author - optional, anything goes
-      /^.*$/
+      {name: "author", regex: /^.*$/}
     ]
 
     attr_reader :file, :line_count
@@ -90,19 +89,20 @@ module PostZephirProcessing
     end
 
     def verify_fields(fields)
-      fields.each_with_index do |field, i|
-        regex = HATHIFILE_FIELD_REGEXES[i]
-        if !fields[i].match?(regex)
-          error(message: "Field #{i} at line #{line_count} in #{file} ('#{field}') does not match #{regex}")
+      fields.zip(HATHIFILE_FIELD_SPECS).each do |field_value, field_spec|
+        field_name = field_spec[:name]
+        regex = field_spec[:regex]
+        if !field_value.match?(regex)
+          error(message: "Field #{field_name} at line #{line_count} in #{file} ('#{field_value}') does not match #{regex}")
         end
       end
     end
 
     def verify_line_field_count(fields)
-      if fields.count == HATHIFILE_FIELDS_COUNT
+      if fields.count == HATHIFILE_FIELD_SPECS.count
         true
       else
-        error(message: "Line #{line_count} in #{file} has only #{fields.count} columns, expected #{HATHIFILE_FIELDS_COUNT}")
+        error(message: "Line #{line_count} in #{file} has only #{fields.count} columns, expected #{HATHIFILE_FIELD_SPECS.count}")
         false
       end
     end
