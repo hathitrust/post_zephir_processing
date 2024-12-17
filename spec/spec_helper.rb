@@ -30,7 +30,7 @@ require_relative "../lib/verifier"
 
 # squelch log output from tests
 PostZephirProcessing::Services.register(:logger) {
-  Logger.new(File.open("/dev/null", "w"), level: Logger::DEBUG)
+  Logger.new(File.open(File::NULL, "w"), level: Logger::DEBUG)
 }
 
 def test_journal

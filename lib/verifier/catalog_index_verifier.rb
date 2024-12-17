@@ -56,14 +56,14 @@ module PostZephirProcessing
       # happens on the current day -- not sure the logic here makes sense?
       @current_date = date
       update_file = self.class.dated_derivative(location: :CATALOG_ARCHIVE, name: "zephir_upd_YYYYMMDD.json.gz", date: date - 1)
-      if(verify_file(path: update_file)) 
+      if verify_file(path: update_file)
         verify_index_count(path: update_file)
       end
 
       # first of month
       if date.first_of_month?
         full_file = self.class.dated_derivative(location: :CATALOG_ARCHIVE, name: "zephir_full_YYYYMMDD_vufind.json.gz", date: date - 1)
-        if(verify_file(path: full_file))
+        if verify_file(path: full_file)
           verify_index_count(path: full_file)
         end
       end
