@@ -28,28 +28,17 @@ module PostZephirProcessing
     #   readable
     #   line count must be the same as input JSON
     def verify_catalog_archive(date: current_date)
-      zephir_update_derivative_params = {
-        location: :CATALOG_ARCHIVE,
-        name: "zephir_upd_YYYYMMDD.json.gz",
-        date: date
-      }
-      zephir_update_path = self.class.dated_derivative(**zephir_update_derivative_params)
+      zephir_update_path = Derivative::CatalogArchive.new(date: date, full: false).path
       verify_file(path: zephir_update_path)
       verify_parseable_ndj(path: zephir_update_path)
 
       if date.last_of_month?
-        zephir_full_derivative_params = {
-          location: :CATALOG_ARCHIVE,
-          name: "zephir_full_YYYYMMDD_vufind.json.gz",
-          date: date
-        }
-
         ht_bib_export_derivative_params = {
           location: :ZEPHIR_DATA,
           name: "ht_bib_export_full_YYYY-MM-DD.json.gz",
           date: date
         }
-        output_path = self.class.dated_derivative(**zephir_full_derivative_params)
+        output_path = Derivative::CatalogArchive.new(date: date, full: true).path
         verify_file(path: output_path)
         verify_parseable_ndj(path: output_path)
         output_linecount = gzip_linecount(path: output_path)
@@ -84,12 +73,12 @@ module PostZephirProcessing
     #   TODO: deletes file is combination of two component files in TMPDIR?
     def verify_catalog_prep(date: current_date)
       delete_file = self.class.dated_derivative(location: :CATALOG_PREP, name: "zephir_upd_YYYYMMDD_delete.txt.gz", date: date)
-      verify_file(path: self.class.dated_derivative(location: :CATALOG_PREP, name: "zephir_upd_YYYYMMDD.json.gz", date: date))
       if verify_file(path: delete_file)
         verify_deletes_contents(path: delete_file)
       end
-      if date.last_of_month?
-        verify_file(path: self.class.dated_derivative(location: :CATALOG_PREP, name: "zephir_full_YYYYMMDD_vufind.json.gz", date: date))
+
+      Derivative::CatalogPrep.derivatives_for_date(date: date).each do |derivative|
+        verify_file(path: derivative.path)
       end
     end
 
