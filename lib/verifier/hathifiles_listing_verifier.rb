@@ -2,6 +2,7 @@
 
 require_relative "../verifier"
 require_relative "../derivatives"
+require_relative "../derivative/hathifile_www"
 require "json"
 
 module PostZephirProcessing
@@ -14,29 +15,9 @@ module PostZephirProcessing
     end
 
     def verify_hathifiles_listing(date: current_date)
-      derivatives_for_date(date: date).each do |derivative_path|
-        verify_listing(path: derivative_path)
+      Derivative::HathifileWWW.derivatives_for_date(date: date).each do |hathifile_derivative|
+        verify_listing(path: hathifile_derivative.path)
       end
-    end
-
-    def derivatives_for_date(date:)
-      derivatives = [
-        self.class.dated_derivative(
-          location: :WWW_DIR,
-          name: "hathi_upd_YYYYMMDD.txt.gz",
-          date: date
-        )
-      ]
-
-      if date.first_of_month?
-        derivatives << self.class.dated_derivative(
-          location: :WWW_DIR,
-          name: "hathi_full_YYYYMMDD.txt.gz",
-          date: date
-        )
-      end
-
-      derivatives
     end
 
     def verify_listing(path:)

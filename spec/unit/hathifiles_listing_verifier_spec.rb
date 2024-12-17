@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "verifier/hathifiles_listing_verifier"
+require "derivative/hathifile_www"
 
 module PostZephirProcessing
   RSpec.describe(HathifilesListingVerifier) do
@@ -23,17 +24,9 @@ module PostZephirProcessing
 
     around(:each) do |example|
       with_test_environment do
-        example.run
-      end
-    end
-
-    describe "#derivatives_for_date" do
-      it "expects two derivativess on firstday" do
-        expect(described_class.new.derivatives_for_date(date: firstday).size).to eq 2
-      end
-
-      it "expects one derivative on secondday" do
-        expect(described_class.new.derivatives_for_date(date: secondday).size).to eq 1
+        ClimateControl.modify(HATHIFILE_ARCHIVE: "data/www") do
+          example.run
+        end
       end
     end
 
@@ -70,9 +63,9 @@ module PostZephirProcessing
 
       it "produces 2 errors if upd and full file are missing on the first day of the month" do
         # Need to remove the 2 files for the first to test
-        verifier.derivatives_for_date(date: firstday).each do |f|
-          if File.exist?(f)
-            FileUtils.rm(f)
+        Derivative::HathifileWWW.derivatives_for_date(date: firstday).each do |d|
+          if File.exist?(d.path)
+            FileUtils.rm(d.path)
           end
         end
         verifier.verify_hathifiles_listing(date: firstday)
