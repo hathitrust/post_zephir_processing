@@ -4,7 +4,7 @@ require "zlib"
 
 require_relative "../verifier"
 require_relative "../derivatives"
-require_relative "../derivative/hathifile_derivative"
+require_relative "../derivative/hathifile"
 
 module PostZephirProcessing
   class HathifilesDatabaseVerifier < Verifier
@@ -35,7 +35,7 @@ module PostZephirProcessing
     def verify_hathifiles_database_log
       # File missing? Not our problem, should be caught by earlier verifier.
 
-      HathifileDerivative.derivatives_for_date(date: current_date).each do |d|
+      Derivative::Hathifile.derivatives_for_date(date: current_date).each do |d|
         next unless File.exist?(d.path)
 
         if !self.class.has_log?(hathifile: d.path)
@@ -45,7 +45,7 @@ module PostZephirProcessing
     end
 
     def verify_hathifiles_database_count
-      HathifileDerivative.derivatives_for_date(date: current_date).select { |d| d.full? }.each do |full_file|
+      Derivative::Hathifile.derivatives_for_date(date: current_date).select { |d| d.full? }.each do |full_file|
         next unless File.exist?(full_file.path)
 
         full_file_count = gzip_linecount(path: full_file.path)

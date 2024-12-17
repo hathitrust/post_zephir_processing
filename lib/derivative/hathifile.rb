@@ -1,17 +1,17 @@
 require "derivative"
 
 module PostZephirProcessing
-  class HathifileDerivative < Derivative
+  class Derivative::Hathifile < Derivative
     def self.derivatives_for_date(date:)
       derivatives = [
-        HathifileDerivative.new(
+        Derivative::Hathifile.new(
           full: false,
           date: date
         )
       ]
 
       if date.first_of_month?
-        derivatives << HathifileDerivative.new(
+        derivatives << Derivative::Hathifile.new(
           full: true,
           date: date
         )

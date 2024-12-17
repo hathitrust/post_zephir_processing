@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 require "derivative"
-require "derivative/hathifile_derivative"
+require "derivative/hathifile"
 
 module PostZephirProcessing
-  RSpec.describe(HathifileDerivative) do
+  RSpec.describe(Derivative::Hathifile) do
     around(:each) do |example|
       with_test_environment do
         ClimateControl.modify(HATHIFILE_ARCHIVE: "/tmp") do
