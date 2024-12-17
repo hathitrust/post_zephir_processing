@@ -21,7 +21,7 @@ module PostZephirProcessing
 
     let(:params) do
       {
-        date: test_date_last_of_month,
+        date: test_date_last_of_month
       }
     end
     let(:derivative) { described_class.new(**params) }

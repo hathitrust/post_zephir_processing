@@ -4,14 +4,14 @@ module PostZephirProcessing
   class Derivative::Catalog < Derivative
     def self.derivatives_for_date(date:)
       derivatives = [
-        self.new(
+        new(
           full: false,
           date: date
         )
       ]
 
       if date.last_of_month?
-        derivatives << self.new(
+        derivatives << new(
           full: true,
           date: date
         )
@@ -30,7 +30,7 @@ module PostZephirProcessing
     private
 
     def filename_template
-      if(full)
+      if full
         "zephir_full_YYYYMMDD_vufind.json.gz"
       else
         "zephir_upd_YYYYMMDD.json.gz"
