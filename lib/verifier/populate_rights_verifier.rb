@@ -21,15 +21,10 @@ module PostZephirProcessing
     UPD_RIGHTS_TEMPLATE = "zephir_upd_YYYYMMDD.rights"
 
     def run_for_date(date:)
-      upd_path = self.class.dated_derivative(location: :RIGHTS_ARCHIVE, name: UPD_RIGHTS_TEMPLATE, date: date)
-      if verify_file(path: upd_path)
-        verify_rights_file(path: upd_path)
-      end
-
-      if date.last_of_month?
-        full_path = self.class.dated_derivative(location: :RIGHTS_ARCHIVE, name: FULL_RIGHTS_TEMPLATE, date: date)
-        if verify_file(path: full_path)
-          verify_rights_file(path: full_path)
+      Derivative::Rights.derivatives_for_date(date: date).each do |derivative|
+        path = derivative.path
+        if verify_file(path: path)
+          verify_rights_file(path: path)
         end
       end
     end

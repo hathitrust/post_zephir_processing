@@ -9,13 +9,13 @@ require_relative "../derivatives"
 module PostZephirProcessing
   class CatalogIndexVerifier < Verifier
     def verify_index_count(derivative:)
+      catalog_linecount = gzip_linecount(path: derivative.path)
+
       if derivative.full?
-        catalog_linecount = gzip_linecount(path: derivative.path)
         solr_count = solr_nondeleted_records
         query_desc = "existed"
       else
         date_of_indexing = derivative.date + 1
-        catalog_linecount = gzip_linecount(path: derivative.path)
         solr_count = solr_count(date_of_indexing)
         query_desc = "had time_of_indexing on #{date_of_indexing}"
       end

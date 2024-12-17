@@ -1,15 +1,14 @@
 # frozen_string_literal: true
 
 require "derivative"
-require "derivative/catalog"
+require "derivative/rights"
 
 module PostZephirProcessing
-  RSpec.describe(Derivative::Catalog) do
+  RSpec.describe(Derivative::Rights) do
     around(:each) do |example|
       with_test_environment do
         ClimateControl.modify(
-          CATALOG_ARCHIVE: "/tmp/archive",
-          CATALOG_PREP: "/tmp/prep"
+          RIGHTS_ARCHIVE: "/tmp/rights"
         ) do
           example.run
         end
@@ -42,29 +41,15 @@ module PostZephirProcessing
         )
         expect(derivatives.count).to eq 1
       end
-    end
 
-    describe(Derivative::CatalogArchive) do
-      it "reports the expected path for a full catalog file" do
+      it "reports the expected path for a rights file derived from a full catalog file" do
         params[:full] = true
-        expect(derivative.path).to eq "/tmp/archive/zephir_full_20231130_vufind.json.gz"
+        expect(derivative.path).to eq "/tmp/rights/zephir_full_20231130.rights"
       end
 
-      it "reports the expected path for an update catalog file" do
+      it "reports the expected path for a rights file derived from an update catalog file" do
         params[:full] = false
-        expect(derivative.path).to eq "/tmp/archive/zephir_upd_20231130.json.gz"
-      end
-    end
-
-    describe(Derivative::CatalogPrep) do
-      it "reports the expected path for a full catalog file" do
-        params[:full] = true
-        expect(derivative.path).to eq "/tmp/prep/zephir_full_20231130_vufind.json.gz"
-      end
-
-      it "reports the expected path for an update catalog file" do
-        params[:full] = false
-        expect(derivative.path).to eq "/tmp/prep/zephir_upd_20231130.json.gz"
+        expect(derivative.path).to eq "/tmp/rights/zephir_upd_20231130.rights"
       end
     end
   end

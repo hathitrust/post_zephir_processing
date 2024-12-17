@@ -130,15 +130,10 @@ module PostZephirProcessing
     #   readable
     #   accepted by verify_rights_file_format
     def verify_rights(date: current_date)
-      upd_path = self.class.dated_derivative(location: :RIGHTS_ARCHIVE, name: "zephir_upd_YYYYMMDD.rights", date: date)
-      if verify_file(path: upd_path)
-        verify_rights_file_format(path: upd_path)
-      end
-
-      if date.last_of_month?
-        full_path = self.class.dated_derivative(location: :RIGHTS_ARCHIVE, name: "zephir_full_YYYYMMDD.rights", date: date)
-        if verify_file(path: full_path)
-          verify_rights_file_format(path: full_path)
+      Derivative::Rights.derivatives_for_date(date: date).each do |derivative|
+        path = derivative.path
+        if verify_file(path: path)
+          verify_rights_file_format(path: path)
         end
       end
     end
