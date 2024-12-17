@@ -8,29 +8,25 @@ require_relative "../derivatives"
 
 module PostZephirProcessing
   class CatalogIndexVerifier < Verifier
-    def verify_index_count(path:)
-      # TODO: we compute this path based on full/update in run_for_date -- avoid logic twice
-      # by using (todo) Derivative class
-      filename = File.basename(path)
-      if (m = filename.match(/^zephir_upd_(\d+)\.json\.gz/))
-        # in normal operation, we _should_ have indexed this the day after the
-        # date listed in the file.
-        #
-        # could potentially use the journal to determine when we actually
-        # indexed it?
-
-        date_of_indexing = Date.parse(m[1]) + 1
-        catalog_linecount = gzip_linecount(path: path)
-        solr_count = solr_count(date_of_indexing)
-      elsif /^zephir_full_\d+_vufind\.json\.gz/.match?(filename)
-        catalog_linecount = gzip_linecount(path: path)
+    def verify_index_count(derivative:)
+      if derivative.full?
+        catalog_linecount = gzip_linecount(path: derivative.path)
         solr_count = solr_nondeleted_records
+        query_desc = "existed"
       else
-        raise ArgumentError, "#{path} doesn't seem to be a catalog index file"
+        date_of_indexing = derivative.date + 1
+        catalog_linecount = gzip_linecount(path: derivative.path)
+        solr_count = solr_count(date_of_indexing)
+        query_desc = "had time_of_indexing on #{date_of_indexing}"
       end
 
+      # in normal operation, we _should_ have indexed this the day after the
+      # date listed in the file.
+      #
+      # could potentially use the journal to determine when we actually
+      # indexed it?
       if solr_count < catalog_linecount
-        error(message: "#{filename} had #{catalog_linecount} records, but only #{solr_count} had time_of_indexing on #{date_of_indexing} in solr")
+        error(message: "#{derivative.path} had #{catalog_linecount} records, but only #{solr_count} #{query_desc} in solr")
       end
     end
 
@@ -52,19 +48,16 @@ module PostZephirProcessing
     end
 
     def run_for_date(date:)
-      # TODO: The dates on the files are the previous day, but the indexing
-      # happens on the current day -- not sure the logic here makes sense?
-      @current_date = date
-      update_file = self.class.dated_derivative(location: :CATALOG_ARCHIVE, name: "zephir_upd_YYYYMMDD.json.gz", date: date - 1)
-      if verify_file(path: update_file)
-        verify_index_count(path: update_file)
-      end
+      # The dates on the files are the previous day, but the indexing
+      # happens on the current day. When we verify the current day, we are
+      # verifying that the file named for the _previous_ day was produced.
 
-      # first of month
-      if date.first_of_month?
-        full_file = self.class.dated_derivative(location: :CATALOG_ARCHIVE, name: "zephir_full_YYYYMMDD_vufind.json.gz", date: date - 1)
-        if verify_file(path: full_file)
-          verify_index_count(path: full_file)
+      @current_date = date
+      Derivative::CatalogArchive.derivatives_for_date(date: date - 1).each do |derivative|
+        path = derivative.path
+
+        if verify_file(path: path)
+          verify_index_count(derivative: derivative)
         end
       end
     end

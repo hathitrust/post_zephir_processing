@@ -2,6 +2,7 @@
 
 require "verifier/catalog_index_verifier"
 require "webmock"
+require "derivative/catalog"
 
 module PostZephirProcessing
   RSpec.describe(CatalogIndexVerifier) do
@@ -10,7 +11,10 @@ module PostZephirProcessing
 
     around(:each) do |example|
       with_test_environment do
-        ClimateControl.modify(SOLR_URL: solr_url) do
+        ClimateControl.modify(
+          SOLR_URL: solr_url,
+          CATALOG_ARCHIVE: fixture("catalog_archive")
+        ) do
           example.run
         end
       end
@@ -72,59 +76,55 @@ module PostZephirProcessing
 
     describe "#verify_index_count" do
       context "with a catalog update file with 3 records" do
-        let(:catalog_update) { fixture("catalog_archive/zephir_upd_20241202.json.gz") }
+        let(:catalog_update) { Derivative::CatalogArchive.new(date: Date.parse("2024-12-02"), full: false) }
         # indexed the day after the date in the filename
         let(:catalog_index_date) { Date.parse("2024-12-03") }
 
         it "accepts a catalog with 3 recent updates" do
           stub_catalog_timerange(catalog_index_date, 3)
-          verifier.verify_index_count(path: catalog_update)
+          verifier.verify_index_count(derivative: catalog_update)
           expect(verifier.errors).to be_empty
         end
         it "accepts a catalog with 5 recent updates" do
           stub_catalog_timerange(catalog_index_date, 5)
-          verifier.verify_index_count(path: catalog_update)
+          verifier.verify_index_count(derivative: catalog_update)
           expect(verifier.errors).to be_empty
         end
         it "rejects a catalog with no recent updates" do
           stub_catalog_timerange(catalog_index_date, 0)
-          verifier.verify_index_count(path: catalog_update)
+          verifier.verify_index_count(derivative: catalog_update)
           expect(verifier.errors).to include(/only 0 .* in solr/)
         end
         it "rejects a catalog with 2 recent updates" do
           stub_catalog_timerange(catalog_index_date, 2)
-          verifier.verify_index_count(path: catalog_update)
+          verifier.verify_index_count(derivative: catalog_update)
           expect(verifier.errors).to include(/only 2 .* in solr/)
         end
       end
 
       context "with a catalog full file with 5 records" do
-        let(:catalog_full) { fixture("catalog_archive/zephir_full_20241130_vufind.json.gz") }
+        let(:catalog_full) { Derivative::CatalogArchive.new(date: Date.parse("2024-11-30"), full: true) }
 
         it "accepts a catalog with 5 records" do
           stub_catalog_record_count(5)
-          verifier.verify_index_count(path: catalog_full)
+          verifier.verify_index_count(derivative: catalog_full)
           expect(verifier.errors).to be_empty
         end
         it "accepts a catalog with 6 records" do
           stub_catalog_record_count(6)
-          verifier.verify_index_count(path: catalog_full)
+          verifier.verify_index_count(derivative: catalog_full)
           expect(verifier.errors).to be_empty
         end
         it "rejects a catalog with no records" do
           stub_catalog_record_count(0)
-          verifier.verify_index_count(path: catalog_full)
+          verifier.verify_index_count(derivative: catalog_full)
           expect(verifier.errors).to include(/only 0 .* in solr/)
         end
         it "rejects a catalog with 2 records" do
           stub_catalog_record_count(2)
-          verifier.verify_index_count(path: catalog_full)
+          verifier.verify_index_count(derivative: catalog_full)
           expect(verifier.errors).to include(/only 2 .* in solr/)
         end
-      end
-
-      it "raises an exception when given some other file" do
-        expect { verifier.verify_index_count(path: fixture("zephir_data/ht_bib_export_full_2024-11-30.json.gz")) }.to raise_exception(ArgumentError)
       end
     end
 
