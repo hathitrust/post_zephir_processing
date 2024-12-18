@@ -1,12 +1,20 @@
 # frozen_string_literal: true
 
 require_relative "dates"
+require "derivative"
+require "derivative/catalog"
+require "derivative/delete"
+require "derivative/rights"
 
 module PostZephirProcessing
   # A class that knows the expected locations of standard Zephir derivative files.
   # `earliest_missing_date` is the main entrypoint when constructing an agenda of Zephir
   # file dates to fetch for processing.
+  #
+  # TODO: this class may be renamed PostZephirDerivatives once directory_for is updated,
+  # moved, or elimminated.
   class Derivatives
+    # TODO: STANDARD_LOCATIONS is only used for testing directory_for and may be eliminated.
     STANDARD_LOCATIONS = [
       :CATALOG_ARCHIVE,
       :CATALOG_PREP,
@@ -14,35 +22,6 @@ module PostZephirProcessing
       :TMPDIR,
       :WWW_DIR
     ].freeze
-    # Location data for the derivatives we care about when constructing our list of missing dates.
-
-    DIR_DATA = {
-      zephir_full: {
-        location: :CATALOG_PREP,
-        pattern: /^zephir_full_(\d{8})_vufind\.json\.gz$/,
-        full: true
-      },
-      zephir_full_rights: {
-        location: :RIGHTS_ARCHIVE,
-        pattern: /^zephir_full_(\d{8})\.rights$/,
-        full: true
-      },
-      zephir_update: {
-        location: :CATALOG_PREP,
-        pattern: /^zephir_upd_(\d{8})\.json\.gz$/,
-        full: false
-      },
-      zephir_update_rights: {
-        location: :RIGHTS_ARCHIVE,
-        pattern: /^zephir_upd_(\d{8})\.rights$/,
-        full: false
-      },
-      zephir_update_delete: {
-        location: :CATALOG_PREP,
-        pattern: /^zephir_upd_(\d{8})_delete\.txt\.gz$/,
-        full: false
-      }
-    }.freeze
 
     attr_reader :dates
 
@@ -71,27 +50,22 @@ module PostZephirProcessing
 
     # @return [Date,nil]
     def earliest_missing_date
-      earliest = []
-      DIR_DATA.each_pair do |name, data|
-        required_dates = data[:full] ? [dates.all_dates.min] : dates.all_dates
-        delta = required_dates - directory_inventory(name: name)
-        earliest << delta.min if delta.any?
+      derivative_classes = [
+        Derivative::CatalogPrep,
+        Derivative::Rights,
+        Derivative::Delete
+      ]
+      earliest = nil
+      dates.all_dates.each do |date|
+        derivative_classes.each do |klass|
+          klass.derivatives_for_date(date: date).each do |derivative|
+            if !File.exist?(derivative.path)
+              earliest = [earliest, date].compact.min
+            end
+          end
+        end
       end
-      earliest.min
-    end
-
-    private
-
-    # Run regexp against the contents of dir and store matching files
-    # that have datestamps in the period of interest.
-    # @return [Array<Date>] de-duped and sorted ASC
-    def directory_inventory(name:)
-      dir = self.class.directory_for(location: DIR_DATA[name][:location])
-      Dir.children(dir)
-        .filter_map { |filename| (m = DIR_DATA[name][:pattern].match(filename)) && Date.parse(m[1]) }
-        .select { |date| dates.all_dates.include? date }
-        .sort
-        .uniq
+      earliest
     end
   end
 end
