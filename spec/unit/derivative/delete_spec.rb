@@ -43,7 +43,7 @@ module PostZephirProcessing
         expect(derivatives.first.full?).to be false
       end
     end
-    
+
     it "reports the expected path for a delete file derived from an update catalog file" do
       params[:full] = false
       expect(derivative.path).to eq "/tmp/prep/zephir_upd_20231130_delete.txt.gz"
