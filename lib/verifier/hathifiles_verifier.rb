@@ -3,7 +3,7 @@
 require "zlib"
 require_relative "hathifiles_contents_verifier"
 require_relative "../verifier"
-require_relative "../derivatives"
+require_relative "../derivative/hathifile"
 
 # Verifies that hathifiles workflow stage did what it was supposed to.
 
@@ -25,19 +25,12 @@ module PostZephirProcessing
     # Verify:
     #   readable
     def verify_hathifile(date: current_date)
-      update_file = self.class.dated_derivative(location: :HATHIFILE_ARCHIVE, name: "hathi_upd_YYYYMMDD.txt.gz", date: date)
-      if verify_file(path: update_file)
-        linecount = verify_hathifile_contents(path: update_file)
-        verify_hathifile_linecount(linecount, catalog_path: catalog_file_for(date))
-      end
-
-      # first of month
-      if date.first_of_month?
-        full_file = self.class.dated_derivative(location: :HATHIFILE_ARCHIVE, name: "hathi_full_YYYYMMDD.txt.gz", date: date)
-        if verify_file(path: full_file)
-          linecount = verify_hathifile_contents(path: full_file)
-          verify_hathifile_linecount(linecount, catalog_path: catalog_file_for(date, full: true))
-        end
+      Derivative::Hathifile.derivatives_for_date(date: date).each do |derivative|
+        path = derivative.path
+        next unless verify_file(path: path)
+        linecount = verify_hathifile_contents(path: path)
+        catalog_path = Derivative::CatalogArchive.new(date: date - 1, full: derivative.full).path
+        verify_hathifile_linecount(linecount, catalog_path: catalog_path)
       end
     end
 
@@ -53,22 +46,6 @@ module PostZephirProcessing
       if linecount < catalog_linecount
         error(message: "#{catalog_path} has #{catalog_linecount} records but corresponding hathifile only has #{linecount}")
       end
-    end
-
-    def catalog_file_for(date, full: false)
-      # TODO address this somehow with Derivative. Maybe Derivative should know
-      # how to construct the filenames?
-      name = if full
-        "zephir_full_YYYYMMDD_vufind.json.gz"
-      else
-        "zephir_upd_YYYYMMDD.json.gz"
-      end
-
-      self.class.dated_derivative(
-        location: :CATALOG_ARCHIVE,
-        name: name,
-        date: date - 1
-      )
     end
 
     def errors
