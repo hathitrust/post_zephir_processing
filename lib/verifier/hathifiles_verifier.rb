@@ -28,17 +28,10 @@ module PostZephirProcessing
       Derivative::Hathifile.derivatives_for_date(date: date).each do |derivative|
         path = derivative.path
         next unless verify_file(path: path)
-        linecount = verify_hathifile_contents(path: path)
+        contents_verifier = verify_hathifile_contents(path: path)
         catalog_path = Derivative::CatalogArchive.new(date: date - 1, full: derivative.full).path
-        verify_hathifile_linecount(linecount, catalog_path: catalog_path)
+        verify_hathifile_linecount(contents_verifier.line_count, catalog_path: catalog_path)
       end
-    end
-
-    def verify_hathifile_contents(path:)
-      verifier = HathifileContentsVerifier.new(path)
-      verifier.run
-      @errors.append(verifier.errors)
-      verifier.line_count
     end
 
     def verify_hathifile_linecount(linecount, catalog_path:)
@@ -50,6 +43,15 @@ module PostZephirProcessing
 
     def errors
       super.flatten
+    end
+
+    private
+
+    def verify_hathifile_contents(path:)
+      HathifileContentsVerifier.new(path).tap do |contents_verifier|
+        contents_verifier.run
+        @errors.append(contents_verifier.errors)
+      end
     end
   end
 end
