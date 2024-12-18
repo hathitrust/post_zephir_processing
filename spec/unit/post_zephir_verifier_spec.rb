@@ -351,39 +351,39 @@ module PostZephirProcessing
           expect_not_ok(
             :verify_rights_file_format,
             rights_cols.join("\t"),
-            errmsg: /Rights file .+ contains malformed line/
+            errmsg: /invalid column id/
           )
         end
       end
 
       it "rejects a file with no rights" do
         rights_cols[1] = ""
-        expect_not_ok(:verify_rights_file_format, rights_cols.join("\t"))
+        expect_not_ok(:verify_rights_file_format, rights_cols.join("\t"), errmsg: /invalid column rights/)
       end
 
       it "rejects a file with unexpected (icus) rights" do
         rights_cols[1] = "icus"
-        expect_not_ok(:verify_rights_file_format, rights_cols.join("\t"))
+        expect_not_ok(:verify_rights_file_format, rights_cols.join("\t"), errmsg: /invalid column rights/)
       end
 
       it "rejects a file without 'bib' (lowercase) in col 2" do
         rights_cols[2] = "BIB"
-        expect_not_ok(:verify_rights_file_format, rights_cols.join("\t"))
+        expect_not_ok(:verify_rights_file_format, rights_cols.join("\t"), errmsg: /invalid column bib/)
       end
 
       it "rejects a file with no reason in col 2" do
         rights_cols[2] = ""
-        expect_not_ok(:verify_rights_file_format, rights_cols.join("\t"))
+        expect_not_ok(:verify_rights_file_format, rights_cols.join("\t"), errmsg: /invalid column bib/)
       end
 
       it "rejects a file without 'bibrights' (lowercase) in col 3" do
         rights_cols[3] = "BIBRIGHTS"
-        expect_not_ok(:verify_rights_file_format, rights_cols.join("\t"))
+        expect_not_ok(:verify_rights_file_format, rights_cols.join("\t"), errmsg: /invalid column bibrights/)
       end
 
       it "rejects a file with no user in col 3" do
         rights_cols[3] = ""
-        expect_not_ok(:verify_rights_file_format, rights_cols.join("\t"))
+        expect_not_ok(:verify_rights_file_format, rights_cols.join("\t"), errmsg: /invalid column bibrights/)
       end
 
       it "accepts a file with OK digitization source" do
@@ -396,7 +396,7 @@ module PostZephirProcessing
         it "rejects a file with malformed digitization source (#{bad_dig_source})" do
           rights_cols[4] = bad_dig_source
 
-          expect_not_ok(:verify_rights_file_format, rights_cols.join("\t"))
+          expect_not_ok(:verify_rights_file_format, rights_cols.join("\t"), errmsg: /invalid column digitization_source/)
         end
       end
     end

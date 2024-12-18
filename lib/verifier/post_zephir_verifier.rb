@@ -161,19 +161,34 @@ module PostZephirProcessing
     # * exist & be be readable (both covered by verify_rights)
     # * either be empty, or all its lines must match regex.
     def verify_rights_file_format(path:)
-      regex = /^ [a-z0-9]+ \. [a-z0-9:\/\$\.]+ # col 1, namespace.objid
+      line_regex = /^ [a-z0-9]+ \. [a-z0-9:\/\$\.]+ # col 1, namespace.objid
               \t (ic|pd|pdus|und)              # col 2, one of these
               \t bib                           # col 3, exactly this
               \t bibrights                     # col 4, exactly this
               \t [a-z]+(-[a-z]+)*              # col 5, digitization source, e.g. 'ia', 'cornell-ms'
               $/x
 
+      # A column-by column version of line_regex
+      column_regexes = [
+        {name: :id, regex: /^[a-z0-9]+\.[a-z0-9:\/\$\.]+s$/},
+        {name: :rights, regex: /^(ic|pd|pdus|und)$/},
+        {name: :bib, regex: /^bib$/},
+        {name: :bibrights, regex: /^bibrights$/},
+        {name: :digitization_source, regex: /^[a-z]+(-[a-z]+)*$/}
+      ]
+
       # This allows an empty file as well, which is possible.
       File.open(path) do |f|
-        f.each_line do |line|
+        f.each_line.with_index do |line, i|
           line.chomp!
-          unless line.match?(regex)
-            error message: "Rights file #{path} contains malformed line: #{line}"
+          unless line.match?(line_regex)
+            # If line_regex did not match the line, find the offending col(s) and report
+            cols = line.split("\t", -1)
+            cols.each_with_index do |col, j|
+              unless col.match?(column_regexes[j][:regex])
+                error message: "Rights file #{path}:#{i + 1}, invalid column #{column_regexes[j][:name]} : #{col}"
+              end
+            end
           end
         end
       end
