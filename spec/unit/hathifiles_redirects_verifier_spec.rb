@@ -93,8 +93,8 @@ module PostZephirProcessing
         malform(redirects_history_file)
         verifier.verify_redirects(date: test_date)
         expect(verifier.errors.count).to eq 2
-        expect(verifier.errors).to include(/#{redirects_file} contains malformed line: #{mess}/)
-        expect(verifier.errors).to include(/#{redirects_history_file} contains malformed line: #{mess}/)
+        expect(verifier.errors).to include(/#{redirects_file}:1 contains malformed line: #{mess}/)
+        expect(verifier.errors).to include(/#{redirects_history_file}:1 contains malformed line: #{mess}/)
       end
       it "will not warn if both files are there & valid)" do
         stage_redirects_file
@@ -114,7 +114,7 @@ module PostZephirProcessing
         malform(redirects_file)
         verifier.verify_redirects_file(path: redirects_file)
         expect(verifier.errors.count).to eq 1
-        expect(verifier.errors).to include(/#{redirects_file} contains malformed line: #{mess}/)
+        expect(verifier.errors).to include(/#{redirects_file}:1 contains malformed line: #{mess}/)
       end
     end
 
@@ -128,7 +128,7 @@ module PostZephirProcessing
         malform(redirects_history_file)
         verifier.verify_redirects_history_file(path: redirects_history_file)
         expect(verifier.errors.count).to eq 1
-        expect(verifier.errors).to include(/#{redirects_history_file} contains malformed line: #{mess}/)
+        expect(verifier.errors).to include(/#{redirects_history_file}:1 contains malformed line: #{mess}/)
       end
     end
   end
