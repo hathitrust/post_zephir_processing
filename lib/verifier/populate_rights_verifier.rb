@@ -17,8 +17,14 @@ module PostZephirProcessing
   # We may also look for errors in the output logs (postZephir.pm and/or populate_rights_data.pl?)
   # but that is out of scope for now.
   class PopulateRightsVerifier < Verifier
-    FULL_RIGHTS_TEMPLATE = "zephir_full_YYYYMMDD.rights"
-    UPD_RIGHTS_TEMPLATE = "zephir_upd_YYYYMMDD.rights"
+    # This is an efficient slice size we adopted for hathifiles based on experimental evidence
+    DEFAULT_SLICE_SIZE = 10_000
+    attr_reader :slice_size
+
+    def initialize(slice_size: DEFAULT_SLICE_SIZE)
+      @slice_size = slice_size
+      super()
+    end
 
     def run_for_date(date:)
       Derivative::Rights.derivatives_for_date(date: date).each do |derivative|
@@ -30,20 +36,38 @@ module PostZephirProcessing
     end
 
     # Check each entry in the .rights file for an entry in `rights_current`.
-    # FIXME: this is likely to be very inefficient.
-    # Should accumulate a batch of HTIDs to query all in one go.
-    # See HathifileWriter#batch_extract_rights for a usable Sequel construct.
     def verify_rights_file(path:)
-      db = Services[:database]
       File.open(path) do |infile|
+        slice = Set.new
         infile.each_line do |line|
           line.strip!
-          htid = line.split("\t").first
-          namespace, id = htid.split(".", 2)
-          if db[:rights_current].where(namespace: namespace, id: id).count.zero?
-            error message: "missing rights_current for #{htid}"
+          slice << line.split("\t").first
+          if slice.count >= slice_size
+            find_missing_rights(htids: slice)
+            slice.clear
           end
         end
+        if slice.count.positive?
+          find_missing_rights(htids: slice)
+        end
+      end
+    end
+
+    private
+
+    # @param htids [Set<String>] a Set of HTID strings to check against the database
+    # @return (not defined)
+    def find_missing_rights(htids:)
+      db_htids = Set.new
+      split_htids = htids.map { |htid| htid.split(".", 2) }
+      Services[:database][:rights_current]
+        .select(:namespace, :id)
+        .where([:namespace, :id] => split_htids)
+        .each do |record|
+        db_htids << record[:namespace] + "." + record[:id]
+      end
+      (htids - db_htids).each do |htid|
+        error message: "missing rights_current for #{htid}"
       end
     end
   end

@@ -1,13 +1,17 @@
 # frozen_string_literal: true
 
 require "verifier/populate_rights_verifier"
+require "derivative/rights"
+require "pry"
 
 module PostZephirProcessing
   RSpec.describe(PopulateRightsVerifier) do
     around(:each) do |example|
       with_test_environment do
         ClimateControl.modify(RIGHTS_ARCHIVE: @tmpdir) do
+          Services[:database][:rights_current].truncate
           example.run
+          Services[:database][:rights_current].truncate
         end
       end
     end
@@ -18,13 +22,15 @@ module PostZephirProcessing
         [rights, "ic", "bib", "bibrights", "aa"].join("\t")
       end.join("\n")
     end
-    let(:verifier) { described_class.new }
+    # Choose a small slice size to make sure we have leftovers after the main rights fetch loop.
+    let(:verifier) { described_class.new(slice_size: 3) }
     let(:db) { Services[:database][:rights_current] }
 
     # Creates a full or upd rights file in @tmpdir.
     def with_fake_rights_file(date:, full: false)
-      rights_file = File.join(@tmpdir, full ? described_class::FULL_RIGHTS_TEMPLATE : described_class::UPD_RIGHTS_TEMPLATE)
-        .sub(/YYYYMMDD/i, date.strftime("%Y%m%d"))
+      rights_file = Derivative::Rights.derivatives_for_date(date: date)
+        .find { |derivative| derivative.full? == full }
+        .path
       File.write(rights_file, test_rights_file_contents)
       yield
     end
@@ -37,32 +43,30 @@ module PostZephirProcessing
 
     context "with HTIDs in the rights database" do
       around(:each) do |example|
-        Services[:database][:rights_current].truncate
-
         split_htids = test_rights.map { |htid| htid.split(".", 2) }
         split_htids.each do |split_htid|
           insert_fake_rights(namespace: split_htid[0], id: split_htid[1])
         end
-
         example.run
-
-        Services[:database][:rights_current].truncate
       end
 
       describe "#run_for_date" do
         it "logs no `missing rights_current` error for full file" do
-          date = Date.new(2024, 11, 30)
+          date = Date.parse("2024-11-30")
           with_fake_rights_file(date: date, full: true) do
             verifier.run_for_date(date: date)
-            expect(verifier.errors).not_to include(/missing rights_current/)
+            # The only error is for the missing upd file.
+            expect(verifier.errors.count).to eq 1
+            missing_rights_errors = verifier.errors.select { |err| /missing rights_current/.match? err }
+            expect(missing_rights_errors).to be_empty
           end
         end
 
         it "logs no `missing rights_current` error for update file" do
-          date = Date.new(2024, 12, 2)
+          date = Date.parse("2024-12-02")
           with_fake_rights_file(date: date) do
             verifier.run_for_date(date: date)
-            expect(verifier.errors).not_to include(/missing rights_current/)
+            expect(verifier.errors).to be_empty
           end
         end
       end
@@ -75,28 +79,22 @@ module PostZephirProcessing
     end
 
     context "with no HTIDs in the rights database" do
-      around(:each) do |example|
-        Services[:database][:rights_current].truncate
-
-        example.run
-
-        Services[:database][:rights_current].truncate
-      end
-
       describe "#run_for_date" do
         it "logs `missing rights_current` error for full file" do
-          date = Date.new(2024, 11, 30)
+          date = Date.parse("2024-11-30")
           with_fake_rights_file(date: date, full: true) do
             verifier.run_for_date(date: date)
-            expect(verifier.errors).to include(/missing rights_current/)
+            # There will be an error for the missing upd file, ignore it.
+            missing_rights_errors = verifier.errors.select { |err| /missing rights_current/.match? err }
+            expect(missing_rights_errors.count).to eq test_rights.count
           end
         end
 
-        it "logs `missing rights_current` error for update file" do
-          date = Date.new(2024, 12, 2)
+        it "logs an error for each HTID in the update file" do
+          date = Date.parse("2024-12-02")
           with_fake_rights_file(date: date) do
             verifier.run_for_date(date: date)
-            expect(verifier.errors).to include(/missing rights_current/)
+            expect(verifier.errors.count).to eq test_rights.count
           end
         end
       end
