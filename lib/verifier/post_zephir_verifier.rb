@@ -3,6 +3,9 @@
 require "zlib"
 require_relative "../verifier"
 require_relative "../derivatives"
+require_relative "../derivative/dollar_dup"
+require_relative "../derivative/catalog"
+require_relative "../derivative/rights"
 
 # Verifies that post_zephir workflow stage did what it was supposed to.
 
@@ -94,12 +97,29 @@ module PostZephirProcessing
 
     # Frequency: DAILY
     # Files: TMPDIR/vufind_incremental_YYYY-MM-DD_dollar_dup.txt.gz
-    # Contents: historically undallarized uc1 HTIDs (e.g., uc1.b312920) one per line
+    #
+    # Contents:
+    #
+    # Historically, un-dollarized uc1 HTIDs (e.g., uc1.b312920) one per line.
+    # These files originally served as a way to report back to Zephir on items to
+    # "uningest" related to a change that University of California made
+    # regarding certain barcode ranges -- things like uc1.b312920 moved to
+    # uc1.$b312920, and we needed to 'uningest' uc1.b312920.
+    #
+    # Later, it served as a more general way to cause Zephir to mark items as not
+    # ingested and thereby no longer export them in full files. This
+    # functionality (as of 2024) has not been used in many years. If we at some
+    # point begin fully deleting material from the repository, this
+    # functionality could again be used.
+    #
+    # As of December 2024, these files are generated each day, but are expected
+    # to be empty.
+    #
     # Verify:
     #  readable
     #  empty
     def verify_dollar_dup(date: current_date)
-      dollar_dup = self.class.dated_derivative(location: :TMPDIR, name: "vufind_incremental_YYYY-MM-DD_dollar_dup.txt.gz", date: date)
+      dollar_dup = Derivative::DollarDup.new(date: date).path
       if verify_file(path: dollar_dup)
         gz_count = gzip_linecount(path: dollar_dup)
         if gz_count.positive?
