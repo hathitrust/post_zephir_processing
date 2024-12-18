@@ -1,42 +1,47 @@
 # frozen_string_literal: true
 
 require_relative "dates"
+require "derivative"
+require "derivative/catalog"
+require "derivative/delete"
+require "derivative/rights"
 
 module PostZephirProcessing
   # A class that knows the expected locations of standard Zephir derivative files.
   # `earliest_missing_date` is the main entrypoint when constructing an agenda of Zephir
   # file dates to fetch for processing.
+  #
+  # TODO: this class may be renamed PostZephirDerivatives once directory_for is updated,
+  # moved, or elimminated.
   class Derivatives
-    # Location data for the derivatives we care about when constructing our list of missing dates.
-    DIR_DATA = {
-      zephir_full: {
-        location: :CATALOG_PREP,
-        pattern: /^zephir_full_(\d{8})_vufind\.json\.gz$/,
-        full: true
-      },
-      zephir_full_rights: {
-        location: :RIGHTS_ARCHIVE,
-        pattern: /^zephir_full_(\d{8})\.rights$/,
-        full: true
-      },
-      zephir_update: {
-        location: :CATALOG_PREP,
-        pattern: /^zephir_upd_(\d{8})\.json\.gz$/,
-        full: false
-      },
-      zephir_update_rights: {
-        location: :RIGHTS_ARCHIVE,
-        pattern: /^zephir_upd_(\d{8})\.rights$/,
-        full: false
-      },
-      zephir_update_delete: {
-        location: :CATALOG_PREP,
-        pattern: /^zephir_upd_(\d{8})_delete\.txt\.gz$/,
-        full: false
-      }
-    }.freeze
+    # TODO: STANDARD_LOCATIONS is only used for testing directory_for and may be eliminated.
+    STANDARD_LOCATIONS = [
+      :CATALOG_ARCHIVE,
+      :CATALOG_PREP,
+      :RIGHTS_ARCHIVE,
+      :TMPDIR,
+      :WWW_DIR
+    ].freeze
 
     attr_reader :dates
+
+    # Translate a known file destination as an environment variable key
+    # into the path via ENV or a default.
+    # @return [String] path to the directory
+    def self.directory_for(location:)
+      location = location.to_s
+      case location
+
+      when "CATALOG_ARCHIVE", "HATHIFILE_ARCHIVE", "CATALOG_PREP", "INGEST_BIBRECORDS", "RIGHTS_DIR", "WWW_DIR", "ZEPHIR_DATA"
+        ENV.fetch location
+      when "RIGHTS_ARCHIVE"
+        ENV["RIGHTS_ARCHIVE"] || File.join(ENV.fetch("RIGHTS_DIR"), "archive")
+      when "TMPDIR"
+        ENV["TMPDIR"] || File.join(ENV.fetch("DATA_ROOT"), "work")
+      else
+        raise "Unknown location #{location.inspect}"
+      end
+    end
 
     # @param date [Date] the file datestamp date, not the "run date"
     def initialize(date: (Date.today - 1))
@@ -45,39 +50,22 @@ module PostZephirProcessing
 
     # @return [Date,nil]
     def earliest_missing_date
-      earliest = []
-      DIR_DATA.each_pair do |name, data|
-        required_dates = data[:full] ? [dates.all_dates.min] : dates.all_dates
-        delta = required_dates - directory_inventory(name: name)
-        earliest << delta.min if delta.any?
+      derivative_classes = [
+        Derivative::CatalogPrep,
+        Derivative::Rights,
+        Derivative::Delete
+      ]
+      earliest = nil
+      dates.all_dates.each do |date|
+        derivative_classes.each do |klass|
+          klass.derivatives_for_date(date: date).each do |derivative|
+            if !File.exist?(derivative.path)
+              earliest = [earliest, date].compact.min
+            end
+          end
+        end
       end
-      earliest.min
-    end
-
-    private
-
-    # Translate a known file destination as an environment variable key
-    # into the path via ENV or a default.
-    # @return [String] path to the directory
-    def directory_for(location:)
-      case location.to_sym
-      when :CATALOG_PREP
-        ENV["CATALOG_PREP"] || "/htsolr/catalog/prep/"
-      when :RIGHTS_ARCHIVE
-        ENV["RIGHTS_ARCHIVE"] || "/htapps/babel/feed/var/rights/archive"
-      end
-    end
-
-    # Run regexp against the contents of dir and store matching files
-    # that have datestamps in the period of interest.
-    # @return [Array<Date>] de-duped and sorted ASC
-    def directory_inventory(name:)
-      dir = directory_for(location: DIR_DATA[name][:location])
-      Dir.children(dir)
-        .filter_map { |filename| (m = DIR_DATA[name][:pattern].match(filename)) && Date.parse(m[1]) }
-        .select { |date| dates.all_dates.include? date }
-        .sort
-        .uniq
+      earliest
     end
   end
 end

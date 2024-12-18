@@ -1,8 +1,16 @@
 # frozen_string_literal: true
 
+require "climate_control"
+require "dotenv"
 require "logger"
+require "tmpdir"
+require "tempfile"
 require "simplecov"
 require "simplecov-lcov"
+require "webmock/rspec"
+require "zlib"
+
+Dotenv.load(File.join(ENV.fetch("ROOTDIR"), "config", "env"))
 
 SimpleCov.add_filter "spec"
 
@@ -18,7 +26,80 @@ SimpleCov.start
 
 require_relative "../lib/dates"
 require_relative "../lib/derivatives"
+require_relative "../lib/journal"
+require_relative "../lib/verifier"
 
+# squelch log output from tests
+PostZephirProcessing::Services.register(:logger) {
+  Logger.new(File.open(File::NULL, "w"), level: Logger::DEBUG)
+}
+
+def test_journal
+  <<~TEST_YAML
+    ---
+    - '20500101'
+    - '20500102'
+  TEST_YAML
+end
+
+def test_journal_dates
+  [Date.new(2050, 1, 1), Date.new(2050, 1, 2)]
+end
+
+def with_test_environment
+  Dir.mktmpdir do |tmpdir|
+    ClimateControl.modify(DATA_ROOT: tmpdir) do
+      File.open(File.join(tmpdir, "journal.yml"), "w") { |f| f.puts test_journal }
+      # Maybe we don't need to yield `tmpdir` since we're also assigning it to an
+      # instance variable. Leaving it for now in case the ivar approach leads to funny business.
+      @tmpdir = tmpdir
+      yield tmpdir
+    end
+  end
+end
+
+def write_gzipped(tmpfile, contents)
+  gz = Zlib::GzipWriter.new(tmpfile)
+  gz.write(contents)
+  gz.close
+end
+
+def with_temp_file(contents, gzipped: false)
+  Tempfile.create("tempfile") do |tmpfile|
+    if gzipped
+      write_gzipped(tmpfile, contents)
+    else
+      tmpfile.write(contents)
+    end
+    tmpfile.close
+    yield tmpfile.path
+  end
+end
+
+def expect_not_ok(method, contents, errmsg: /.*/, gzipped: false, check_return: false)
+  with_temp_file(contents, gzipped: gzipped) do |tmpfile|
+    verifier = described_class.new
+    result = verifier.send(method, path: tmpfile)
+    expect(verifier.errors).to include(errmsg)
+    if check_return
+      expect(result).to be false
+    end
+  end
+end
+
+def expect_ok(method, contents, gzipped: false, check_return: false)
+  with_temp_file(contents, gzipped: gzipped) do |tmpfile|
+    verifier = described_class.new
+    result = verifier.send(method, path: tmpfile)
+    expect(verifier.errors).to be_empty
+    if check_return
+      expect(result).to be true
+    end
+  end
+end
+
+# TODO: the following ENV juggling routines are for the integration tests,
+# and should be integrated with the `with_test_environment` facility above.
 ENV["POST_ZEPHIR_LOGGER_LEVEL"] = Logger::WARN.to_s
 
 def catalog_prep_dir
@@ -84,6 +165,13 @@ def setup_test_files(date:)
     `touch #{delete_file_for_date(date: d)}`
     `touch #{update_rights_file_for_date(date: d)}`
   end
+end
+
+# Returns the full path to the given fixture file.
+#
+# @param file [String]
+def fixture(file)
+  File.join(File.dirname(__FILE__), "fixtures", file)
 end
 
 # The following RSpec boilerplate tends to recur across HathiTrust Ruby test suites.
