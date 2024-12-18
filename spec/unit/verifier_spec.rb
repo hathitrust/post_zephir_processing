@@ -62,7 +62,6 @@ module PostZephirProcessing
           verifier.verify_file(path: tmpfile)
           expect(verifier.errors).to include(/^PostZephirProcessing::Verifier: .*/)
         end
-
       end
     end
 
