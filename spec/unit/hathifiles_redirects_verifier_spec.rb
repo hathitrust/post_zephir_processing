@@ -12,18 +12,26 @@ module PostZephirProcessing
     # Including this mess should invalidate either file
     let(:mess) { "oops, messed up a line!" }
 
-    # Clean dir before each test
+    # Clean temp subdir before each test
     before(:each) do
-      [ENV["REDIRECTS_DIR"], ENV["REDIRECTS_HISTORY_DIR"]].each do |dir|
-        FileUtils.rm_rf(dir)
-        FileUtils.mkdir_p(dir)
+      ["redirects", "redirects_history"].each do |subdir|
+        FileUtils.rm_rf(File.join(@tmpdir, subdir))
+        FileUtils.mkdir_p(File.join(@tmpdir, subdir))
       end
     end
 
     around(:each) do |example|
-      with_test_environment { example.run }
+      with_test_environment {
+        ClimateControl.modify(
+          REDIRECTS_DIR: File.join(@tmpdir, "redirects"),
+          REDIRECTS_HISTORY_DIR: File.join(@tmpdir, "redirects_history")
+        ) do
+          example.run
+        end
+      }
     end
 
+    # copy fixture to temporary subdir
     def stage_redirects_file
       FileUtils.cp(fixture("redirects/redirects_202301.txt.gz"), ENV["REDIRECTS_DIR"])
     end
