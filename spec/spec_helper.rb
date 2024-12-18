@@ -7,6 +7,7 @@ require "tmpdir"
 require "tempfile"
 require "simplecov"
 require "simplecov-lcov"
+require "webmock/rspec"
 require "zlib"
 
 Dotenv.load(File.join(ENV.fetch("ROOTDIR"), "config", "env"))
