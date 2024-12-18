@@ -20,7 +20,6 @@ module PostZephirProcessing
       verify_dollar_dup
       verify_ingest_bibrecords
       verify_rights
-      verify_zephir_data
     end
 
     # Frequency: ALL
@@ -177,19 +176,6 @@ module PostZephirProcessing
             error message: "Rights file #{path} contains malformed line: #{line}"
           end
         end
-      end
-    end
-
-    # Frequency: MONTHLY
-    # Files:
-    #   ZEPHIR_DATA/full/zephir_full_monthly_rpt.txt
-    #   ZEPHIR_DATA/full/zephir_full_YYYYMMDD.rights_rpt.tsv
-    # Contents: TODO
-    # Verify: readable
-    def verify_zephir_data(date: current_date)
-      if date.last_of_month?
-        verify_file(path: self.class.derivative(location: :ZEPHIR_DATA, name: "full/zephir_full_monthly_rpt.txt"))
-        verify_file(path: self.class.dated_derivative(location: :ZEPHIR_DATA, name: "full/zephir_full_YYYYMMDD.rights_rpt.tsv", date: date))
       end
     end
   end
