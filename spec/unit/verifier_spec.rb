@@ -52,11 +52,17 @@ module PostZephirProcessing
 
       context "with nonexistent file" do
         it "reports an error" do
-          verifier.errors.count
           tmpfile = File.join(@tmpdir, "no_such_tmpfile.txt")
           verifier.verify_file(path: tmpfile)
           expect(verifier.errors).not_to be_empty
         end
+
+        it "includes the class name in the error" do
+          tmpfile = File.join(@tmpdir, "no_such_tmpfile.txt")
+          verifier.verify_file(path: tmpfile)
+          expect(verifier.errors).to include(/^PostZephirProcessing::Verifier: .*/)
+        end
+
       end
     end
 

@@ -93,8 +93,9 @@ module PostZephirProcessing
     # I'm not sure if we're going to try to distinguish errors and warnings.
     # For now let's call everything an error.
     def error(message:)
-      @errors << message
-      Services[:logger].error message
+      output_msg = self.class.to_s + ": " + message
+      @errors << output_msg
+      Services[:logger].error output_msg
     end
   end
 end

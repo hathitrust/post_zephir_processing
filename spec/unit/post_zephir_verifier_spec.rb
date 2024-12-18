@@ -211,7 +211,7 @@ module PostZephirProcessing
             verifier = described_class.new
             verifier.verify_dollar_dup(date: test_date)
             expect(verifier.errors.count).to eq 1
-            expect(verifier.errors).to include(/^not found/)
+            expect(verifier.errors).to include(/.*not found.*dollar_dup.*/)
           end
         end
       end
@@ -239,7 +239,7 @@ module PostZephirProcessing
               verifier = described_class.new
               verifier.verify_ingest_bibrecords(date: test_date)
               expect(verifier.errors.count).to eq 1
-              expect(verifier.errors).to include(/^not found/)
+              expect(verifier.errors).to include(/.*not found.*zephir_ingested_items.*/)
             end
           end
         end
@@ -251,7 +251,7 @@ module PostZephirProcessing
               verifier = described_class.new
               verifier.verify_ingest_bibrecords(date: test_date)
               expect(verifier.errors.count).to eq 1
-              expect(verifier.errors).to include(/^not found/)
+              expect(verifier.errors).to include(/.*not found.*groove_full.*/)
             end
           end
         end
@@ -293,7 +293,7 @@ module PostZephirProcessing
               verifier.verify_rights(date: test_date)
               expect(verifier.errors.count).to eq 2
               verifier.errors.each do |err|
-                expect(err).to include(/^not found/)
+                expect(err).to include(/not found.*rights/)
               end
             end
           end
@@ -321,7 +321,7 @@ module PostZephirProcessing
               verifier = described_class.new
               verifier.verify_rights(date: test_date)
               expect(verifier.errors.count).to eq 1
-              expect(verifier.errors).to include(/^not found/)
+              expect(verifier.errors).to include(/.*not found.*rights.*/)
             end
           end
         end
