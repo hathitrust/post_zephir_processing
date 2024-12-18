@@ -4,6 +4,7 @@ require_relative "../verifier"
 require_relative "../derivatives"
 require_relative "../derivative/hathifile_www"
 require "json"
+require "set"
 
 module PostZephirProcessing
   class HathifilesListingVerifier < Verifier
@@ -22,28 +23,23 @@ module PostZephirProcessing
 
     def verify_listing(path:)
       verify_file(path: path)
-
-      filename = File.basename(path)
-      verify_file_in_json(filename: filename)
+      verify_file_in_json(filename: File.basename(path))
     end
 
-    # Verify that the derivatives for the date are included in
-    # "#{ENV['WWW_DIR']}/hathi_file_list.json"
     def verify_file_in_json(filename:)
-      json_path = "#{ENV["WWW_DIR"]}/hathi_file_list.json"
-      listings = JSON.load_file(json_path)
-      matches = []
-
-      listings.each do |listing|
-        if listing["filename"] == filename
-          matches << listing
-          break
-        end
+      unless listings.include?(filename)
+        error(message: "No listing with filename: #{filename} in #{Derivative::HathifileWWW.json_path}")
       end
+    end
 
-      if matches.empty?
-        error(message: "Did not find a listing with filename: #{filename} in JSON (#{json_path})")
-      end
+    private
+
+    # Load json file and produce the set of "filename" values in that json, once.
+    def listings
+      @listings ||= JSON
+        .load_file(Derivative::HathifileWWW.json_path)
+        .map { |listing| listing["filename"] }
+        .to_set
     end
   end
 end
