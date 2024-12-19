@@ -10,9 +10,6 @@ module PostZephirProcessing
     end
 
     let(:sample_line) { File.read(fixture("sample_hathifile_line.txt"), encoding: "utf-8") }
-    around(:each) do |example|
-      with_test_environment { example.run }
-    end
 
     hathifiles_fields = [
       {
