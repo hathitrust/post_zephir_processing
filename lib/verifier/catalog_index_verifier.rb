@@ -54,9 +54,8 @@ module PostZephirProcessing
       Derivative::CatalogArchive.derivatives_for_date(date: date - 1).each do |derivative|
         path = derivative.path
 
-        if verify_file(path: path)
-          verify_index_count(derivative: derivative)
-        end
+        next unless verify_file(path: path)
+        verify_index_count(derivative: derivative)
       end
     end
   end

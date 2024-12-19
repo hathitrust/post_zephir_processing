@@ -113,13 +113,13 @@ module PostZephirProcessing
       end
     end
 
-    describe "#verify_catalog_archive" do
+    describe "#verify_catalog_full_archive" do
       let(:verifier) { described_class.new }
       let(:test_date) { Date.parse("2024-11-30") }
       it "requires input file to have same line count as output file" do
         # We have fixtures with matching line counts for test_date,
         # so expect no warnings
-        verifier.verify_catalog_archive(date: test_date)
+        verifier.verify_catalog_full_archive(date: test_date)
         expect(verifier.errors).to be_empty
       end
 
@@ -132,7 +132,7 @@ module PostZephirProcessing
           end
           # The other unmodified fixtures in CATALOG_ARCHIVE should
           # no longer have matching line counts, so expect a warning
-          verifier.verify_catalog_archive(date: test_date)
+          verifier.verify_catalog_full_archive(date: test_date)
           expect(verifier.errors.count).to eq 1
           expect(verifier.errors).to include(/output line count .+ != input line count/)
         end

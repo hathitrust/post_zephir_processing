@@ -4,8 +4,6 @@ require "journal"
 require "services"
 
 # Common superclass for all things Verifier.
-# Right now the only thing I can think of to put here is shared
-# code for writing whatever output file, logs, metrics, artifacts, etc. we decide on.
 
 module PostZephirProcessing
   class Verifier
@@ -20,8 +18,6 @@ module PostZephirProcessing
 
     # Main entrypoint
     # What should it return?
-    # Do we want to bail out or keep going if we encounter a show-stopper?
-    # I'm inclined to just keep going.
     def run
       journal.dates.each do |date|
         run_for_date(date: date)
@@ -71,8 +67,9 @@ module PostZephirProcessing
       true
     end
 
-    # I'm not sure if we're going to try to distinguish errors and warnings.
-    # For now let's call everything an error.
+    # Log an error -- something unexpected from the verifier. Generally, this
+    # indicates something unexpected that requires human intervention to
+    # correct, and which should be corrected ASAP.
     def error(message:)
       output_msg = self.class.to_s + ": " + message
       @errors << output_msg

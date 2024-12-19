@@ -35,9 +35,7 @@ Post-Zephir can read and write files in a number of locations, and it can become
 Many of the locations (all of them directories) show up again and again. Under Argo these
 all come from the `ENV` provided to the workflow. Under Docker the locations are not so scattered,
 and all orient themselves to `ENV[ROOTDIR]`. The shell scripts rely on `config/defaults` to fill
-in many of these variables. The Ruby scripts orient off the `DATA_ROOT` in `Dockerfile`
-but fill in the other locations in a more haphazard manner (see the `directory_for` method in
-`lib/derivatives.rb` for an example of how this can go off the rails).
+in many of these variables; the Ruby scripts expect that the environment variables set by `config/defaults` are present.
 
 TODO: can we use `dotenv` and `.env` in both the shell scripts and the Ruby code, and get rid of
 `config/defaults`? Or can we translate `config/defaults` into Ruby and invoke it from the driver?
@@ -53,10 +51,6 @@ TODO: can we use `dotenv` and `.env` in both the shell scripts and the Ruby code
 | `ROOTDIR`           | (not used)                          | `/usr/src/app`                |
 
 Additional derivative paths are set by `config/defaults`, typically from the daily or monthly shell script.
-Another mechanism (`lib/derivatives.rb`) is being experimented with for the Ruby code.
-(Note: there may be some fuzziness between these two sets since we may decide to let
-Argo handle one or more of these in future. Look to the Argo metadata workflow config for
-authoritative values.)
 
 | `ENV`               | Standard/Default/Docker Location    | Note             |
 | --------            | -------                             | ----             |

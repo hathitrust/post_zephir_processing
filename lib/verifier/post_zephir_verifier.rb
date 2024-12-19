@@ -17,11 +17,18 @@ module PostZephirProcessing
 
     def run_for_date(date:)
       @current_date = date
-      verify_catalog_archive
+      verify_catalog_update_archive
+      verify_catalog_full_archive
       verify_catalog_prep
       verify_dollar_dup
       verify_ingest_bibrecords
       verify_rights
+    end
+
+    def verify_catalog_update_archive(date: current_date)
+      zephir_update_path = Derivative::CatalogArchive.new(date: date, full: false).path
+      return unless verify_file(path: zephir_update_path)
+      verify_parseable_ndj(path: zephir_update_path)
     end
 
     # Frequency: ALL
@@ -31,33 +38,29 @@ module PostZephirProcessing
     # Verify:
     #   readable
     #   line count must be the same as input JSON
-    def verify_catalog_archive(date: current_date)
-      zephir_update_path = Derivative::CatalogArchive.new(date: date, full: false).path
-      if verify_file(path: zephir_update_path)
-        if verify_parseable_ndj(path: zephir_update_path)
-          if date.last_of_month?
-            output_path = Derivative::CatalogArchive.new(date: date, full: true).path
-            verify_file(path: output_path)
-            verify_parseable_ndj(path: output_path)
-            output_linecount = gzip_linecount(path: output_path)
-            input_path = Derivative::HTBibExport.new(date: date, full: true).path
-            verify_file(path: input_path)
-            verify_parseable_ndj(path: input_path)
-            input_linecount = gzip_linecount(path: input_path)
+    def verify_catalog_full_archive(date: current_date)
+      return unless date.last_of_month?
+      output_path = Derivative::CatalogArchive.new(date: date, full: true).path
+      input_path = Derivative::HTBibExport.new(date: date, full: true).path
 
-            if output_linecount != input_linecount
-              error(
-                message: sprintf(
-                  "output line count (%s = %s) != input line count (%s = %s)",
-                  output_path,
-                  output_linecount,
-                  input_path,
-                  input_linecount
-                )
-              )
-            end
-          end
-        end
+      paths = [input_path, output_path]
+      return unless paths.all? { |path| verify_file(path: path) }
+
+      paths.each { |path| verify_parseable_ndj(path: path) }
+
+      output_linecount = gzip_linecount(path: output_path)
+      input_linecount = gzip_linecount(path: input_path)
+
+      if output_linecount != input_linecount
+        error(
+          message: sprintf(
+            "output line count (%s = %s) != input line count (%s = %s)",
+            output_path,
+            output_linecount,
+            input_path,
+            input_linecount
+          )
+        )
       end
     end
 
@@ -72,6 +75,7 @@ module PostZephirProcessing
     #   TODO: deletes file is combination of two component files in TMPDIR?
     def verify_catalog_prep(date: current_date)
       delete_file = Derivative::Delete.new(date: date)
+
       if verify_file(path: delete_file.path)
         verify_deletes_contents(path: delete_file.path)
       end
@@ -116,11 +120,10 @@ module PostZephirProcessing
     #  empty
     def verify_dollar_dup(date: current_date)
       dollar_dup = Derivative::DollarDup.new(date: date).path
-      if verify_file(path: dollar_dup)
-        gz_count = gzip_linecount(path: dollar_dup)
-        if gz_count.positive?
-          error message: "spurious dollar_dup lines: #{dollar_dup} should be empty (found #{gz_count} lines)"
-        end
+      return unless verify_file(path: dollar_dup)
+      gz_count = gzip_linecount(path: dollar_dup)
+      if gz_count.positive?
+        error message: "spurious dollar_dup lines: #{dollar_dup} should be empty (found #{gz_count} lines)"
       end
     end
 
@@ -147,9 +150,8 @@ module PostZephirProcessing
     def verify_rights(date: current_date)
       Derivative::Rights.derivatives_for_date(date: date).each do |derivative|
         path = derivative.path
-        if verify_file(path: path)
-          verify_rights_file_format(path: path)
-        end
+        next unless verify_file(path: path)
+        verify_rights_file_format(path: path)
       end
     end
 
