@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 require "faraday"
-require_relative "../verifier"
-require_relative "../derivatives"
+require "verifier"
+require "derivatives"
 
 # Verifies that catalog indexing workflow stage did what it was supposed to.
 

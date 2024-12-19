@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../verifier"
+require "verifier"
 
 module PostZephirProcessing
   class HathifileRedirectsVerifier < Verifier

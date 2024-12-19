@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative "derivatives"
-require_relative "journal"
-require_relative "services"
+require "derivatives"
+require "journal"
+require "services"
 
 # Common superclass for all things Verifier.
 # Right now the only thing I can think of to put here is shared

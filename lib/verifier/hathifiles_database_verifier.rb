@@ -2,9 +2,9 @@
 
 require "zlib"
 
-require_relative "../verifier"
-require_relative "../derivatives"
-require_relative "../derivative/hathifile"
+require "verifier"
+require "derivatives"
+require "derivative/hathifile"
 
 module PostZephirProcessing
   class HathifilesDatabaseVerifier < Verifier

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require "zlib"
+require "verifier"
 require_relative "hathifiles_contents_verifier"
-require_relative "../verifier"
-require_relative "../derivative/hathifile"
+require "derivative/hathifile"
 
 # Verifies that hathifiles workflow stage did what it was supposed to.
 

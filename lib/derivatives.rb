@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "dates"
+require "dates"
 require "derivative"
 require "derivative/catalog"
 require "derivative/delete"

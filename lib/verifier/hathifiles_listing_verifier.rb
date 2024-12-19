@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative "../verifier"
-require_relative "../derivatives"
-require_relative "../derivative/hathifile_www"
+require "verifier"
+require "derivatives"
+require "derivative/hathifile_www"
 require "json"
 require "set"
 

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative "../verifier"
-require_relative "../derivatives"
+require "verifier"
+require "derivatives"
 
 module PostZephirProcessing
   # The PostZephirVerifier checks for the existence and readability of the .rights files.

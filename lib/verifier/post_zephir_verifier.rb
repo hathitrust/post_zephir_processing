@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 require "zlib"
-require_relative "../verifier"
-require_relative "../derivatives"
-require_relative "../derivative/dollar_dup"
-require_relative "../derivative/catalog"
-require_relative "../derivative/rights"
-require_relative "../derivative/ingest_bibrecord"
-require_relative "../derivative/ht_bib_export"
+require "verifier"
+require "derivatives"
+require "derivative/dollar_dup"
+require "derivative/catalog"
+require "derivative/rights"
+require "derivative/ingest_bibrecord"
+require "derivative/ht_bib_export"
 
 # Verifies that post_zephir workflow stage did what it was supposed to.
 
