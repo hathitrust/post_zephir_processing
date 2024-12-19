@@ -140,28 +140,30 @@ module PostZephirProcessing
     end
 
     describe "#verify_catalog_prep" do
+      around(:each) do |example|
+        ClimateControl.modify(CATALOG_PREP: @tmpdir) do
+          example.run
+        end
+      end
+
       test_date = Date.parse("2024-11-30")
       context "with all the expected files" do
         it "reports no errors" do
           # Create and test upd, full, and deletes in @tmpdir/catalog_prep
-          ClimateControl.modify(CATALOG_PREP: @tmpdir) do
-            FileUtils.cp(fixture(File.join("catalog_archive", "zephir_full_20241130_vufind.json.gz")), @tmpdir)
-            FileUtils.cp(fixture(File.join("catalog_archive", "zephir_upd_20241130.json.gz")), @tmpdir)
-            FileUtils.cp(fixture(File.join("catalog_prep", "zephir_upd_20241130_delete.txt.gz")), @tmpdir)
-            verifier = described_class.new
-            verifier.verify_catalog_prep(date: test_date)
-            expect(verifier.errors.count).to eq 0
-          end
+          FileUtils.cp(fixture(File.join("catalog_archive", "zephir_full_20241130_vufind.json.gz")), @tmpdir)
+          FileUtils.cp(fixture(File.join("catalog_archive", "zephir_upd_20241130.json.gz")), @tmpdir)
+          FileUtils.cp(fixture(File.join("catalog_prep", "zephir_upd_20241130_delete.txt.gz")), @tmpdir)
+          verifier = described_class.new
+          verifier.verify_catalog_prep(date: test_date)
+          expect(verifier.errors.count).to eq 0
         end
       end
 
       context "without any of the expected files" do
         it "reports an error for each of the three missing files" do
-          ClimateControl.modify(CATALOG_PREP: @tmpdir) do
-            verifier = described_class.new
-            verifier.verify_catalog_prep(date: test_date)
-            expect(verifier.errors.count).to eq 3
-          end
+          verifier = described_class.new
+          verifier.verify_catalog_prep(date: test_date)
+          expect(verifier.errors.count).to eq 3
         end
       end
     end
@@ -170,89 +172,83 @@ module PostZephirProcessing
       test_date = Date.parse("2024-12-01")
       context "with empty file" do
         it "reports no errors" do
-          ClimateControl.modify(TMPDIR: @tmpdir) do
-            dollar_dup_path = File.join(@tmpdir, "vufind_incremental_2024-12-01_dollar_dup.txt.gz")
-            Zinzout.zout(dollar_dup_path) { |output_gz| }
-            verifier = described_class.new
-            verifier.verify_dollar_dup(date: test_date)
-            expect(verifier.errors).to eq []
-          end
+          dollar_dup_path = File.join(@tmpdir, "vufind_incremental_2024-12-01_dollar_dup.txt.gz")
+          Zinzout.zout(dollar_dup_path) { |output_gz| }
+          verifier = described_class.new
+          verifier.verify_dollar_dup(date: test_date)
+          expect(verifier.errors).to eq []
         end
       end
 
       context "with nonempty file" do
         it "reports one `spurious dollar_dup lines` error" do
-          ClimateControl.modify(TMPDIR: @tmpdir) do
-            dollar_dup_path = File.join(@tmpdir, "vufind_incremental_2024-12-01_dollar_dup.txt.gz")
-            Zinzout.zout(dollar_dup_path) do |output_gz|
-              output_gz.puts <<~GZ
-                uc1.b275234
-                uc1.b85271
-                uc1.b312920
-                uc1.b257214
-                uc1.b316327
-                uc1.b23918
-                uc1.b95355
-                uc1.b183819
-                uc1.b197217
-              GZ
-            end
-            verifier = described_class.new
-            verifier.verify_dollar_dup(date: test_date)
-            expect(verifier.errors.count).to eq 1
-            expect(verifier.errors).to include(/spurious dollar_dup lines/)
+          dollar_dup_path = File.join(@tmpdir, "vufind_incremental_2024-12-01_dollar_dup.txt.gz")
+          Zinzout.zout(dollar_dup_path) do |output_gz|
+            output_gz.puts <<~GZ
+              uc1.b275234
+              uc1.b85271
+              uc1.b312920
+              uc1.b257214
+              uc1.b316327
+              uc1.b23918
+              uc1.b95355
+              uc1.b183819
+              uc1.b197217
+            GZ
           end
+          verifier = described_class.new
+          verifier.verify_dollar_dup(date: test_date)
+          expect(verifier.errors.count).to eq 1
+          expect(verifier.errors).to include(/spurious dollar_dup lines/)
         end
       end
 
       context "with missing file" do
         it "reports one `not found` error" do
-          ClimateControl.modify(TMPDIR: @tmpdir) do
-            verifier = described_class.new
-            verifier.verify_dollar_dup(date: test_date)
-            expect(verifier.errors.count).to eq 1
-            expect(verifier.errors).to include(/.*not found.*dollar_dup.*/)
-          end
+          verifier = described_class.new
+          verifier.verify_dollar_dup(date: test_date)
+          expect(verifier.errors.count).to eq 1
+          expect(verifier.errors).to include(/.*not found.*dollar_dup.*/)
         end
       end
     end
 
     describe "#verify_ingest_bibrecords" do
+      around(:each) do |example|
+        ClimateControl.modify(INGEST_BIBRECORDS: @tmpdir) do
+          example.run
+        end
+      end
+
       context "last day of month" do
         test_date = Date.parse("2024-11-30")
         context "with expected groove_full and zephir_ingested_items files" do
           it "reports no errors" do
-            ClimateControl.modify(INGEST_BIBRECORDS: @tmpdir) do
-              FileUtils.touch(File.join(@tmpdir, "groove_full.tsv.gz"))
-              FileUtils.touch(File.join(@tmpdir, "zephir_ingested_items.txt.gz"))
-              verifier = described_class.new
-              verifier.verify_ingest_bibrecords(date: test_date)
-              expect(verifier.errors.count).to eq 0
-            end
+            FileUtils.touch(File.join(@tmpdir, "groove_full.tsv.gz"))
+            FileUtils.touch(File.join(@tmpdir, "zephir_ingested_items.txt.gz"))
+            verifier = described_class.new
+            verifier.verify_ingest_bibrecords(date: test_date)
+            expect(verifier.errors.count).to eq 0
           end
         end
 
         context "missing zephir_ingested_items" do
           it "reports one `not found` error" do
-            ClimateControl.modify(INGEST_BIBRECORDS: @tmpdir) do
-              FileUtils.touch(File.join(@tmpdir, "groove_full.tsv.gz"))
-              verifier = described_class.new
-              verifier.verify_ingest_bibrecords(date: test_date)
-              expect(verifier.errors.count).to eq 1
-              expect(verifier.errors).to include(/.*not found.*zephir_ingested_items.*/)
-            end
+            FileUtils.touch(File.join(@tmpdir, "groove_full.tsv.gz"))
+            verifier = described_class.new
+            verifier.verify_ingest_bibrecords(date: test_date)
+            expect(verifier.errors.count).to eq 1
+            expect(verifier.errors).to include(/.*not found.*zephir_ingested_items.*/)
           end
         end
 
         context "missing groove_full" do
           it "reports one `not found` error" do
-            ClimateControl.modify(INGEST_BIBRECORDS: @tmpdir) do
-              FileUtils.touch(File.join(@tmpdir, "zephir_ingested_items.txt.gz"))
-              verifier = described_class.new
-              verifier.verify_ingest_bibrecords(date: test_date)
-              expect(verifier.errors.count).to eq 1
-              expect(verifier.errors).to include(/.*not found.*groove_full.*/)
-            end
+            FileUtils.touch(File.join(@tmpdir, "zephir_ingested_items.txt.gz"))
+            verifier = described_class.new
+            verifier.verify_ingest_bibrecords(date: test_date)
+            expect(verifier.errors.count).to eq 1
+            expect(verifier.errors).to include(/.*not found.*groove_full.*/)
           end
         end
       end
@@ -268,33 +264,34 @@ module PostZephirProcessing
     end
 
     describe "#verify_rights" do
+      around(:each) do |example|
+        ClimateControl.modify(RIGHTS_ARCHIVE: @tmpdir) do
+          example.run
+        end
+      end
       context "last day of month" do
         test_date = Date.parse("2024-11-30")
         context "with full and update rights files" do
           it "reports no errors" do
-            ClimateControl.modify(RIGHTS_ARCHIVE: @tmpdir) do
-              verifier = described_class.new
-              upd_rights_file = "zephir_upd_YYYYMMDD.rights".gsub("YYYYMMDD", test_date.strftime("%Y%m%d"))
-              upd_rights_path = File.join(@tmpdir, upd_rights_file)
-              File.write(upd_rights_path, well_formed_rights_file_content)
-              full_rights_file = "zephir_full_YYYYMMDD.rights".gsub("YYYYMMDD", test_date.strftime("%Y%m%d"))
-              full_rights_path = File.join(@tmpdir, full_rights_file)
-              File.write(full_rights_path, well_formed_rights_file_content)
-              verifier.verify_rights(date: test_date)
-              expect(verifier.errors.count).to eq 0
-            end
+            verifier = described_class.new
+            upd_rights_file = "zephir_upd_YYYYMMDD.rights".gsub("YYYYMMDD", test_date.strftime("%Y%m%d"))
+            upd_rights_path = File.join(@tmpdir, upd_rights_file)
+            File.write(upd_rights_path, well_formed_rights_file_content)
+            full_rights_file = "zephir_full_YYYYMMDD.rights".gsub("YYYYMMDD", test_date.strftime("%Y%m%d"))
+            full_rights_path = File.join(@tmpdir, full_rights_file)
+            File.write(full_rights_path, well_formed_rights_file_content)
+            verifier.verify_rights(date: test_date)
+            expect(verifier.errors.count).to eq 0
           end
         end
 
         context "with no rights files" do
           it "reports two `not found` errors" do
-            ClimateControl.modify(RIGHTS_ARCHIVE: @tmpdir) do
-              verifier = described_class.new
-              verifier.verify_rights(date: test_date)
-              expect(verifier.errors.count).to eq 2
-              verifier.errors.each do |err|
-                expect(err).to include(/not found.*rights/)
-              end
+            verifier = described_class.new
+            verifier.verify_rights(date: test_date)
+            expect(verifier.errors.count).to eq 2
+            verifier.errors.each do |err|
+              expect(err).to include(/not found.*rights/)
             end
           end
         end
@@ -304,25 +301,21 @@ module PostZephirProcessing
         test_date = Date.parse("2024-12-01")
         context "with update rights file" do
           it "reports no errors" do
-            ClimateControl.modify(RIGHTS_ARCHIVE: @tmpdir) do
-              verifier = described_class.new
-              rights_file = "zephir_upd_YYYYMMDD.rights".gsub("YYYYMMDD", test_date.strftime("%Y%m%d"))
-              rights_path = File.join(@tmpdir, rights_file)
-              File.write(rights_path, well_formed_rights_file_content)
-              verifier.verify_rights(date: test_date)
-              expect(verifier.errors.count).to eq 0
-            end
+            verifier = described_class.new
+            rights_file = "zephir_upd_YYYYMMDD.rights".gsub("YYYYMMDD", test_date.strftime("%Y%m%d"))
+            rights_path = File.join(@tmpdir, rights_file)
+            File.write(rights_path, well_formed_rights_file_content)
+            verifier.verify_rights(date: test_date)
+            expect(verifier.errors.count).to eq 0
           end
         end
 
         context "missing update rights file" do
           it "reports one `not found` error" do
-            ClimateControl.modify(RIGHTS_ARCHIVE: @tmpdir) do
-              verifier = described_class.new
-              verifier.verify_rights(date: test_date)
-              expect(verifier.errors.count).to eq 1
-              expect(verifier.errors).to include(/.*not found.*rights.*/)
-            end
+            verifier = described_class.new
+            verifier.verify_rights(date: test_date)
+            expect(verifier.errors.count).to eq 1
+            expect(verifier.errors).to include(/.*not found.*rights.*/)
           end
         end
       end
