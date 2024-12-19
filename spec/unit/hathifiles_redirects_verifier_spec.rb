@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "verifier/hathifiles_redirects_verifier"
-require "zinzout"
+require "zlib"
 
 module PostZephirProcessing
   RSpec.describe(HathifileRedirectsVerifier) do
@@ -42,7 +42,7 @@ module PostZephirProcessing
 
     # Intentionally add mess to an otherwise wellformed file to trigger errors
     def malform(file)
-      Zinzout.zout(file) do |outfile|
+      Zlib::GzipWriter.open(file) do |outfile|
         outfile.puts mess
       end
     end

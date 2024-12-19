@@ -101,7 +101,6 @@ GEM
       addressable (>= 2.8.0)
       crack (>= 0.3.2)
       hashdiff (>= 0.4.0, < 2.0.0)
-    zinzout (0.1.1)
 
 PLATFORMS
   aarch64-linux
@@ -120,7 +119,6 @@ DEPENDENCIES
   simplecov-lcov
   standardrb
   webmock
-  zinzout
 
 BUNDLED WITH
    2.5.23

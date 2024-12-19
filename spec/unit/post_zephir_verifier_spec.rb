@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "verifier/post_zephir_verifier"
-require "zinzout"
+require "zlib"
 
 module PostZephirProcessing
   RSpec.describe(PostZephirVerifier) do
@@ -127,7 +127,7 @@ module PostZephirProcessing
         # Make a temporary ht_bib_export with just 1 line to trigger error
         ClimateControl.modify(ZEPHIR_DATA: "/tmp/test/zephir_data") do
           FileUtils.mkdir_p(ENV["ZEPHIR_DATA"])
-          Zinzout.zout(File.join(ENV["ZEPHIR_DATA"], "ht_bib_export_full_2024-11-30.json.gz")) do |gz|
+          Zlib::GzipWriter.open(File.join(ENV["ZEPHIR_DATA"], "ht_bib_export_full_2024-11-30.json.gz")) do |gz|
             gz.puts "{ \"this file\": \"too short\" }"
           end
           # The other unmodified fixtures in CATALOG_ARCHIVE should
@@ -173,7 +173,7 @@ module PostZephirProcessing
       context "with empty file" do
         it "reports no errors" do
           dollar_dup_path = File.join(@tmpdir, "vufind_incremental_2024-12-01_dollar_dup.txt.gz")
-          Zinzout.zout(dollar_dup_path) { |output_gz| }
+          Zlib::GzipWriter.open(dollar_dup_path) { |output_gz| }
           verifier = described_class.new
           verifier.verify_dollar_dup(date: test_date)
           expect(verifier.errors).to eq []
@@ -183,7 +183,7 @@ module PostZephirProcessing
       context "with nonempty file" do
         it "reports one `spurious dollar_dup lines` error" do
           dollar_dup_path = File.join(@tmpdir, "vufind_incremental_2024-12-01_dollar_dup.txt.gz")
-          Zinzout.zout(dollar_dup_path) do |output_gz|
+          Zlib::GzipWriter.open(dollar_dup_path) do |output_gz|
             output_gz.puts <<~GZ
               uc1.b275234
               uc1.b85271
