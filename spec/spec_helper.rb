@@ -51,7 +51,6 @@ def with_test_environment
       DATA_ROOT: tmpdir,
       TMPDIR: tmpdir
     ) do
-      File.open(File.join(tmpdir, "journal.yml"), "w") { |f| f.puts test_journal }
       # Maybe we don't need to yield `tmpdir` since we're also assigning it to an
       # instance variable. Leaving it for now in case the ivar approach leads to funny business.
       @tmpdir = tmpdir

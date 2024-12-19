@@ -7,25 +7,22 @@ require "services"
 
 module PostZephirProcessing
   class Verifier
-    attr_reader :journal, :errors
+    attr_reader :errors
 
-    # Generally, needs a Journal in order to know what to look for.
     def initialize
-      @journal = Journal.from_yaml
       # Mainly for testing
       @errors = []
     end
 
-    # Main entrypoint
-    # What should it return?
+    # Verify all dates listed in the journal
     def run
-      journal.dates.each do |date|
+      Journal.from_yaml.dates.each do |date|
         run_for_date(date: date)
       end
     end
 
-    # Verify outputs for one date in the journal.
-    # USeful for verifying datestamped files.
+    # Verify outputs for one date.
+    # Useful for verifying datestamped files.
     def run_for_date(date:)
     end
 

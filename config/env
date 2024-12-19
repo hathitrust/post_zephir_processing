@@ -1,6 +1,7 @@
 # This is just for running/testing the Ruby components under Docker
 # Under Argo these ENV variables will all be set externally
 CATALOG_ARCHIVE=/usr/src/app/data/catalog_archive
+HATHIFILE_ARCHIVE=/usr/src/app/data/hathifile_archive
 CATALOG_PREP=/usr/src/app/data/catalog_prep
 DATA_ROOT=/usr/src/app/data
 INGEST_BIBRECORDS=/usr/src/app/data/ingest_bibrecords

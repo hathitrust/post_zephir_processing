@@ -2,7 +2,7 @@
 
 require "zlib"
 require "verifier"
-require_relative "hathifiles_contents_verifier"
+require "verifier/hathifiles_contents_verifier"
 require "derivative/hathifile"
 
 # Verifies that hathifiles workflow stage did what it was supposed to.

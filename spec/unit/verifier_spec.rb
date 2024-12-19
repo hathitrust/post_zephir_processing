@@ -19,19 +19,6 @@ module PostZephirProcessing
       it "creates a Verifier" do
         expect(verifier).to be_an_instance_of(Verifier)
       end
-
-      context "with no Journal file" do
-        it "raises StandardError" do
-          FileUtils.rm(File.join(@tmpdir, "journal.yml"))
-          expect { verifier }.to raise_error(StandardError)
-        end
-      end
-    end
-
-    describe ".run" do
-      it "runs to completion" do
-        verifier.run
-      end
     end
 
     describe "#verify_file" do
