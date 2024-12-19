@@ -6,6 +6,7 @@ require_relative "../derivatives"
 require_relative "../derivative/dollar_dup"
 require_relative "../derivative/catalog"
 require_relative "../derivative/rights"
+require_relative "../derivative/ingest_bibrecord"
 
 # Verifies that post_zephir workflow stage did what it was supposed to.
 
@@ -135,9 +136,8 @@ module PostZephirProcessing
     # Contents: TODO
     # Verify: readable
     def verify_ingest_bibrecords(date: current_date)
-      if date.last_of_month?
-        verify_file(path: self.class.derivative(location: :INGEST_BIBRECORDS, name: "groove_full.tsv.gz"))
-        verify_file(path: self.class.derivative(location: :INGEST_BIBRECORDS, name: "zephir_ingested_items.txt.gz"))
+      Derivative::IngestBibrecord.derivatives_for_date(date: date).each do |derivative|
+        verify_file(path: derivative.path)
       end
     end
 

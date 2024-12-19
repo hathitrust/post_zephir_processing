@@ -18,6 +18,7 @@ module PostZephirProcessing
     STANDARD_LOCATIONS = [
       :CATALOG_ARCHIVE,
       :CATALOG_PREP,
+      :INGEST_BIBRECORDS,
       :RIGHTS_ARCHIVE,
       :TMPDIR,
       :WWW_DIR
