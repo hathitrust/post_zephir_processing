@@ -12,22 +12,6 @@ module PostZephirProcessing
       end
     end
 
-    describe ".directory_for" do
-      context "with known locations" do
-        Derivatives::STANDARD_LOCATIONS.each do |loc_name|
-          it "returns a string for #{loc_name}" do
-            expect(described_class.directory_for(location: loc_name)).to be_a(String)
-          end
-        end
-      end
-
-      context "with an unknown location" do
-        it "raises" do
-          expect { described_class.directory_for(location: :NO_SUCH_LOC) }.to raise_error(StandardError)
-        end
-      end
-    end
-
     describe ".new" do
       it "creates a Derivatives" do
         expect(described_class.new).to be_an_instance_of(Derivatives)

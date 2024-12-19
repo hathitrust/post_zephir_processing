@@ -12,24 +12,6 @@ module PostZephirProcessing
   class Verifier
     attr_reader :journal, :errors
 
-    def self.datestamped_file(name:, date:)
-      name.sub(/YYYYMMDD/i, date.strftime("%Y%m%d"))
-        .sub(/YYYY-MM-DD/i, date.strftime("%Y-%m-%d"))
-    end
-
-    # TODO: see if we want to move this to Derivatives class
-    def self.dated_derivative(location:, name:, date:)
-      File.join(
-        Derivatives.directory_for(location: location),
-        datestamped_file(name: name, date: date)
-      )
-    end
-
-    # TODO: see if we want to move this to Derivatives class
-    def self.derivative(location:, name:)
-      File.join(Derivatives.directory_for(location: location), name)
-    end
-
     # Generally, needs a Journal in order to know what to look for.
     def initialize
       @journal = Journal.from_yaml

@@ -18,7 +18,7 @@ module PostZephirProcessing
 
     def template
       {
-        location: :TMPDIR,
+        location: ENV["TMPDIR"] || File.join(ENV["DATA_ROOT"], "work"),
         name: "vufind_incremental_YYYY-MM-DD_dollar_dup.txt.gz"
       }
     end

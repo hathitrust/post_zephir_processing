@@ -15,7 +15,15 @@ module PostZephirProcessing
     end
 
     def path
-      Verifier.dated_derivative(**template, date: date)
+      File.join(
+        template[:location],
+        datestamped_file
+      )
+    end
+
+    def datestamped_file
+      template[:name].sub(/YYYYMMDD/i, date.strftime("%Y%m%d"))
+        .sub(/YYYY-MM-DD/i, date.strftime("%Y-%m-%d"))
     end
 
     def self.derivatives_for_date(date:)

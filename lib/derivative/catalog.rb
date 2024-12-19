@@ -40,13 +40,13 @@ module PostZephirProcessing
 
   class Derivative::CatalogArchive < Derivative::Catalog
     def location
-      :CATALOG_ARCHIVE
+      ENV["CATALOG_ARCHIVE"]
     end
   end
 
   class Derivative::CatalogPrep < Derivative::Catalog
     def location
-      :CATALOG_PREP
+      ENV["CATALOG_PREP"]
     end
   end
 end

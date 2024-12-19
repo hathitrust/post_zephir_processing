@@ -13,7 +13,7 @@ module PostZephirProcessing
 
     def template
       {
-        location: :CATALOG_PREP,
+        location: ENV["CATALOG_PREP"],
         name: "zephir_upd_YYYYMMDD_delete.txt.gz"
       }
     end

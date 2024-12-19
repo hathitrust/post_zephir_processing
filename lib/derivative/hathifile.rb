@@ -22,7 +22,7 @@ module PostZephirProcessing
 
     def template
       {
-        location: :HATHIFILE_ARCHIVE,
+        location: ENV["HATHIFILE_ARCHIVE"],
         name: "hathi_#{fullness}_YYYYMMDD.txt.gz"
       }
     end

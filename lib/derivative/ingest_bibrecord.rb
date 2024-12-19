@@ -9,7 +9,7 @@ module PostZephirProcessing
     end
 
     def path
-      Verifier.derivative(location: :INGEST_BIBRECORDS, name: name)
+      File.join(ENV["INGEST_BIBRECORDS"], name)
     end
 
     def self.derivatives_for_date(date:)

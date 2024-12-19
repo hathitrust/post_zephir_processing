@@ -22,7 +22,7 @@ module PostZephirProcessing
 
     def template
       {
-        location: :RIGHTS_ARCHIVE,
+        location: ENV["RIGHTS_ARCHIVE"] || File.join(ENV.fetch("RIGHTS_DIR"), "archive"),
         name: "zephir_#{fullness}_YYYYMMDD.rights"
       }
     end

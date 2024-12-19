@@ -26,7 +26,7 @@ module PostZephirProcessing
 
     def template
       {
-        location: :WWW_DIR,
+        location: ENV["WWW_DIR"],
         name: "hathi_#{fullness}_YYYYMMDD.txt.gz"
       }
     end
