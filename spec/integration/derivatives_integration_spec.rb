@@ -3,12 +3,13 @@
 require "date"
 require "fileutils"
 require "tmpdir"
+require "post_zephir_derivatives"
 require "derivative/catalog"
 require "derivative/delete"
 require "derivative/rights"
 
 module PostZephirProcessing
-  RSpec.describe Derivatives do
+  RSpec.describe PostZephirDerivatives do
     def catalog_prep_dir
       File.join(@tmpdir, "catalog_prep")
     end

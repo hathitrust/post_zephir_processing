@@ -2,7 +2,7 @@
 
 require "faraday"
 require "verifier"
-require "derivatives"
+require "derivative/catalog"
 
 # Verifies that catalog indexing workflow stage did what it was supposed to.
 

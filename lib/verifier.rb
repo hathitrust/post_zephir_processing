@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "derivatives"
 require "journal"
 require "services"
 

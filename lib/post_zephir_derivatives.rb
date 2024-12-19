@@ -10,10 +10,7 @@ module PostZephirProcessing
   # A class that knows the expected locations of standard Zephir derivative files.
   # `earliest_missing_date` is the main entrypoint when constructing an agenda of Zephir
   # file dates to fetch for processing.
-  #
-  # TODO: this class may be renamed PostZephirDerivatives once directory_for is updated,
-  # moved, or elimminated.
-  class Derivatives
+  class PostZephirDerivatives
     attr_reader :dates
 
     # @param date [Date] the file datestamp date, not the "run date"

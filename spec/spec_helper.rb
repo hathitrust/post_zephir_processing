@@ -11,7 +11,6 @@ require "webmock/rspec"
 require "zlib"
 
 require "dates"
-require "derivatives"
 require "journal"
 require "verifier"
 

@@ -1,5 +1,4 @@
 require "verifier"
-require "derivatives"
 
 module PostZephirProcessing
   class Derivative

@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "verifier"
-require "derivatives"
 require "derivative/hathifile_www"
 require "json"
 require "set"

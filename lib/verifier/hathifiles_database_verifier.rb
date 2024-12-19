@@ -3,7 +3,6 @@
 require "zlib"
 
 require "verifier"
-require "derivatives"
 require "derivative/hathifile"
 
 module PostZephirProcessing
@@ -13,7 +12,7 @@ module PostZephirProcessing
     # Does an entry exist in hf_log for the hathifile?
     # Can pass a path or just the filename.
     def self.has_log?(hathifile:)
-      PostZephirProcessing::Services[:database][:hf_log]
+      Services[:database][:hf_log]
         .where(hathifile: File.basename(hathifile))
         .count
         .positive?
@@ -21,7 +20,7 @@ module PostZephirProcessing
 
     # Count the number of entries in hathifiles.hf
     def self.db_count
-      PostZephirProcessing::Services[:database][:hf].count
+      Services[:database][:hf].count
     end
 
     def run_for_date(date:)

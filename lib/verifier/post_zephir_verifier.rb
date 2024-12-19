@@ -2,7 +2,7 @@
 
 require "zlib"
 require "verifier"
-require "derivatives"
+require "post_zephir_derivatives"
 require "derivative/dollar_dup"
 require "derivative/catalog"
 require "derivative/rights"
