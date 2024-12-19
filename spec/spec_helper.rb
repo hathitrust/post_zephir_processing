@@ -10,6 +10,11 @@ require "simplecov-lcov"
 require "webmock/rspec"
 require "zlib"
 
+require "dates"
+require "derivatives"
+require "journal"
+require "verifier"
+
 Dotenv.load(File.join(ENV.fetch("ROOTDIR"), "config", "env"))
 
 SimpleCov.add_filter "spec"
@@ -23,11 +28,6 @@ SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new([
   SimpleCov::Formatter::LcovFormatter
 ])
 SimpleCov.start
-
-require_relative "../lib/dates"
-require_relative "../lib/derivatives"
-require_relative "../lib/journal"
-require_relative "../lib/verifier"
 
 # squelch log output from tests
 PostZephirProcessing::Services.register(:logger) {
@@ -98,75 +98,6 @@ def expect_ok(method, contents, gzipped: false, check_return: false)
     if check_return
       expect(result).to be true
     end
-  end
-end
-
-# TODO: the following ENV juggling routines are for the integration tests,
-# and should be integrated with the `with_test_environment` facility above.
-ENV["POST_ZEPHIR_LOGGER_LEVEL"] = Logger::WARN.to_s
-
-def catalog_prep_dir
-  File.join(ENV["SPEC_TMPDIR"], "catalog_prep")
-end
-
-def rights_dir
-  File.join(ENV["SPEC_TMPDIR"], "rights")
-end
-
-def rights_archive_dir
-  File.join(ENV["SPEC_TMPDIR"], "rights_archive")
-end
-
-# Set the all-important SPEC_TMPDIR and derivative env vars,
-# and populate test dir with the appropriate directories.
-# FIXME: RIGHTS_DIR should no longer be needed for testing Derivatives,
-# and may not be needed for testing Verifier and friends.
-def setup_test_dirs(parent_dir:)
-  ENV["SPEC_TMPDIR"] = parent_dir
-  ENV["CATALOG_PREP"] = catalog_prep_dir
-  ENV["RIGHTS_DIR"] = rights_dir
-  ENV["RIGHTS_ARCHIVE"] = rights_archive_dir
-  [catalog_prep_dir, rights_dir, rights_archive_dir].each do |loc|
-    Dir.mkdir loc
-  end
-end
-
-def full_file_for_date(date:)
-  File.join(catalog_prep_dir, "zephir_full_#{date.strftime("%Y%m%d")}_vufind.json.gz")
-end
-
-def full_rights_file_for_date(date:, archive: true)
-  File.join(
-    archive ? rights_archive_dir : rights_dir,
-    "zephir_full_#{date.strftime("%Y%m%d")}.rights"
-  )
-end
-
-def update_file_for_date(date:)
-  File.join(catalog_prep_dir, "zephir_upd_#{date.strftime("%Y%m%d")}.json.gz")
-end
-
-def delete_file_for_date(date:)
-  File.join(catalog_prep_dir, "zephir_upd_#{date.strftime("%Y%m%d")}_delete.txt.gz")
-end
-
-def update_rights_file_for_date(date:, archive: true)
-  File.join(
-    archive ? rights_archive_dir : rights_dir,
-    "zephir_upd_#{date.strftime("%Y%m%d")}.rights"
-  )
-end
-
-# @param date [Date] determines the month and year for the file datestamps
-def setup_test_files(date:)
-  start_date = Date.new(date.year, date.month - 1, -1)
-  `touch #{full_file_for_date(date: start_date)}`
-  `touch #{full_rights_file_for_date(date: start_date)}`
-  end_date = Date.new(date.year, date.month, -2)
-  (start_date..end_date).each do |d|
-    `touch #{update_file_for_date(date: d)}`
-    `touch #{delete_file_for_date(date: d)}`
-    `touch #{update_rights_file_for_date(date: d)}`
   end
 end
 

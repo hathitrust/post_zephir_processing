@@ -71,7 +71,7 @@ module PostZephirProcessing
     #   readable
     #   TODO: deletes file is combination of two component files in TMPDIR?
     def verify_catalog_prep(date: current_date)
-      delete_file = Derivative::Delete.new(date: date, full: false)
+      delete_file = Derivative::Delete.new(date: date)
       if verify_file(path: delete_file.path)
         verify_deletes_contents(path: delete_file.path)
       end

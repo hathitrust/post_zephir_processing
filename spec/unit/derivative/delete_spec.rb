@@ -49,10 +49,9 @@ module PostZephirProcessing
       expect(derivative.path).to eq "/tmp/prep/zephir_upd_20231130_delete.txt.gz"
     end
 
-    # TODO: maybe this should raise since it's asking for a nonexistent derivative?
-    it "reports the same (upd) path regardless of fullness" do
+    it "raises if a full file is requested" do
       params[:full] = true
-      expect(derivative.path).to eq "/tmp/prep/zephir_upd_20231130_delete.txt.gz"
+      expect { derivative }.to raise_exception(ArgumentError, /full/)
     end
   end
 end
