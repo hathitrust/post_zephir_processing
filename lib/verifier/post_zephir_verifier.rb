@@ -7,6 +7,7 @@ require_relative "../derivative/dollar_dup"
 require_relative "../derivative/catalog"
 require_relative "../derivative/rights"
 require_relative "../derivative/ingest_bibrecord"
+require_relative "../derivative/ht_bib_export"
 
 # Verifies that post_zephir workflow stage did what it was supposed to.
 
@@ -35,17 +36,11 @@ module PostZephirProcessing
       if verify_file(path: zephir_update_path)
         if verify_parseable_ndj(path: zephir_update_path)
           if date.last_of_month?
-            ht_bib_export_derivative_params = {
-              location: :ZEPHIR_DATA,
-              name: "ht_bib_export_full_YYYY-MM-DD.json.gz",
-              date: date
-            }
             output_path = Derivative::CatalogArchive.new(date: date, full: true).path
             verify_file(path: output_path)
             verify_parseable_ndj(path: output_path)
             output_linecount = gzip_linecount(path: output_path)
-
-            input_path = self.class.dated_derivative(**ht_bib_export_derivative_params)
+            input_path = Derivative::HTBibExport.new(date: date, full: true).path
             verify_file(path: input_path)
             verify_parseable_ndj(path: input_path)
             input_linecount = gzip_linecount(path: input_path)
