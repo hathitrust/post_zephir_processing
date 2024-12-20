@@ -59,10 +59,10 @@ module PostZephirProcessing
 
     # @param date [Date] determines the month and year for the file datestamps
     def setup_test_files(date:)
-      start_date = Date.new(date.year, date.month - 1, -1)
+      start_date = Date.new(date.year, date.month, 1)
       `touch #{full_file_for_date(date: start_date)}`
       `touch #{full_rights_file_for_date(date: start_date)}`
-      end_date = Date.new(date.year, date.month, -2)
+      end_date = Date.new(date.year, date.month, -1)
       (start_date..end_date).each do |d|
         `touch #{update_file_for_date(date: d)}`
         `touch #{delete_file_for_date(date: d)}`
@@ -78,11 +78,11 @@ module PostZephirProcessing
       end
     end
 
-    it "with no files present, returns the last day of last month" do
+    it "with no files present, returns the first day the month" do
       expect(described_class
-        .new(date: Date.parse("2023-01-15"))
+        .new(date: Date.parse("2024-12-15"))
         .earliest_missing_date)
-        .to eq Date.parse("2022-12-31")
+        .to eq Date.parse("2024-12-01")
     end
 
     context "with test files" do
@@ -102,8 +102,8 @@ module PostZephirProcessing
         expect(verifier.earliest_missing_date).to eq date
       end
 
-      it "with monthly file missing, returns the last day of the last month" do
-        date = Date.parse("2023-10-31")
+      it "with monthly file missing, returns the first of the month" do
+        date = Date.parse("2023-11-01")
         FileUtils.rm full_file_for_date(date: date)
         expect(verifier.earliest_missing_date).to eq date
       end

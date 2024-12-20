@@ -8,7 +8,7 @@ require "date"
 require "logger"
 
 require_relative "../lib/dates"
-require_relative "../lib/derivatives"
+require_relative "../lib/post_zephir_derivatives"
 require_relative "../lib/journal"
 
 def run_system_command(command)
@@ -22,11 +22,11 @@ FULL_SCRIPT = File.join(HOME, "run_zephir_full_monthly.sh")
 INCREMENTAL_SCRIPT = File.join(HOME, "run_process_zephir_incremental.sh")
 YESTERDAY = Date.today - 1
 
-inventory = PostZephirProcessing::Derivatives.new(date: YESTERDAY)
+derivatives = PostZephirProcessing::PostZephirDerivatives.new
 dates = []
 # Is there a missing date? Plug them into an array to process.
-if !inventory.earliest_missing_date.nil?
-  dates = (inventory.earliest_missing_date..YESTERDAY)
+if !derivatives.earliest_missing_date.nil?
+  dates = ((derivatives.earliest_missing_date - 1)..YESTERDAY)
 end
 
 LOGGER.info "Processing Zephir files from #{dates}"

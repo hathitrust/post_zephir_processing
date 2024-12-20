@@ -27,7 +27,7 @@ module PostZephirProcessing
         let(:catalog_update) { Derivative::CatalogArchive.new(date: Date.parse("2024-12-02"), full: false) }
         # indexed the day after the date in the filename starting at midnight
         # EST
-        let(:catalog_index_begin) { "2024-12-03T05:00:00Z" }
+        let(:catalog_index_begin) { "2024-12-02T05:00:00Z" }
 
         it "accepts a catalog with 3 recent updates" do
           stub_catalog_timerange(catalog_index_begin, 3)
@@ -52,7 +52,7 @@ module PostZephirProcessing
       end
 
       context "with a catalog full file with 5 records" do
-        let(:catalog_full) { Derivative::CatalogArchive.new(date: Date.parse("2024-11-30"), full: true) }
+        let(:catalog_full) { Derivative::CatalogArchive.new(date: Date.parse("2024-12-01"), full: true) }
 
         it "accepts a catalog with 5 records" do
           stub_catalog_record_count(5)

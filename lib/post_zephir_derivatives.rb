@@ -13,8 +13,8 @@ module PostZephirProcessing
   class PostZephirDerivatives
     attr_reader :dates
 
-    # @param date [Date] the file datestamp date, not the "run date"
-    def initialize(date: (Date.today - 1))
+    # @param date [Date] the run date (the datestamp date will be one day earlier)
+    def initialize(date: Date.today)
       @dates = Dates.new(date: date)
     end
 

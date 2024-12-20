@@ -52,9 +52,9 @@ module PostZephirProcessing
 
       describe "#run_for_date" do
         it "logs no `missing rights_current` error for full file" do
-          date = Date.parse("2024-11-30")
-          with_fake_rights_file(date: date, full: true) do
-            verifier.run_for_date(date: date)
+          run_date = Date.parse("2024-12-01")
+          with_fake_rights_file(date: run_date, full: true) do
+            verifier.run_for_date(date: run_date)
             # The only error is for the missing upd file.
             expect(verifier.errors.count).to eq 1
             missing_rights_errors = verifier.errors.select { |err| /missing rights_current/.match? err }
@@ -81,9 +81,9 @@ module PostZephirProcessing
     context "with no HTIDs in the rights database" do
       describe "#run_for_date" do
         it "logs `missing rights_current` error for full file" do
-          date = Date.parse("2024-11-30")
-          with_fake_rights_file(date: date, full: true) do
-            verifier.run_for_date(date: date)
+          run_date = Date.parse("2024-12-01")
+          with_fake_rights_file(date: run_date, full: true) do
+            verifier.run_for_date(date: run_date)
             # There will be an error for the missing upd file, ignore it.
             missing_rights_errors = verifier.errors.select { |err| /missing rights_current/.match? err }
             expect(missing_rights_errors.count).to eq test_rights.count

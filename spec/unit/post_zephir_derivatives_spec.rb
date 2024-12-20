@@ -10,8 +10,8 @@ module PostZephirProcessing
         expect(described_class.new).to be_an_instance_of(PostZephirDerivatives)
       end
 
-      it "has a default date of yesterday" do
-        expect(described_class.new.dates.date).to eq(Date.today - 1)
+      it "has a default date of today" do
+        expect(described_class.new.dates.date).to eq Date.today
       end
     end
 

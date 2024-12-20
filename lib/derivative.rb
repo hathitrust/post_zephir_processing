@@ -13,6 +13,17 @@ module PostZephirProcessing
       full
     end
 
+    # Difference in days between when the workflow/verifier is run, and the datestamp on the files.
+    # Post-zephir derivatives are datestamped yesterday relative to the run date.
+    # Everything else is same day (the default).
+    def datestamp_delta
+      0
+    end
+
+    def datestamp
+      date + datestamp_delta
+    end
+
     def path
       File.join(
         template[:location],
@@ -21,8 +32,8 @@ module PostZephirProcessing
     end
 
     def datestamped_file
-      template[:name].sub(/YYYYMMDD/i, date.strftime("%Y%m%d"))
-        .sub(/YYYY-MM-DD/i, date.strftime("%Y-%m-%d"))
+      template[:name].sub(/YYYYMMDD/i, datestamp.strftime("%Y%m%d"))
+        .sub(/YYYY-MM-DD/i, datestamp.strftime("%Y-%m-%d"))
     end
 
     def self.derivatives_for_date(date:)

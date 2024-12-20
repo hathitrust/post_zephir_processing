@@ -5,7 +5,7 @@ require "derivative"
 module PostZephirProcessing
   RSpec.describe(Derivative) do
     let(:test_date_first_of_month) { Date.parse("2023-11-01") }
-    let(:test_date_last_of_month) { Date.parse("2023-11-30") }
+    # let(:test_date_last_of_month) { Date.parse("2023-11-30") }
 
     let(:params) do
       {

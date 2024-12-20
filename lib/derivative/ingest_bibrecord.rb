@@ -13,7 +13,7 @@ module PostZephirProcessing
     end
 
     def self.derivatives_for_date(date:)
-      if date.last_of_month?
+      if date.first_of_month?
         [
           new(name: "groove_full.tsv.gz"),
           new(name: "zephir_ingested_items.txt.gz")

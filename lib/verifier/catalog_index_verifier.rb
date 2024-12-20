@@ -16,7 +16,7 @@ module PostZephirProcessing
         solr_count = solr_nondeleted_records
         query_desc = "existed"
       else
-        date_of_indexing = derivative.date + 1
+        date_of_indexing = derivative.date
         solr_count = solr_count(date_of_indexing)
         query_desc = "had time_of_indexing on #{date_of_indexing}"
       end
@@ -51,9 +51,10 @@ module PostZephirProcessing
       # The dates on the files are the previous day, but the indexing
       # happens on the current day. When we verify the current day, we are
       # verifying that the file named for the _previous_ day was produced.
+      # This is handled by the derivative class `datestamp_delta`
 
       @current_date = date
-      Derivative::CatalogArchive.derivatives_for_date(date: date - 1).each do |derivative|
+      Derivative::CatalogArchive.derivatives_for_date(date: date).each do |derivative|
         path = derivative.path
 
         next unless verify_file(path: path)

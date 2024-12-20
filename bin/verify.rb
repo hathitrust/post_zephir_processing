@@ -17,8 +17,9 @@ module PostZephirProcessing
   def self.run_verifiers(date_to_check)
     [
       # all outputs here are date-stamped with yesterday's date
-      -> { PostZephirVerifier.new.run_for_date(date: date_to_check - 1) },
-      -> { PopulateRightsVerifier.new.run_for_date(date: date_to_check - 1) },
+      # This is taken care of by the `Derivative` subclasses.
+      -> { PostZephirVerifier.new.run_for_date(date: date_to_check) },
+      -> { PopulateRightsVerifier.new.run_for_date(date: date_to_check) },
 
       # these are today's date
       -> { HathifilesVerifier.new.run_for_date(date: date_to_check) },

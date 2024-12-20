@@ -40,7 +40,7 @@ module PostZephirProcessing
     #   readable
     #   line count must be the same as input JSON
     def verify_catalog_full_archive(date: current_date)
-      return unless date.last_of_month?
+      return unless date.first_of_month?
       output_path = Derivative::CatalogArchive.new(date: date, full: true).path
       input_path = Derivative::HTBibExport.new(date: date, full: true).path
 

@@ -23,6 +23,11 @@ module PostZephirProcessing
 
     # Verify outputs for one date.
     # Useful for verifying datestamped files.
+    # @param date [Date] "today", or more accurately "the day on which the processes we are verifying ran".
+    #                    The names of derivative files can differ from this date
+    #                    depending on the type of process or workflow step.
+    #                    Post Zephir derivatives are stamped one day ago.
+    #                    Hathifiles are stamped today.
     def run_for_date(date:)
       info message: "running for #{date}"
     end

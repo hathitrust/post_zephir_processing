@@ -2,6 +2,10 @@ require "derivative"
 
 module PostZephirProcessing
   class Derivative::HTBibExport < Derivative
+    def datestamp_delta
+      -1
+    end
+
     def template
       {
         location: ENV["ZEPHIR_DATA"],

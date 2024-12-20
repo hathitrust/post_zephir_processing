@@ -115,7 +115,7 @@ module PostZephirProcessing
 
     describe "#verify_catalog_full_archive" do
       let(:verifier) { described_class.new }
-      let(:test_date) { Date.parse("2024-11-30") }
+      let(:test_date) { Date.parse("2024-12-01") }
       it "requires input file to have same line count as output file" do
         # We have fixtures with matching line counts for test_date,
         # so expect no warnings
@@ -146,7 +146,7 @@ module PostZephirProcessing
         end
       end
 
-      test_date = Date.parse("2024-11-30")
+      test_date = Date.parse("2024-12-01")
       context "with all the expected files" do
         it "reports no errors" do
           # Create and test upd, full, and deletes in @tmpdir/catalog_prep
@@ -172,7 +172,7 @@ module PostZephirProcessing
       test_date = Date.parse("2024-12-01")
       context "with empty file" do
         it "reports no errors" do
-          dollar_dup_path = File.join(@tmpdir, "vufind_incremental_2024-12-01_dollar_dup.txt.gz")
+          dollar_dup_path = File.join(@tmpdir, "vufind_incremental_2024-11-30_dollar_dup.txt.gz")
           Zlib::GzipWriter.open(dollar_dup_path) { |output_gz| }
           verifier = described_class.new
           verifier.verify_dollar_dup(date: test_date)
@@ -182,7 +182,7 @@ module PostZephirProcessing
 
       context "with nonempty file" do
         it "reports one `spurious dollar_dup lines` error" do
-          dollar_dup_path = File.join(@tmpdir, "vufind_incremental_2024-12-01_dollar_dup.txt.gz")
+          dollar_dup_path = File.join(@tmpdir, "vufind_incremental_2024-11-30_dollar_dup.txt.gz")
           Zlib::GzipWriter.open(dollar_dup_path) do |output_gz|
             output_gz.puts <<~GZ
               uc1.b275234
@@ -220,8 +220,8 @@ module PostZephirProcessing
         end
       end
 
-      context "last day of month" do
-        test_date = Date.parse("2024-11-30")
+      context "first day of month" do
+        test_date = Date.parse("2024-12-01")
         context "with expected groove_full and zephir_ingested_items files" do
           it "reports no errors" do
             FileUtils.touch(File.join(@tmpdir, "groove_full.tsv.gz"))
@@ -254,7 +254,7 @@ module PostZephirProcessing
       end
 
       context "non-last day of month" do
-        test_date = Date.parse("2024-12-01")
+        test_date = Date.parse("2024-12-02")
         it "reports no errors" do
           verifier = described_class.new
           verifier.verify_ingest_bibrecords(date: test_date)
@@ -269,15 +269,15 @@ module PostZephirProcessing
           example.run
         end
       end
-      context "last day of month" do
-        test_date = Date.parse("2024-11-30")
+      context "first day of month" do
+        test_date = Date.parse("2024-12-01")
         context "with full and update rights files" do
           it "reports no errors" do
             verifier = described_class.new
-            upd_rights_file = "zephir_upd_YYYYMMDD.rights".gsub("YYYYMMDD", test_date.strftime("%Y%m%d"))
+            upd_rights_file = "zephir_upd_YYYYMMDD.rights".gsub("YYYYMMDD", (test_date - 1).strftime("%Y%m%d"))
             upd_rights_path = File.join(@tmpdir, upd_rights_file)
             File.write(upd_rights_path, well_formed_rights_file_content)
-            full_rights_file = "zephir_full_YYYYMMDD.rights".gsub("YYYYMMDD", test_date.strftime("%Y%m%d"))
+            full_rights_file = "zephir_full_YYYYMMDD.rights".gsub("YYYYMMDD", (test_date - 1).strftime("%Y%m%d"))
             full_rights_path = File.join(@tmpdir, full_rights_file)
             File.write(full_rights_path, well_formed_rights_file_content)
             verifier.verify_rights(date: test_date)
@@ -297,12 +297,12 @@ module PostZephirProcessing
         end
       end
 
-      context "non-last day of month" do
-        test_date = Date.parse("2024-12-01")
+      context "after first of month" do
+        test_date = Date.parse("2024-12-02")
         context "with update rights file" do
           it "reports no errors" do
             verifier = described_class.new
-            rights_file = "zephir_upd_YYYYMMDD.rights".gsub("YYYYMMDD", test_date.strftime("%Y%m%d"))
+            rights_file = "zephir_upd_YYYYMMDD.rights".gsub("YYYYMMDD", (test_date - 1).strftime("%Y%m%d"))
             rights_path = File.join(@tmpdir, rights_file)
             File.write(rights_path, well_formed_rights_file_content)
             verifier.verify_rights(date: test_date)

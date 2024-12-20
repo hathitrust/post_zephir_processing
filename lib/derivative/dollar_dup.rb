@@ -16,6 +16,10 @@ module PostZephirProcessing
       ]
     end
 
+    def datestamp_delta
+      -1
+    end
+
     def template
       {
         location: ENV["TMPDIR"] || File.join(ENV["DATA_ROOT"], "work"),

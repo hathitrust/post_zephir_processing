@@ -10,7 +10,7 @@ module PostZephirProcessing
         )
       ]
 
-      if date.last_of_month?
+      if date.first_of_month?
         derivatives << new(
           full: true,
           date: date
@@ -18,6 +18,10 @@ module PostZephirProcessing
       end
 
       derivatives
+    end
+
+    def datestamp_delta
+      -1
     end
 
     def template
