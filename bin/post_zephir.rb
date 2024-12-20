@@ -8,7 +8,8 @@ require "date"
 require "logger"
 
 require_relative "../lib/dates"
-require_relative "../lib/derivatives"
+require_relative "../lib/post_zephir_derivatives"
+require_relative "../lib/journal"
 
 def run_system_command(command)
   LOGGER.info command
@@ -21,19 +22,25 @@ FULL_SCRIPT = File.join(HOME, "run_zephir_full_monthly.sh")
 INCREMENTAL_SCRIPT = File.join(HOME, "run_process_zephir_incremental.sh")
 YESTERDAY = Date.today - 1
 
-inventory = PostZephirProcessing::Derivatives.new(date: YESTERDAY)
-
-if inventory.earliest_missing_date.nil?
-  LOGGER.info "no Zephir files to process, exiting"
-  exit 0
+derivatives = PostZephirProcessing::PostZephirDerivatives.new
+dates = []
+# Is there a missing date? Plug them into an array to process.
+if !derivatives.earliest_missing_date.nil?
+  dates = ((derivatives.earliest_missing_date - 1)..YESTERDAY)
 end
 
-dates = (inventory.earliest_missing_date..YESTERDAY)
 LOGGER.info "Processing Zephir files from #{dates}"
 dates.each do |date|
   date_str = date.strftime("%Y%m%d")
+  LOGGER.info "Processing Zephir file for #{date_str}"
   if date.last_of_month?
     run_system_command "#{FULL_SCRIPT} #{date_str}"
   end
   run_system_command "#{INCREMENTAL_SCRIPT} #{date_str}"
 end
+
+# Record our work for the verifier
+LOGGER.info "Writing journal for #{dates}"
+# TODO: consider moving the `to_a` to the Journal initializer so it can take
+# Ranges as well as Arrays
+PostZephirProcessing::Journal.new(dates: dates.to_a).write!
