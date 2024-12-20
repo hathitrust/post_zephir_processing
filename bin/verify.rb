@@ -25,7 +25,7 @@ module PostZephirProcessing
       -> { HathifilesVerifier.new.run_for_date(date: date_to_check) },
       -> { HathifilesDatabaseVerifier.new.run_for_date(date: date_to_check) },
       -> { HathifilesListingVerifier.new.run_for_date(date: date_to_check) },
-      -> { HathifileRedirectsVerifier.new.run_for_date(date: date_to_check) },
+      -> { HathifilesRedirectsVerifier.new.run_for_date(date: date_to_check) },
       -> { CatalogIndexVerifier.new.run_for_date(date: date_to_check) },
     ].each do |verifier_lambda|
       begin

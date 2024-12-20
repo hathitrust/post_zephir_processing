@@ -4,7 +4,7 @@ require "verifier/hathifiles_redirects_verifier"
 require "zlib"
 
 module PostZephirProcessing
-  RSpec.describe(HathifileRedirectsVerifier) do
+  RSpec.describe(HathifilesRedirectsVerifier) do
     let(:test_date) { Date.parse("2024-12-01") }
     let(:verifier) { described_class.new(date: test_date) }
     let(:redirects_file) { verifier.redirects_file(date: test_date) }

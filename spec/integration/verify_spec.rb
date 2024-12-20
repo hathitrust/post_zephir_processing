@@ -39,7 +39,7 @@ module PostZephirProcessing
         HathifilesVerifier
         HathifilesDatabaseVerifier
         HathifilesListingVerifier
-        HathifileRedirectsVerifier
+        HathifilesRedirectsVerifier
         CatalogIndexVerifier].each do |verifier|
         expect(@test_log.string).to include(/.*INFO.*#{verifier}/)
       end
