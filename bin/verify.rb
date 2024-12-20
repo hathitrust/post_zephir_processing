@@ -16,23 +16,19 @@ Dotenv.load(File.join(ENV.fetch("ROOTDIR"), "config", "env"))
 module PostZephirProcessing
   def self.run_verifiers(date_to_check)
     [
-      # all outputs here are date-stamped with yesterday's date
-      # This is taken care of by the `Derivative` subclasses.
-      -> { PostZephirVerifier.new.run_for_date(date: date_to_check) },
-      -> { PopulateRightsVerifier.new.run_for_date(date: date_to_check) },
-
-      # these are today's date
-      -> { HathifilesVerifier.new.run_for_date(date: date_to_check) },
-      -> { HathifilesDatabaseVerifier.new.run_for_date(date: date_to_check) },
-      -> { HathifilesListingVerifier.new.run_for_date(date: date_to_check) },
-      -> { HathifilesRedirectsVerifier.new.run_for_date(date: date_to_check) },
-      -> { CatalogIndexVerifier.new.run_for_date(date: date_to_check) },
-    ].each do |verifier_lambda|
+      PostZephirVerifier,
+      PopulateRightsVerifier,
+      HathifilesVerifier,
+      HathifilesDatabaseVerifier,
+      HathifilesListingVerifier,
+      HathifilesRedirectsVerifier,
+      CatalogIndexVerifier
+    ].each do |klass|
       begin
-        verifier_lambda.call
-        # Very simple minded exception handler so we can in theory check subsequent workflow steps
+        klass.new.run_for_date(date: date_to_check)
+      # Very simple minded exception handler so we can in theory check subsequent workflow steps
       rescue StandardError => e
-        Services[:logger].fatal e
+        PostZephirProcessing::Services[:logger].fatal e
       end
     end
   end
