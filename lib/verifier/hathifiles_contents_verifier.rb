@@ -77,6 +77,7 @@ module PostZephirProcessing
     end
 
     def run
+      info message: "verifying contents of #{file}"
       Zlib::GzipReader.open(file, encoding: "utf-8").each_line do |line|
         @line_count += 1
         # limit of -1 to ensure we don't drop trailing empty fields

@@ -27,6 +27,7 @@ module PostZephirProcessing
     end
 
     def run_for_date(date:)
+      super
       Derivative::Rights.derivatives_for_date(date: date).each do |derivative|
         path = derivative.path
         next unless verify_file(path: path)

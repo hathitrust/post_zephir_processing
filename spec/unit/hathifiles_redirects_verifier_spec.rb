@@ -5,7 +5,7 @@ require "zlib"
 
 module PostZephirProcessing
   RSpec.describe(HathifileRedirectsVerifier) do
-    let(:test_date) { Date.parse("2023-01-01") }
+    let(:test_date) { Date.parse("2024-12-01") }
     let(:verifier) { described_class.new(date: test_date) }
     let(:redirects_file) { verifier.redirects_file(date: test_date) }
     let(:redirects_history_file) { verifier.redirects_history_file(date: test_date) }
@@ -33,11 +33,11 @@ module PostZephirProcessing
 
     # copy fixture to temporary subdir
     def stage_redirects_file
-      FileUtils.cp(fixture("redirects/redirects_202301.txt.gz"), ENV["REDIRECTS_DIR"])
+      FileUtils.cp(fixture("redirects/redirects_202412.txt.gz"), ENV["REDIRECTS_DIR"])
     end
 
     def stage_redirects_history_file
-      FileUtils.cp(fixture("redirects/202301.ndj.gz"), ENV["REDIRECTS_HISTORY_DIR"])
+      FileUtils.cp(fixture("redirects/202412.ndj.gz"), ENV["REDIRECTS_HISTORY_DIR"])
     end
 
     # Intentionally add mess to an otherwise wellformed file to trigger errors

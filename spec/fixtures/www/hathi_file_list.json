@@ -22,5 +22,13 @@
         "created": "2023-01-02 02:02:02 -0400",
         "modified": "2023-01-02 02:02:02 -0400",
         "url": "https://www.hathitrust.org/files/hathifiles/hathi_upd_20230102.txt.gz"
+    },
+    {
+        "filename": "hathi_upd_20241203.txt.gz",
+        "full": false,
+        "size": 43,
+        "created": "2024-12-03 02:02:02 -0400",
+        "modified": "2024-12-03 02:02:02 -0400",
+        "url": "https://www.hathitrust.org/files/hathifiles/hathi_upd_20241203.txt.gz"
     }
 ]

@@ -16,6 +16,7 @@ module PostZephirProcessing
     attr_reader :current_date
 
     def run_for_date(date:)
+      super
       @current_date = date
       verify_catalog_update_archive
       verify_catalog_full_archive
@@ -88,6 +89,7 @@ module PostZephirProcessing
     # Verify contents of the given file consists of catalog record IDs (9 digits)
     # or blank lines
     def verify_deletes_contents(path:)
+      info message: "verifying contents of #{path}"
       Zlib::GzipReader.open(path).each_line do |line|
         if line != "\n" && !line.match?(/^\d{9}$/)
           error message: "Unexpected line in #{path} (was '#{line.strip}'); expecting catalog record ID (9 digits)"
@@ -175,6 +177,7 @@ module PostZephirProcessing
         {name: :digitization_source, regex: /^[a-z]+(-[a-z]+)*$/}
       ]
 
+      info message: "verifying contents of #{path}"
       # This allows an empty file as well, which is possible.
       File.open(path) do |f|
         f.each_line.with_index do |line, i|

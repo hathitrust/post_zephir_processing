@@ -13,26 +13,29 @@ require "verifier/catalog_index_verifier"
 
 Dotenv.load(File.join(ENV.fetch("ROOTDIR"), "config", "env"))
 
-module PostZephir
+module PostZephirProcessing
   def self.run_verifiers(date_to_check)
     [
-      PostZephirProcessing::PostZephirVerifier,
-      PostZephirProcessing::PopulateRightsVerifier,
-      PostZephirProcessing::HathifilesVerifier,
-      PostZephirProcessing::HathifilesDatabaseVerifier,
-      PostZephirProcessing::HathifilesListingVerifier,
-      PostZephirProcessing::HathifileRedirectsVerifier,
-      PostZephirProcessing::CatalogIndexVerifier
-    ].each do |klass|
+      # all outputs here are date-stamped with yesterday's date
+      -> { PostZephirVerifier.new.run_for_date(date: date_to_check - 1) },
+      -> { PopulateRightsVerifier.new.run_for_date(date: date_to_check - 1) },
+
+      # these are today's date
+      -> { HathifilesVerifier.new.run_for_date(date: date_to_check) },
+      -> { HathifilesDatabaseVerifier.new.run_for_date(date: date_to_check) },
+      -> { HathifilesListingVerifier.new.run_for_date(date: date_to_check) },
+      -> { HathifileRedirectsVerifier.new.run_for_date(date: date_to_check) },
+      -> { CatalogIndexVerifier.new.run_for_date(date: date_to_check) },
+    ].each do |verifier_lambda|
       begin
-        klass.new.run_for_date(date: date_to_check)
-      # Very simple minded exception handler so we can in theory check subsequent workflow steps
+        verifier_lambda.call
+        # Very simple minded exception handler so we can in theory check subsequent workflow steps
       rescue StandardError => e
-        PostZephirProcessing::Services[:logger].fatal e
+        Services[:logger].fatal e
       end
     end
   end
 end
 
 date_to_check = ARGV[0] || Date.today
-PostZephir.run_verifiers(date_to_check) if __FILE__ == $0
+PostZephirProcessing.run_verifiers(date_to_check) if __FILE__ == $0

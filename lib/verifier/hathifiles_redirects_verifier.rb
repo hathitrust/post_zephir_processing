@@ -14,6 +14,12 @@ module PostZephirProcessing
       @current_date = date
     end
 
+    def run_for_date(date:)
+      super
+      @current_date = date
+      verify_redirects
+    end
+
     def verify_redirects(date: current_date)
       verify_redirects_file
       verify_redirects_history_file

@@ -24,11 +24,13 @@ module PostZephirProcessing
     # Verify outputs for one date.
     # Useful for verifying datestamped files.
     def run_for_date(date:)
+      info message: "running for #{date}"
     end
 
     # Basic checks for the existence and readability of the file at `path`.
     # @return [Boolean] `true` if verified, `false` if error was reported.
     def verify_file(path:)
+      info message: "verifying file exists & is readable: #{path}"
       verify_file_exists(path: path) && verify_file_readable(path: path)
     end
 
@@ -47,12 +49,14 @@ module PostZephirProcessing
     end
 
     def gzip_linecount(path:)
+      info message: "getting line count: #{path}"
       Zlib::GzipReader.open(path, encoding: "utf-8") { |gz| gz.count }
     end
 
     # Take a .ndj.gz file and check that each line is indeed parseable json
     # @return [Boolean] `true` if verified, `false` if error was reported.
     def verify_parseable_ndj(path:)
+      info message: "verifying parseable newline-delimited json: #{path}"
       Zlib::GzipReader.open(path, encoding: "utf-8") do |gz|
         gz.each_line do |line|
           JSON.parse(line)
@@ -71,6 +75,10 @@ module PostZephirProcessing
       output_msg = self.class.to_s + ": " + message
       @errors << output_msg
       Services[:logger].error output_msg
+    end
+
+    def info(message:)
+      Services[:logger].info "#{self.class}: #{message}"
     end
   end
 end

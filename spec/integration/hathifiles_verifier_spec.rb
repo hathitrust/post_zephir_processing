@@ -24,7 +24,7 @@ module PostZephirProcessing
     end
 
     it "rejects a file with fewer records than the corresponding catalog, some of which are malformed" do
-      verifier.run_for_date(date: Date.parse("2024-12-03"))
+      verifier.run_for_date(date: Date.parse("2024-12-04"))
       expect(verifier.errors).not_to be_empty
     end
 

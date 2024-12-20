@@ -4,14 +4,12 @@ require "verifier/hathifiles_database_verifier"
 
 module PostZephirProcessing
   RSpec.describe(HathifilesDatabaseVerifier) do
+    include_context "with hathifile database"
+
     around(:each) do |example|
       with_test_environment do
         ClimateControl.modify(HATHIFILE_ARCHIVE: fixture("hathifile_archive")) do
-          Services[:database][:hf].truncate
-          Services[:database][:hf_log].truncate
           example.run
-          Services[:database][:hf].truncate
-          Services[:database][:hf_log].truncate
         end
       end
     end
@@ -25,18 +23,6 @@ module PostZephirProcessing
     let(:second_of_month) { Date.parse("2024-12-02") }
     let(:fake_upd_htids) { (1..5).map { |n| "test.%03d" % n } }
     let(:fake_full_htids) { (1..11).map { |n| "test.%03d" % n } }
-
-    # Temporarily add `hathifile` to `hf_log` with the current timestamp.
-    def with_fake_hf_log_entry(hathifile:)
-      Services[:database][:hf_log].insert(hathifile: hathifile)
-      yield
-    end
-
-    # Temporarily add `htid` to `hf` with reasonable (and irrelevant) defaults.
-    def with_fake_hf_entries(htids:)
-      htids.each { |htid| Services[:database][:hf].insert(htid: htid) }
-      yield
-    end
 
     describe ".has_log?" do
       context "with corresponding hf_log" do

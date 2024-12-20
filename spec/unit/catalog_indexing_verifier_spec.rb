@@ -3,10 +3,11 @@
 require "verifier/catalog_index_verifier"
 require "webmock"
 require "derivative/catalog"
+require "uri"
 
 module PostZephirProcessing
   RSpec.describe(CatalogIndexVerifier) do
-    let(:solr_url) { "http://solr-sdr-catalog:9033/solr/catalog" }
+    include_context "with solr mocking"
     let(:verifier) { described_class.new }
 
     around(:each) do |example|
@@ -19,48 +20,6 @@ module PostZephirProcessing
           example.run
         end
       end
-    end
-
-    def stub_catalog_record_count(result_count)
-      url = "#{solr_url}/select?fq=deleted:false&q=*:*&rows=0&wt=json"
-
-      result = {
-        "responseHeader" => {
-          "status" => 0,
-          "QTime" => 0,
-          "params" => {
-            "q" => "*=>*",
-            "fq" => "deleted:false",
-            "rows" => "0",
-            "wt" => "json"
-          }
-        },
-        "response" => {"numFound" => result_count, "start" => 0, "docs" => []}
-      }.to_json
-
-      WebMock::API.stub_request(:get, url)
-        .to_return(body: result, headers: {"Content-Type" => "application/json"})
-    end
-
-    def stub_catalog_timerange(datebegin, result_count)
-      url = "#{solr_url}/select?fq=time_of_index:[#{datebegin}%20TO%20NOW]&q=*:*&rows=0&wt=json"
-
-      result = {
-        "responseHeader" => {
-          "status" => 0,
-          "QTime" => 0,
-          "params" => {
-            "q" => "*=>*",
-            "fq" => "time_of_index:[#{datebegin} TO NOW]",
-            "rows" => "0",
-            "wt" => "json"
-          }
-        },
-        "response" => {"numFound" => result_count, "start" => 0, "docs" => []}
-      }.to_json
-
-      WebMock::API.stub_request(:get, url)
-        .to_return(body: result, headers: {"Content-Type" => "application/json"})
     end
 
     describe "#verify_index_count" do

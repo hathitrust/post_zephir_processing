@@ -12,6 +12,7 @@ module PostZephirProcessing
     attr_reader :current_date
 
     def run_for_date(date:)
+      super
       @current_date = date
       verify_hathifile
     end

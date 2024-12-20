@@ -24,6 +24,7 @@ module PostZephirProcessing
     end
 
     def run_for_date(date:)
+      super
       @current_date = date
       verify_hathifiles_database_log
       verify_hathifiles_database_count

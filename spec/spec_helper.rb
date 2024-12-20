@@ -14,6 +14,9 @@ require "dates"
 require "journal"
 require "verifier"
 
+require "support/solr_mock"
+require "support/hathifile_database"
+
 Dotenv.load(File.join(ENV.fetch("ROOTDIR"), "config", "env"))
 
 SimpleCov.add_filter "spec"
