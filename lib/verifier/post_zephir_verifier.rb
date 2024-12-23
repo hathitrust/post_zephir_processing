@@ -18,50 +18,42 @@ module PostZephirProcessing
     def run_for_date(date:)
       super
       @current_date = date
-      verify_catalog_update_archive
-      verify_catalog_full_archive
+      verify_catalog_archive
       verify_catalog_prep
       verify_dollar_dup
       verify_ingest_bibrecords
       verify_rights
     end
 
-    def verify_catalog_update_archive(date: current_date)
-      zephir_update_path = Derivative::CatalogArchive.new(date: date, full: false).path
-      return unless verify_file(path: zephir_update_path)
-      verify_parseable_ndj(path: zephir_update_path)
-    end
-
     # Frequency: ALL
-    # Files: CATALOG_ARCHIVE/zephir_upd_YYYYMMDD.json.gz
-    #   and potentially CATALOG_ARCHIVE/zephir_full_YYYYMMDD_vufind.json.gz
+    # Files:
+    #   CATALOG_ARCHIVE/zephir_upd_YYYYMMDD.json.gz
+    #   CATALOG_ARCHIVE/zephir_full_YYYYMMDD_vufind.json.gz [Monthly]
     # Contents: ndj file with one catalog record per line
     # Verify:
     #   readable
     #   line count must be the same as input JSON
-    def verify_catalog_full_archive(date: current_date)
-      return unless date.first_of_month?
-      output_path = Derivative::CatalogArchive.new(date: date, full: true).path
-      input_path = Derivative::HTBibExport.new(date: date, full: true).path
+    def verify_catalog_archive(date: current_date)
+      Derivative::CatalogArchive.derivatives_for_date(date: date).each do |derivative|
+        next unless verify_file(path: derivative.path)
 
-      paths = [input_path, output_path]
-      return unless paths.all? { |path| verify_file(path: path) }
+        verify_parseable_ndj(path: derivative.path)
+        archive_linecount = gzip_linecount(path: derivative.path)
+        bib_export_path = Derivative::HTBibExport.new(date: date, full: derivative.full?).path
+        next unless verify_file(path: bib_export_path)
 
-      paths.each { |path| verify_parseable_ndj(path: path) }
-
-      output_linecount = gzip_linecount(path: output_path)
-      input_linecount = gzip_linecount(path: input_path)
-
-      if output_linecount != input_linecount
-        error(
-          message: sprintf(
-            "output line count (%s = %s) != input line count (%s = %s)",
-            output_path,
-            output_linecount,
-            input_path,
-            input_linecount
+        bib_export_linecount = gzip_linecount(path: bib_export_path)
+        if bib_export_linecount != archive_linecount
+          error(
+            message: sprintf(
+              "catalog archive line count (%s = %s) != bib export line count (%s = %s)",
+              derivative.path,
+              archive_linecount,
+              bib_export_path,
+              bib_export_linecount
+            )
           )
-        )
+        end
       end
     end
 
@@ -192,6 +184,15 @@ module PostZephirProcessing
             end
           end
         end
+      end
+    end
+
+    private
+
+    def verify_hathifile_contents(path:)
+      HathifileContentsVerifier.new(path).tap do |contents_verifier|
+        contents_verifier.run
+        @errors.append(contents_verifier.errors)
       end
     end
   end

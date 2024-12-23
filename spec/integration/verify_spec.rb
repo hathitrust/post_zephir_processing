@@ -22,7 +22,7 @@ module PostZephirProcessing
         REDIRECTS_DIR: fixture("redirects"),
         REDIRECTS_HISTORY_DIR: fixture("redirects"),
         CATALOG_PREP: fixture("catalog_prep"),
-        TMPDIR: fixture("dollar_dup"),
+        TMPDIR: fixture("work"),
         SOLR_URL: "http://solr-sdr-catalog:9033/solr/catalog",
         TZ: "America/Detroit"
       ) do

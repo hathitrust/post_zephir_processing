@@ -48,6 +48,15 @@ def test_journal_dates
   [Date.new(2050, 1, 1), Date.new(2050, 1, 2)]
 end
 
+# Note potential pitfall:
+# Setting ENV["TMPDIR"] has an effect on Ruby's choice of temporary directory locations.
+# See https://github.com/ruby/ruby/blob/f4476f0d07c781c906ed1353d8e1be5a7314d6e7/lib/tmpdir.rb#L130
+# So if you see mktmpdir yielding a location in spec/fixtures then it's likely
+# TMPDIR has been defined, maybe in an `around` block, before the call to `with_test_environment`.
+# Currently it is not happening but it can when noodling around with test setups.
+# It's not a critical problem, but might nudge us in the direction of moving away from using
+# TMPDIR in the PZP internals.
+# Could also try wrapping the mktmpdir in another Climate Control layer.
 def with_test_environment
   Dir.mktmpdir do |tmpdir|
     ClimateControl.modify(

@@ -6,7 +6,7 @@ config/config.pl
 config/.netrc
 coverage/
 zephir_full_daily_a*
-*.gz
+data/
 local
 local*
 *_stderr
