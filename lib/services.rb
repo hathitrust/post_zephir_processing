@@ -3,7 +3,6 @@
 require "canister"
 require "logger"
 require "sequel"
-require "yaml"
 
 module PostZephirProcessing
   Services = Canister.new
@@ -13,17 +12,15 @@ module PostZephirProcessing
   end
 
   # Read-only connection to database for verifying rights DB vs .rights files
-  # Would prefer to populate these values from ENV for consistency with other Ruby
-  # code running in the workflow but this suffices for now.
+  # as well as hathifiles tables.
   Services.register(:database) do
-    database_yaml = File.join(ENV.fetch("ROOTDIR"), "config", "database.yml")
-    yaml_data = YAML.load_file(database_yaml)
     Sequel.connect(
       adapter: "mysql2",
-      user: yaml_data["user"],
-      password: yaml_data["password"],
-      host: yaml_data["hostname"],
-      database: yaml_data["dbname"],
+      user: ENV["DB_HT_RO_USER"],
+      password: ENV["DB_HT_RO_PASSWORD"],
+      host: ENV["DB_HT_RO_HOST"],
+      port: ENV["DB_HT_RO_PORT"],
+      database: ENV["DB_HT_RO_DATABASE"],
       encoding: "utf8mb4"
     )
   end

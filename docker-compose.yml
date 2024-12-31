@@ -39,6 +39,11 @@ services:
       - DB_CONNECTION_STRING="mysql2://ht_rights:ht_rights@mariadb/ht"
       - POST_ZEPHIR_PROCESSING_LOGGER_LEVEL=1
       - PUSHGATEWAY="http://pushgateway:9091"
+      - DB_HT_RO_USER=ht_rights
+      - DB_HT_RO_PASSWORD=ht_rights
+      - DB_HT_RO_HOST=mariadb
+      - DB_HT_RO_PORT=3306
+      - DB_HT_RO_DATABASE=ht
       # pass through info needed by coveralls uploader
       - GITHUB_TOKEN
       - GITHUB_RUN_ID
