@@ -42,8 +42,13 @@ module PostZephirProcessing
 
     def solr_result_count(filter_query)
       url = "#{ENV["SOLR_URL"]}/select?fq=#{URI.encode_www_form_component(filter_query)}&q=*:*&rows=0&wt=json"
-
-      JSON.parse(Faraday.get(url).body)["response"]["numFound"]
+      body = Faraday.get(url).body
+      begin
+        JSON.parse(body)["response"]["numFound"]
+      rescue JSON::ParserError => e
+        error(message: "could not parse response from #{url}: #{body} (#{e})")
+        0
+      end
     end
 
     def run_for_date(date:)
