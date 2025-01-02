@@ -3,26 +3,26 @@
 
 $LOAD_PATH.unshift File.expand_path("../lib/", __FILE__)
 require "dotenv"
-require "verifier/post_zephir_verifier"
-require "verifier/populate_rights_verifier"
-require "verifier/hathifiles_verifier"
-require "verifier/hathifiles_database_verifier"
-require "verifier/hathifiles_listing_verifier"
-require "verifier/hathifiles_redirects_verifier"
-require "verifier/catalog_index_verifier"
+require "verifier/post_zephir"
+require "verifier/populate_rights"
+require "verifier/hathifiles"
+require "verifier/hathifiles_database"
+require "verifier/hathifiles_listing"
+require "verifier/hathifiles_redirects"
+require "verifier/catalog_index"
 
 Dotenv.load(File.join(ENV.fetch("ROOTDIR"), "config", "env"))
 
 module PostZephirProcessing
   def self.run_verifiers(date_to_check)
     [
-      PostZephirVerifier,
-      PopulateRightsVerifier,
-      HathifilesVerifier,
-      HathifilesDatabaseVerifier,
-      HathifilesListingVerifier,
-      HathifilesRedirectsVerifier,
-      CatalogIndexVerifier
+      Verifier::PostZephir,
+      Verifier::PopulateRights,
+      Verifier::Hathifiles,
+      Verifier::HathifilesDatabase,
+      Verifier::HathifilesListing,
+      Verifier::HathifilesRedirects,
+      Verifier::CatalogIndex
     ].each do |klass|
       begin
         klass.new.run_for_date(date: date_to_check)

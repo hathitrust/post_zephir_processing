@@ -2,13 +2,13 @@
 
 require "zlib"
 require "verifier"
-require "verifier/hathifiles_contents_verifier"
+require "verifier/hathifiles_contents"
 require "derivative/hathifile"
 
 # Verifies that hathifiles workflow stage did what it was supposed to.
 
 module PostZephirProcessing
-  class HathifilesVerifier < Verifier
+  class Verifier::Hathifiles < Verifier
     attr_reader :current_date
 
     def run_for_date(date:)
@@ -22,7 +22,7 @@ module PostZephirProcessing
     # Frequency: ALL
     # Files: CATALOG_PREP/hathi_upd_YYYYMMDD.txt.gz
     #   and potentially HATHIFILE_ARCHIVE/hathi_full_YYYYMMDD.txt.gz
-    # Contents: verified with HathifileContentsVerifier with regexes for each line/field
+    # Contents: verified with Verifier::HathifileContents with regexes for each line/field
     # Verify:
     #   readable
     def verify_hathifile(date: current_date)
@@ -49,7 +49,7 @@ module PostZephirProcessing
     private
 
     def verify_hathifile_contents(path:)
-      HathifileContentsVerifier.new(path).tap do |contents_verifier|
+      Verifier::HathifileContents.new(path).tap do |contents_verifier|
         contents_verifier.run
         @errors.append(contents_verifier.errors)
       end

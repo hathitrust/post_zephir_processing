@@ -6,7 +6,7 @@ require "json"
 require "set"
 
 module PostZephirProcessing
-  class HathifilesListingVerifier < Verifier
+  class Verifier::HathifilesListing < Verifier
     attr_reader :current_date
 
     def run_for_date(date:)

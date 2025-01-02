@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require "verifier/populate_rights_verifier"
+require "verifier/populate_rights"
 require "derivative/rights"
 require "pry"
 
 module PostZephirProcessing
-  RSpec.describe(PopulateRightsVerifier) do
+  RSpec.describe(Verifier::PopulateRights) do
     around(:each) do |example|
       with_test_environment do
         ClimateControl.modify(RIGHTS_ARCHIVE: @tmpdir) do

@@ -12,7 +12,7 @@ require "derivative/ht_bib_export"
 # Verifies that post_zephir workflow stage did what it was supposed to.
 
 module PostZephirProcessing
-  class PostZephirVerifier < Verifier
+  class Verifier::PostZephir < Verifier
     attr_reader :current_date
 
     def run_for_date(date:)

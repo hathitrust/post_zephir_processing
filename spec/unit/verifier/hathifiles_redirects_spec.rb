@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "verifier/hathifiles_redirects_verifier"
+require "verifier/hathifiles_redirects"
 require "zlib"
 
 module PostZephirProcessing
-  RSpec.describe(HathifilesRedirectsVerifier) do
+  RSpec.describe(Verifier::HathifilesRedirects) do
     let(:test_date) { Date.parse("2024-12-01") }
     let(:verifier) { described_class.new(date: test_date) }
     let(:redirects_file) { verifier.redirects_file(date: test_date) }

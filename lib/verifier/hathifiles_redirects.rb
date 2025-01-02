@@ -3,7 +3,7 @@
 require "verifier"
 
 module PostZephirProcessing
-  class HathifilesRedirectsVerifier < Verifier
+  class Verifier::HathifilesRedirects < Verifier
     attr_reader :current_date
 
     REDIRECTS_REGEX = /^\d{9}\t\d{9}$/

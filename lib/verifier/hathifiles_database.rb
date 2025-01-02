@@ -6,7 +6,7 @@ require "verifier"
 require "derivative/hathifile"
 
 module PostZephirProcessing
-  class HathifilesDatabaseVerifier < Verifier
+  class Verifier::HathifilesDatabase < Verifier
     attr_reader :current_date
 
     # Does an entry exist in hf_log for the hathifile?

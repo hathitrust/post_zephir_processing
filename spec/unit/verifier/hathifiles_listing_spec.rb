@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "verifier/hathifiles_listing_verifier"
+require "verifier/hathifiles_listing"
 require "derivative/hathifile_www"
 
 module PostZephirProcessing
-  RSpec.describe(HathifilesListingVerifier) do
+  RSpec.describe(Verifier::HathifilesListing) do
     # Using secondday here as a representative for
     # "any day of the month that's not the 1st"
     # missingday does not have files or listings

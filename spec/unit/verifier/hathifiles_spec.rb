@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "verifier/hathifiles_verifier"
+require "verifier/hathifiles"
 
 module PostZephirProcessing
-  RSpec.describe(HathifilesVerifier) do
+  RSpec.describe(Verifier::Hathifiles) do
     around(:each) do |example|
       with_test_environment { example.run }
     end

@@ -34,13 +34,13 @@ module PostZephirProcessing
 
       # TODO: dollar-dup, hf_log (database)
 
-      %w[PostZephirVerifier
-        PopulateRightsVerifier
-        HathifilesVerifier
-        HathifilesDatabaseVerifier
-        HathifilesListingVerifier
-        HathifilesRedirectsVerifier
-        CatalogIndexVerifier].each do |verifier|
+      %w[Verifier::PostZephir
+        Verifier::PopulateRights
+        Verifier::Hathifiles
+        Verifier::HathifilesDatabase
+        Verifier::HathifilesListing
+        Verifier::HathifilesRedirects
+        Verifier::CatalogIndex].each do |verifier|
         expect(@test_log.string).to include(/.*INFO.*#{verifier}/)
       end
       expect(@test_log.string).not_to include(/.*ERROR.*/)

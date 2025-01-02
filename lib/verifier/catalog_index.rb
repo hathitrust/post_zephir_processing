@@ -8,7 +8,7 @@ require "uri"
 # Verifies that catalog indexing workflow stage did what it was supposed to.
 
 module PostZephirProcessing
-  class CatalogIndexVerifier < Verifier
+  class Verifier::CatalogIndex < Verifier
     def verify_index_count(derivative:)
       catalog_linecount = gzip_linecount(path: derivative.path)
 

@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "verifier/post_zephir_verifier"
+require "verifier/post_zephir"
 require "zlib"
 
 module PostZephirProcessing
-  RSpec.describe(PostZephirVerifier) do
+  RSpec.describe(Verifier::PostZephir) do
     around(:each) do |example|
       ClimateControl.modify(
         CATALOG_ARCHIVE: fixture("catalog_archive"),

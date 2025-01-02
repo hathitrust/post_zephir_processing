@@ -6,7 +6,7 @@ require "verifier"
 # Verifies that hathifiles workflow stage did what it was supposed to.
 
 module PostZephirProcessing
-  class HathifileContentsVerifier < Verifier
+  class Verifier::HathifileContents < Verifier
     HATHIFILE_FIELD_SPECS = [
       # htid - required; lowercase alphanumeric namespace, period, non-whitespace ID
       {name: "htid", regex: /^[a-z0-9]{2,4}\.\S+$/},

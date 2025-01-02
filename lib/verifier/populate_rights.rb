@@ -16,7 +16,7 @@ module PostZephirProcessing
 
   # We may also look for errors in the output logs (postZephir.pm and/or populate_rights_data.pl?)
   # but that is out of scope for now.
-  class PopulateRightsVerifier < Verifier
+  class Verifier::PopulateRights < Verifier
     # This is an efficient slice size we adopted for hathifiles based on experimental evidence
     DEFAULT_SLICE_SIZE = 10_000
     attr_reader :slice_size

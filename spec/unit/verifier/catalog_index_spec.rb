@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require "verifier/catalog_index_verifier"
+require "verifier/catalog_index"
 require "webmock"
 require "derivative/catalog"
 require "uri"
 
 module PostZephirProcessing
-  RSpec.describe(CatalogIndexVerifier) do
+  RSpec.describe(Verifier::CatalogIndex) do
     include_context "with solr mocking"
     let(:verifier) { described_class.new }
 

@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 require "climate_control"
-require "verifier/hathifiles_verifier"
+require "verifier/hathifiles"
 
 module PostZephirProcessing
-  RSpec.describe HathifilesVerifier do
+  RSpec.describe Verifier::Hathifiles do
     let(:verifier) { described_class.new }
 
     around(:each) do |example|

@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 require "zlib"
-require "verifier/hathifiles_contents_verifier"
+require "verifier/hathifiles_contents"
 
 module PostZephirProcessing
-  RSpec.describe(HathifileContentsVerifier) do
+  RSpec.describe(Verifier::HathifileContents) do
     around(:each) do |example|
       with_test_environment { example.run }
     end
