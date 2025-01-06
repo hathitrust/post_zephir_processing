@@ -23,7 +23,7 @@ module PostZephirProcessing
         REDIRECTS_HISTORY_DIR: fixture("redirects"),
         CATALOG_PREP: fixture("catalog_prep"),
         TMPDIR: fixture("work"),
-        SOLR_URL: "http://solr-sdr-catalog:9033/solr/catalog",
+        SOLR_URL: "http://solr:SolrRocks@solr-sdr-catalog:9033/solr/catalog",
         TZ: "America/Detroit"
       ) do
         stub_catalog_timerange("2024-12-03T05:00:00Z", 3)

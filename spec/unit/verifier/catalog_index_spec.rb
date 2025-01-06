@@ -13,7 +13,7 @@ module PostZephirProcessing
     around(:each) do |example|
       with_test_environment do
         ClimateControl.modify(
-          SOLR_URL: solr_url,
+          SOLR_URL: "http://solr:SolrRocks@solr-sdr-catalog:9033/solr/catalog",
           CATALOG_ARCHIVE: fixture("catalog_archive"),
           TZ: "America/Detroit"
         ) do

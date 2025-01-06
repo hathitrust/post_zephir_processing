@@ -19,6 +19,7 @@ RSpec.shared_context "with solr mocking" do
     }.to_json
 
     WebMock::API.stub_request(:get, url)
+      .with(basic_auth: ['solr','SolrRocks'])
       .to_return(body: result, headers: {"Content-Type" => "application/json"})
   end
 

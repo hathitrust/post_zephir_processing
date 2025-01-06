@@ -41,12 +41,22 @@ module PostZephirProcessing
     end
 
     def solr_result_count(filter_query)
-      url = "#{ENV["SOLR_URL"]}/select?fq=#{URI.encode_www_form_component(filter_query)}&q=*:*&rows=0&wt=json"
-      body = Faraday.get(url).body
+      url = URI.parse(ENV["SOLR_URL"])
+      # duplicate the URL since Faraday will mutate the passed URL to remove
+      # the username & password from it ... which probably makes sense for a security
+      # reason, but isn't what we want.
+      conn = Faraday.new(url: url.dup)
+      conn.set_basic_auth(url.user, url.password)
+      params = {fq: filter_query, 
+                q: '*:*', 
+                rows: '0', 
+                wt: 'json'}
+      body = conn.get('select', params).body
+
       begin
         JSON.parse(body)["response"]["numFound"]
       rescue JSON::ParserError => e
-        error(message: "could not parse response from #{url}: #{body} (#{e})")
+        error(message: "could not parse response from #{conn.url_prefix}: #{body} (#{e})")
         0
       end
     end
