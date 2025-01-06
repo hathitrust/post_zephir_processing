@@ -47,11 +47,11 @@ module PostZephirProcessing
       # reason, but isn't what we want.
       conn = Faraday.new(url: url.dup)
       conn.set_basic_auth(url.user, url.password)
-      params = {fq: filter_query, 
-                q: '*:*', 
-                rows: '0', 
-                wt: 'json'}
-      body = conn.get('select', params).body
+      params = {fq: filter_query,
+                q: "*:*",
+                rows: "0",
+                wt: "json"}
+      body = conn.get("select", params).body
 
       begin
         JSON.parse(body)["response"]["numFound"]
