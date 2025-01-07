@@ -83,11 +83,13 @@ ls -l $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT
 run_external_command "unpigz -c $ZEPHIR_DATA/$ZEPHIR_VUFIND_EXPORT | split -l $SPLITCOUNT - zephir_full_monthly_"
 
 file_list=`ls zephir_full_monthly_??`
+monthly_success_interval=$((86400 * 31 + 3600 * 8))
 
 for file in $file_list; do
   echo "`date`: processing file $file"
   # TODO: wait to finalize until all of these have run?
-  cmd="JOB_APP=run_zephir_full_monthly JOB_NAME=\"$file\" $ROOTDIR/postZephir.pm -z 1 -i $file -o ${file}_out -r ${file}.rights -d -f $RIGHTS_DBM &> ${file}_stderr &"
+  # monthly -- 31 days + 8 hours slop
+  cmd="JOB_APP=run_zephir_full_monthly JOB_SUCCESS_INTERVAL=$monthly_success_interval JOB_NAME=\"$file\" $ROOTDIR/postZephir.pm -z 1 -i $file -o ${file}_out -r ${file}.rights -d -f $RIGHTS_DBM &> ${file}_stderr &"
   run_external_command $cmd
 done
 
