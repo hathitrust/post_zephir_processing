@@ -28,6 +28,6 @@ RSpec.shared_context "with solr mocking" do
   end
 
   def stub_catalog_timerange(datebegin, result_count)
-    stub_solr_count(fq: "time_of_index:[#{datebegin} TO NOW]", result_count: result_count)
+    stub_solr_count(fq: "time_of_index:[#{datebegin} TO NOW] AND deleted:false", result_count: result_count)
   end
 end

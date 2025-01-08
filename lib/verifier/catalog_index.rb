@@ -33,7 +33,7 @@ module PostZephirProcessing
 
     def solr_count(date_of_indexing)
       datebegin = date_of_indexing.to_time.utc.strftime("%FT%TZ")
-      solr_result_count("time_of_index:[#{datebegin} TO NOW]")
+      solr_result_count("time_of_index:[#{datebegin} TO NOW] AND deleted:false")
     end
 
     def solr_nondeleted_records
