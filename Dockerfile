@@ -21,6 +21,7 @@ RUN apt-get update && apt-get install -y \
     libmarc-perl \
     libmarc-record-perl \
     libmarc-xml-perl \
+    libmariadb-dev \
     libnet-ssleay-perl \
     libtest-output-perl \
     libwww-perl \
@@ -39,7 +40,7 @@ RUN cpanm --notest \
 # Ruby setup
 ENV BUNDLE_PATH /gems
 ENV RUBYLIB /usr/src/app/lib
-RUN gem install bundler
+RUN gem install bundler --version "~> 2.5.23"
 RUN bundle config --global silence_root_warning 1
 RUN bundle install
 

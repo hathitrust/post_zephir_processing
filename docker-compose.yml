@@ -19,7 +19,9 @@ services:
       mariadb: *healthy
       pushgateway: *healthy
     environment:
+      DATA_ROOT: "/usr/src/app/data"
       DB_CONNECTION_STRING: "mysql2://ht_rights:ht_rights@mariadb/ht"
+      POST_ZEPHIR_PROCESSING_LOGGER_LEVEL: "1"
       PUSHGATEWAY: "http://pushgateway:9091"
     command:
       - /bin/bash
@@ -33,8 +35,15 @@ services:
       mariadb: *healthy
       pushgateway: *healthy
     environment:
+      - DATA_ROOT=/usr/src/app/data
       - DB_CONNECTION_STRING="mysql2://ht_rights:ht_rights@mariadb/ht"
+      - POST_ZEPHIR_PROCESSING_LOGGER_LEVEL=1
       - PUSHGATEWAY="http://pushgateway:9091"
+      - DB_HT_RO_USER=ht_rights
+      - DB_HT_RO_PASSWORD=ht_rights
+      - DB_HT_RO_HOST=mariadb
+      - DB_HT_RO_PORT=3306
+      - DB_HT_RO_DATABASE=ht
       # pass through info needed by coveralls uploader
       - GITHUB_TOKEN
       - GITHUB_RUN_ID
@@ -49,6 +58,7 @@ services:
     image: ghcr.io/hathitrust/db-image:latest
     volumes:
       - ./sql/ingest.sql:/docker-entrypoint-initdb.d/999-ingest.sql
+      - ./sql/hathifiles.sql:/docker-entrypoint-initdb.d/999-hathifiles.sql
     restart: always
     environment:
       # setting via MYSQL_ROOT_PASSWORD didn't work; this at least

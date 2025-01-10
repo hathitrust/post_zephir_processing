@@ -1,8 +1,23 @@
 # frozen_string_literal: true
 
+require "climate_control"
+require "dotenv"
 require "logger"
+require "tmpdir"
+require "tempfile"
 require "simplecov"
 require "simplecov-lcov"
+require "webmock/rspec"
+require "zlib"
+
+require "dates"
+require "journal"
+require "verifier"
+
+require "support/solr_mock"
+require "support/hathifile_database"
+
+Dotenv.load(File.join(ENV.fetch("ROOTDIR"), "config", "env"))
 
 SimpleCov.add_filter "spec"
 
@@ -16,74 +31,91 @@ SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new([
 ])
 SimpleCov.start
 
-require_relative "../lib/dates"
-require_relative "../lib/derivatives"
+# squelch log output from tests
+PostZephirProcessing::Services.register(:logger) {
+  Logger.new(File.open(File::NULL, "w"), level: Logger::DEBUG)
+}
 
-ENV["POST_ZEPHIR_LOGGER_LEVEL"] = Logger::WARN.to_s
-
-def catalog_prep_dir
-  File.join(ENV["SPEC_TMPDIR"], "catalog_prep")
+def test_journal
+  <<~TEST_YAML
+    ---
+    - '20500101'
+    - '20500102'
+  TEST_YAML
 end
 
-def rights_dir
-  File.join(ENV["SPEC_TMPDIR"], "rights")
+def test_journal_dates
+  [Date.new(2050, 1, 1), Date.new(2050, 1, 2)]
 end
 
-def rights_archive_dir
-  File.join(ENV["SPEC_TMPDIR"], "rights_archive")
-end
-
-# Set the all-important SPEC_TMPDIR and derivative env vars,
-# and populate test dir with the appropriate directories.
-# FIXME: RIGHTS_DIR should no longer be needed for testing Derivatives,
-# and may not be needed for testing Verifier and friends.
-def setup_test_dirs(parent_dir:)
-  ENV["SPEC_TMPDIR"] = parent_dir
-  ENV["CATALOG_PREP"] = catalog_prep_dir
-  ENV["RIGHTS_DIR"] = rights_dir
-  ENV["RIGHTS_ARCHIVE"] = rights_archive_dir
-  [catalog_prep_dir, rights_dir, rights_archive_dir].each do |loc|
-    Dir.mkdir loc
+# Note potential pitfall:
+# Setting ENV["TMPDIR"] has an effect on Ruby's choice of temporary directory locations.
+# See https://github.com/ruby/ruby/blob/f4476f0d07c781c906ed1353d8e1be5a7314d6e7/lib/tmpdir.rb#L130
+# So if you see mktmpdir yielding a location in spec/fixtures then it's likely
+# TMPDIR has been defined, maybe in an `around` block, before the call to `with_test_environment`.
+# Currently it is not happening but it can when noodling around with test setups.
+# It's not a critical problem, but might nudge us in the direction of moving away from using
+# TMPDIR in the PZP internals.
+# Could also try wrapping the mktmpdir in another Climate Control layer.
+def with_test_environment
+  Dir.mktmpdir do |tmpdir|
+    ClimateControl.modify(
+      DATA_ROOT: tmpdir,
+      TMPDIR: tmpdir
+    ) do
+      # Maybe we don't need to yield `tmpdir` since we're also assigning it to an
+      # instance variable. Leaving it for now in case the ivar approach leads to funny business.
+      @tmpdir = tmpdir
+      yield tmpdir
+    end
   end
 end
 
-def full_file_for_date(date:)
-  File.join(catalog_prep_dir, "zephir_full_#{date.strftime("%Y%m%d")}_vufind.json.gz")
+def write_gzipped(tmpfile, contents)
+  gz = Zlib::GzipWriter.new(tmpfile)
+  gz.write(contents)
+  gz.close
 end
 
-def full_rights_file_for_date(date:, archive: true)
-  File.join(
-    archive ? rights_archive_dir : rights_dir,
-    "zephir_full_#{date.strftime("%Y%m%d")}.rights"
-  )
-end
-
-def update_file_for_date(date:)
-  File.join(catalog_prep_dir, "zephir_upd_#{date.strftime("%Y%m%d")}.json.gz")
-end
-
-def delete_file_for_date(date:)
-  File.join(catalog_prep_dir, "zephir_upd_#{date.strftime("%Y%m%d")}_delete.txt.gz")
-end
-
-def update_rights_file_for_date(date:, archive: true)
-  File.join(
-    archive ? rights_archive_dir : rights_dir,
-    "zephir_upd_#{date.strftime("%Y%m%d")}.rights"
-  )
-end
-
-# @param date [Date] determines the month and year for the file datestamps
-def setup_test_files(date:)
-  start_date = Date.new(date.year, date.month - 1, -1)
-  `touch #{full_file_for_date(date: start_date)}`
-  `touch #{full_rights_file_for_date(date: start_date)}`
-  end_date = Date.new(date.year, date.month, -2)
-  (start_date..end_date).each do |d|
-    `touch #{update_file_for_date(date: d)}`
-    `touch #{delete_file_for_date(date: d)}`
-    `touch #{update_rights_file_for_date(date: d)}`
+def with_temp_file(contents, gzipped: false)
+  Tempfile.create("tempfile") do |tmpfile|
+    if gzipped
+      write_gzipped(tmpfile, contents)
+    else
+      tmpfile.write(contents)
+    end
+    tmpfile.close
+    yield tmpfile.path
   end
+end
+
+def expect_not_ok(method, contents, errmsg: /.*/, gzipped: false, check_return: false)
+  with_temp_file(contents, gzipped: gzipped) do |tmpfile|
+    verifier = described_class.new
+    result = verifier.send(method, path: tmpfile)
+    expect(verifier.errors).to include(errmsg)
+    if check_return
+      expect(result).to be false
+    end
+  end
+end
+
+def expect_ok(method, contents, gzipped: false, check_return: false)
+  with_temp_file(contents, gzipped: gzipped) do |tmpfile|
+    verifier = described_class.new
+    result = verifier.send(method, path: tmpfile)
+    expect(verifier.errors).to be_empty
+    if check_return
+      expect(result).to be true
+    end
+  end
+end
+
+# Returns the full path to the given fixture file.
+#
+# @param file [String]
+def fixture(file)
+  File.join(File.dirname(__FILE__), "fixtures", file)
 end
 
 # The following RSpec boilerplate tends to recur across HathiTrust Ruby test suites.
