@@ -54,5 +54,13 @@ module PostZephirProcessing
         expect_not_ok(:verify_hathifile_contents, contents, errmsg: /.*columns.*/, gzipped: true)
       end
     end
+
+    describe "#catalog_source" do
+      it "has the correct datestamp" do
+        hathifile_derivative = Derivative::Hathifile.new(date: Date.today, full: false)
+        catalog_derivative = described_class.new.catalog_source(hathifile: hathifile_derivative)
+        expect(catalog_derivative.datestamp).to eq(hathifile_derivative.datestamp - 1)
+      end
+    end
   end
 end

@@ -30,9 +30,16 @@ module PostZephirProcessing
         path = derivative.path
         next unless verify_file(path: path)
         contents_verifier = verify_hathifile_contents(path: path)
-        catalog_path = Derivative::CatalogArchive.new(date: date - 1, full: derivative.full).path
+        catalog_path = catalog_source(hathifile: derivative).path
         verify_hathifile_linecount(contents_verifier.line_count, catalog_path: catalog_path)
       end
+    end
+
+    # The post-Zephir catalog whence the hathifile was derived
+    # @param hathifile [Derivative::Hathifile]
+    # @return [Derivative::CatalogArchive]
+    def catalog_source(hathifile:)
+      Derivative::CatalogArchive.new(date: hathifile.date, full: hathifile.full)
     end
 
     def verify_hathifile_linecount(linecount, catalog_path:)
