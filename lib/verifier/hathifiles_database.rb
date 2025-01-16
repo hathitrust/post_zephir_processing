@@ -39,7 +39,8 @@ module PostZephirProcessing
         next unless File.exist?(d.path)
 
         if !self.class.has_log?(hathifile: d.path)
-          error message: "missing hf_log: no entry for #{d.path}"
+          recent = Services[:database][:hf_log].order(Sequel.desc(:time)).limit(5).all
+          error message: "missing hf_log: no entry for #{d.path} (most recent: #{recent})"
         end
       end
     end
