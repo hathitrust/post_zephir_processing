@@ -35,7 +35,7 @@ RUN apt-get update && apt-get install -y \
 # Install perl modules that we cannot get with apt-get
 RUN cpanm --notest \
     Devel::Cover::Report::Coveralls \
-    https://github.com/hathitrust/progress_tracker.git@v0.11.0
+    https://github.com/hathitrust/progress_tracker.git@v0.11.1
 
 # Ruby setup
 ENV BUNDLE_PATH /gems
