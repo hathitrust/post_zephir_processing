@@ -16,11 +16,10 @@ module PostZephirProcessing
   Services.register(:database) do
     Sequel.connect(
       adapter: "mysql2",
-      user: ENV["DB_HT_RO_USER"],
-      password: ENV["DB_HT_RO_PASSWORD"],
-      host: ENV["DB_HT_RO_HOST"],
-      port: ENV["DB_HT_RO_PORT"],
-      database: ENV["DB_HT_RO_DATABASE"],
+      user: ENV["MARIADB_HT_RO_USERNAME"],
+      password: ENV["MARIADB_HT_RO_PASSWORD"],
+      host: ENV["MARIADB_HT_RO_HOST"],
+      database: ENV["MARIADB_HT_RO_DATABASE"],
       encoding: "utf8mb4"
     )
   end

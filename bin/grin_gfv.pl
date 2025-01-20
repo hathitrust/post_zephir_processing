@@ -19,12 +19,15 @@
 use strict;
 use warnings;
 
+use lib "$ENV{ROOTDIR}/perl_lib";
+
 use Date::Manip qw(ParseDate UnixDate);
-use DBI;
 use Getopt::Long;
 use Mail::Mailer;
 use ProgressTracker;
 use YAML::XS;
+
+use Database;
 
 my $noop         = undef; # set with --noop
 my $mailer       = undef;
@@ -40,10 +43,9 @@ my $user         = 'libadm';
 # config
 my $config_dir   = $ENV{CONFIG_DIR} || '/usr/src/app/config';
 my $config_yaml  = "$config_dir/rights.yml";
-my $db_yaml      = "$config_dir/database.yml";
 my $config       = YAML::XS::LoadFile($config_yaml);
 my $rights_dir   = $config->{rights}->{rights_dir};
-my $dbh          = get_dbh();
+my $dbh          = Database::get_rights_rw_dbh();
 
 GetOptions(
     # skip update queries, emails, log file & tracker
@@ -184,26 +186,4 @@ sub new_mailer {
     };
 
     $mailer->open($email);
-}
-
-# Inspired by HTFeed::DBTools::_init
-sub get_dbh {
-    my $db_conf  = YAML::XS::LoadFile($db_yaml);
-    my $dbname   = $db_conf->{dbname};
-    my $hostname = $db_conf->{hostname};
-    my $dbuser   = $db_conf->{user};
-    my $passwd   = $db_conf->{password};
-
-    my $extra_params = {
-        'RaiseError' => 1,
-    };
-
-    my $dbh = DBI->connect(
-        "DBI:MariaDB:$dbname:$hostname",
-        $dbuser,
-        $passwd,
-        $extra_params
-    );
-
-    return $dbh;
 }

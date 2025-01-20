@@ -20,7 +20,6 @@ services:
       pushgateway: *healthy
     environment:
       DATA_ROOT: "/usr/src/app/data"
-      DB_CONNECTION_STRING: "mysql2://ht_rights:ht_rights@mariadb/ht"
       POST_ZEPHIR_PROCESSING_LOGGER_LEVEL: "1"
       PUSHGATEWAY: "http://pushgateway:9091"
     command:
@@ -36,14 +35,16 @@ services:
       pushgateway: *healthy
     environment:
       - DATA_ROOT=/usr/src/app/data
-      - DB_CONNECTION_STRING="mysql2://ht_rights:ht_rights@mariadb/ht"
       - POST_ZEPHIR_PROCESSING_LOGGER_LEVEL=1
       - PUSHGATEWAY="http://pushgateway:9091"
-      - DB_HT_RO_USER=ht_rights
-      - DB_HT_RO_PASSWORD=ht_rights
-      - DB_HT_RO_HOST=mariadb
-      - DB_HT_RO_PORT=3306
-      - DB_HT_RO_DATABASE=ht
+      - MARIADB_HT_RO_USERNAME=ht_rights
+      - MARIADB_HT_RO_PASSWORD=ht_rights
+      - MARIADB_HT_RO_HOST=mariadb
+      - MARIADB_HT_RO_DATABASE=ht
+      - MARIADB_RIGHTS_RW_USERNAME=ht_rights
+      - MARIADB_RIGHTS_RW_PASSWORD=ht_rights
+      - MARIADB_RIGHTS_RW_HOST=mariadb
+      - MARIADB_RIGHTS_RW_DATABASE=ht
       # pass through info needed by coveralls uploader
       - GITHUB_TOKEN
       - GITHUB_RUN_ID

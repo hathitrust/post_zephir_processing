@@ -3,38 +3,24 @@
 use strict;
 use warnings;
 use utf8;
+
+use lib "$ENV{ROOTDIR}/perl_lib";
+
 use DBI;
 use Encode qw(encode);
 use Test::More;
 use YAML;
+
+use Database;
 
 # This test is here as an example to help characterize the behavior of the
 # database connection and ensure that we can process UTF-8 at least from the
 # perl side. YMMV in production as it might be a different version of mariadb
 # with different settings, etc.
 
-sub get_dbh {
-  my $db_conf  = YAML::LoadFile("/usr/src/app/config/database.yml");
-  my $dbname   = $db_conf->{dbname};
-  my $hostname = $db_conf->{hostname};
-  my $user     = $db_conf->{user};
-  my $passwd   = $db_conf->{password};
 
-    my $extra_params = {
-        'RaiseError'          => 1,
-    };
 
-    my $dbh = DBI->connect(
-        "DBI:MariaDB:$dbname:$hostname",
-        $user,
-        $passwd,
-        $extra_params
-    );
-
-    return $dbh;
-}
-
-my $dbh = get_dbh();
+my $dbh = Database::get_rights_rw_dbh;
 
 subtest "UTF-8 support for ht_rights" => sub {
   my @tables = ('rights_current', 'rights_log');
