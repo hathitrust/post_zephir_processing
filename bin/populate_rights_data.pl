@@ -3,8 +3,7 @@
 use strict;
 use warnings;
 
-use FindBin;
-use lib "$FindBin::Bin/../lib";
+use lib "$ENV{ROOTDIR}/perl_lib";
 
 use Date::Manip;
 use DBI;
@@ -12,6 +11,8 @@ use Getopt::Long;
 use Pod::Usage;
 use ProgressTracker;
 use YAML::XS;
+
+use Database;
 
 # Set up precedence. New rights with >= precedence are allowed to override.
 # PRIORITY_MAN is special - a note must be set.
@@ -59,7 +60,6 @@ my $mock_tracker       = 0;
 # read config from yaml
 my $config_dir  = $ENV{CONFIG_DIR} || '/usr/src/app/config';
 my $config_yaml = "$config_dir/rights.yml";
-my $db_yaml     = "$config_dir/database.yml";
 my $config      = YAML::XS::LoadFile($config_yaml);
 my $archive     = $config->{rights}->{archive};
 my $rights_dir  = $config->{rights}->{rights_dir};
@@ -129,7 +129,7 @@ if (! $data) {
 }
 
 if (@rights_files) {
-    $dbh = get_dbh();
+    $dbh = Database::get_rights_rw_dbh();
     prepare_statements();
 
     foreach my $file (@rights_files) {
@@ -572,27 +572,6 @@ sub export_barcodes {
     foreach my $htid (@$htids) {
         print $fh $htid, "\n";
     }
-}
-
-sub get_dbh {
-  my $db_conf  = YAML::XS::LoadFile($db_yaml);
-  my $dbname   = $db_conf->{dbname};
-  my $hostname = $db_conf->{hostname};
-  my $user     = $db_conf->{user};
-  my $passwd   = $db_conf->{password};
-
-    my $extra_params = {
-        'RaiseError'          => 1,
-    };
-
-    my $dbh = DBI->connect(
-        "DBI:MariaDB:$dbname:$hostname",
-        $user,
-        $passwd,
-        $extra_params
-    );
-
-    return $dbh;
 }
 
 

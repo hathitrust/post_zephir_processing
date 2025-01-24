@@ -3,11 +3,12 @@ package rightsDB;
 use strict;
 no strict 'refs';
 no strict 'subs';
-#use Sys::Hostname;
-use DBI;
-#use Data::Dumper;
+
+use lib "$ENV{ROOTDIR}/perl_lib";
+
 use File::Basename;
 use YAML;
+use Database;
 
 sub new {
   my $class = shift;
@@ -15,11 +16,8 @@ sub new {
 
   my $self;
 
-  # config
-  my $config_path = dirname(__FILE__) . '/config/database.yml';
-  my %config = %{ YAML::LoadFile($config_path) };
   # globals
-  my $sdr_dbh = ConnectToSdrDb($config{user}, $config{password}, $config{hostname}, $config{dbname});
+  my $sdr_dbh = Database::get_ht_ro_dbh;
   my $sdr_sth = InitSdrSth($sdr_dbh);
   $self->{sdr_dbh} = $sdr_dbh;
   $self->{sdr_sth} = $sdr_sth;
@@ -31,20 +29,6 @@ sub new {
   $self->{access_profile_table} = getAccessProfileTable($self);
 
   return bless $self, $class;
-}
-
-sub ConnectToSdrDb
-{
-     my $db_user   = shift;
-     my $db_passwd = shift;
-     my $db_server = shift;
-     my $db_name   = shift;
-
-     my $sdr_dbh;
-     $sdr_dbh   = DBI->connect( "DBI:MariaDB:$db_name:$db_server", $db_user, $db_passwd,
-               { RaiseError => 0, AutoCommit => 1 } ) || die "Cannot connect: $DBI::errstr";
-
-     return $sdr_dbh;
 }
 
 sub InitSdrSth {
