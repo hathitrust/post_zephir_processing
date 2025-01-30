@@ -153,7 +153,7 @@ module PostZephirProcessing
     # * exist & be be readable (both covered by verify_rights)
     # * either be empty, or all its lines must match regex.
     def verify_rights_file_format(path:)
-      line_regex = /^ [a-z0-9]+ \. [a-z0-9:\/\$\.]+ # col 1, namespace.objid
+      line_regex = /^ [a-z0-9]+ \. \S+ # col 1, namespace.objid
               \t (ic|pd|pdus|und)              # col 2, one of these
               \t bib                           # col 3, exactly this
               \t bibrights                     # col 4, exactly this

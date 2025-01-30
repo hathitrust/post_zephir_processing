@@ -351,13 +351,24 @@ module PostZephirProcessing
 
       volids_not_ok = ["", "x", "x.", ".x", "X.X"]
       volids_not_ok.each do |bad_volume_id|
-        it "rejects a file with malformed volume id" do
+        it "rejects a file with malformed volume id #{bad_volume_id}" do
           rights_cols[0] = bad_volume_id
 
           expect_not_ok(
             :verify_rights_file_format,
             rights_cols.join("\t"),
             errmsg: /invalid column id/
+          )
+        end
+      end
+
+      ["uiuc.0001_001_001", "uc1.$b123456", "miun.aaa0001.001.001", "ucbk.ark:/28722/h2b854467"].each do |ok_volume_id|
+        it "accepts a file with non-alphanumeric htid #{ok_volume_id}" do
+          rights_cols[0] = ok_volume_id
+
+          expect_ok(
+            :verify_rights_file_format,
+            rights_cols.join("\t")
           )
         end
       end
