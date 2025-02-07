@@ -157,12 +157,12 @@ module PostZephirProcessing
               \t (ic|pd|pdus|und)              # col 2, one of these
               \t bib                           # col 3, exactly this
               \t bibrights                     # col 4, exactly this
-              \t [a-z]+(-[a-z]+)*              # col 5, digitization source, e.g. 'ia', 'cornell-ms'
+              \t [a-z\d+]+(-[a-z\d+]+)*              # col 5, digitization source, e.g. 'ia', 'cornell-ms'
               $/x
 
       # A column-by column version of line_regex
       column_regexes = [
-        {name: :id, regex: /^[a-z0-9]+\.[a-z0-9:\/\$\.]+$/},
+        {name: :id, regex: /^[a-z0-9]+\.\S+$/},
         {name: :rights, regex: /^(ic|pd|pdus|und)$/},
         {name: :bib, regex: /^bib$/},
         {name: :bibrights, regex: /^bibrights$/},
