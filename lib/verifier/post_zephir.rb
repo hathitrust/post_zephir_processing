@@ -162,11 +162,11 @@ module PostZephirProcessing
 
       # A column-by column version of line_regex
       column_regexes = [
-        {name: :id, regex: /^[a-z0-9]+\.[a-z0-9:\/\$\.]+s$/},
+        {name: :id, regex: /^[a-z0-9]+\.[a-z0-9:\/\$\.]+$/},
         {name: :rights, regex: /^(ic|pd|pdus|und)$/},
         {name: :bib, regex: /^bib$/},
         {name: :bibrights, regex: /^bibrights$/},
-        {name: :digitization_source, regex: /^[a-z]+(-[a-z]+)*$/}
+        {name: :digitization_source, regex: /^[a-z\d]+(-[a-z\d]+)*$/}
       ]
 
       info message: "verifying contents of #{path}"

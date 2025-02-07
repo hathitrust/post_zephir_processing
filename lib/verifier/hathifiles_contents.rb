@@ -57,7 +57,7 @@ module PostZephirProcessing
       # collection code - required, uppercase characters
       {name: "collection_code", regex: /^[A-Z]+$/},
       # content provider - required, lowercase characters + dash
-      {name: "content_provider_code", regex: /^[a-z\-]+$/},
+      {name: "content_provider_code", regex: /^[a-z\-_]+$/},
       # responsible entity code - required, lowercase characters + dash
       {name: "responsible_entity_code", regex: /^[a-z\-]+$/},
       # digitization agent code - required, lowercase characters + dash and optional trailing digit (yale2)
