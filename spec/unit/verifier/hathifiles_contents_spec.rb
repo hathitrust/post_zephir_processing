@@ -208,5 +208,12 @@ module PostZephirProcessing
         end
       end
     end
+
+    it "accepts a file with content_provider_code ht_private" do
+      sample_fields[hathifiles_fields.find_index { |f| f[:name] == "content_provider_code" }] = "ht_private"
+
+      verifier.verify_fields(sample_fields)
+      expect(verifier.errors).to be_empty
+    end
   end
 end

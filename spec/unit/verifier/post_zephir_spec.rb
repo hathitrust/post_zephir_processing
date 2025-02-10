@@ -408,6 +408,11 @@ module PostZephirProcessing
         expect_ok(:verify_rights_file_format, rights_cols.join("\t"))
       end
 
+      it "accepts a file with yale2 digitization source" do
+        rights_cols[4] = "yale2"
+        expect_ok(:verify_rights_file_format, rights_cols.join("\t"))
+      end
+
       not_ok_dig_sources = ["", "-aa", "aa-", "AA"]
       not_ok_dig_sources.each do |bad_dig_source|
         it "rejects a file with malformed digitization source (#{bad_dig_source})" do
