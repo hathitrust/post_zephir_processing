@@ -163,6 +163,7 @@ close($fh);
 unless ($noop) {
     # Send the second email and we're done
     $mailer = new_mailer("Old pdus/gfv volumes no longer VIEW_FULL");
+    print $mailer "$email_body";
     $mailer->close() or warn("Couldn't send message: $!");
 }
 
