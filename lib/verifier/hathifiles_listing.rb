@@ -3,7 +3,6 @@
 require "verifier"
 require "derivative/hathifile_www"
 require "json"
-require "set"
 
 module PostZephirProcessing
   class Verifier::HathifilesListing < Verifier
