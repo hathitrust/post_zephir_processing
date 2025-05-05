@@ -1,4 +1,4 @@
-FROM debian:bookworm
+FROM ruby:3.4
 
 ENV ROOTDIR /usr/src/app
 ENV HOME /usr/src/app
