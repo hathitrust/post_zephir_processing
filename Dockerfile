@@ -34,14 +34,14 @@ RUN cpanm --notest \
     Devel::Cover::Report::Coveralls \
     https://github.com/hathitrust/progress_tracker.git@v0.11.1
 
+COPY . $ROOTDIR
+WORKDIR $ROOTDIR
+
 # Ruby setup
 ENV BUNDLE_PATH /gems
 ENV RUBYLIB /usr/src/app/lib
 RUN gem install bundler --version "~> 2.5.23"
 RUN bundle config --global silence_root_warning 1
 RUN bundle install
-
-COPY . $ROOTDIR
-WORKDIR $ROOTDIR
 
 CMD run_process_zephir_incremental.sh
