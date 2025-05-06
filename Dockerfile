@@ -3,9 +3,6 @@ FROM ruby:3.4
 ENV ROOTDIR /usr/src/app
 ENV HOME /usr/src/app
 
-COPY . $ROOTDIR
-WORKDIR $ROOTDIR
-
 # Install Debian packages
 RUN apt-get update && apt-get install -y \
     bsd-mailx \
@@ -43,5 +40,8 @@ ENV RUBYLIB /usr/src/app/lib
 RUN gem install bundler --version "~> 2.5.23"
 RUN bundle config --global silence_root_warning 1
 RUN bundle install
+
+COPY . $ROOTDIR
+WORKDIR $ROOTDIR
 
 CMD run_process_zephir_incremental.sh
