@@ -3,9 +3,6 @@ FROM ruby:3.4
 ENV ROOTDIR /usr/src/app
 ENV HOME /usr/src/app
 
-COPY . $ROOTDIR
-WORKDIR $ROOTDIR
-
 # Install Debian packages
 RUN apt-get update && apt-get install -y \
     bsd-mailx \
@@ -36,6 +33,9 @@ RUN apt-get update && apt-get install -y \
 RUN cpanm --notest \
     Devel::Cover::Report::Coveralls \
     https://github.com/hathitrust/progress_tracker.git@v0.11.1
+
+COPY . $ROOTDIR
+WORKDIR $ROOTDIR
 
 # Ruby setup
 ENV BUNDLE_PATH /gems
