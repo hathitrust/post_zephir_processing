@@ -150,6 +150,28 @@ module PostZephirProcessing
           expect(verifier.errors).to include(/catalog archive line count .+ != bib export line count/)
         end
       end
+
+      it "handles input/output line count mismatch if there are suppressed records" do
+        ClimateControl.modify(ZEPHIR_DATA: "/tmp/test/zephir_data") do
+          FileUtils.mkdir_p(ENV["ZEPHIR_DATA"])
+          # Make a temporary ht_bib_export with 6 lines, which is 1 longer than the derivative
+          Zlib::GzipWriter.open(File.join(ENV["ZEPHIR_DATA"], "ht_bib_export_full_2024-11-30.json.gz")) do |gz|
+            6.times do |i|
+              gz.puts "{ \"this file\": \"too long\" }"
+            end
+          end
+          # Make a paper trail to our suppressed sixth record
+          # Location copied from zephir_full_monthly_rpt_txt private method
+          FileUtils.mkdir_p(File.join(ENV["ZEPHIR_DATA"], "full"))
+          File.open(File.join(ENV["ZEPHIR_DATA"], "full", "zephir_full_monthly_rpt.txt"), "w") do |rpt|
+            rpt.puts "0000000:000000000 (000000): no unsuppressed 974 fields in record--not written"
+          end
+          # The additional record in the original can be found in the monthly_rpt.txt so there should
+          # be no error
+          verifier.verify_catalog_archive(date: test_date)
+          expect(verifier.errors.count).to eq 0
+        end
+      end
     end
 
     describe "#verify_catalog_prep" do
