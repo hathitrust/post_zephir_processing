@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "open3"
 require "zlib"
 require "verifier"
 require "post_zephir_derivatives"
@@ -202,12 +203,14 @@ module PostZephirProcessing
     # Only applies to monthly files.
     def count_suppressed_records(derivative:)
       if derivative.full?
-        rpt = zephir_full_monthly_rpt_txt
-        if File.exist?(rpt)
+        if File.exist?(zephir_full_monthly_rpt_txt)
           cmd = "grep -c no.unsuppressed.*not.written #{zephir_full_monthly_rpt_txt}"
-          delta = `#{cmd}`
-          if $?.to_i.zero?
-            return delta.to_i
+          stdout_str, stderr_str, status = Open3.capture3(cmd)
+          if status.success?
+            # With the -c option we should reliably just get a number from STDOUT
+            return stdout_str.chomp.to_i
+          else
+            error message: "count_suppressed_records: status #{status.exitstatus}, STDERR '#{stderr_str.chomp}' (#{cmd})"
           end
         end
       end
@@ -217,7 +220,7 @@ module PostZephirProcessing
     # This is a non-datestamped file written by postZephir.pm and moved into position
     # by run_zephir_full_monthly.sh` (around line 150)
     def zephir_full_monthly_rpt_txt
-      File.join(ENV["ZEPHIR_DATA"], "full", "zephir_full_monthly_rpt.txt")
+      @zephir_full_monthly_rpt_txt ||= File.join(ENV["ZEPHIR_DATA"], "full", "zephir_full_monthly_rpt.txt")
     end
   end
 end
