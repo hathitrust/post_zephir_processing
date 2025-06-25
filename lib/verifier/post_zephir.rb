@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "open3"
 require "zlib"
 require "verifier"
 require "post_zephir_derivatives"
@@ -32,7 +33,9 @@ module PostZephirProcessing
     # Contents: ndj file with one catalog record per line
     # Verify:
     #   readable
-    #   line count must be the same as input JSON
+    #   line count must be the same as input JSON minus suppressed records,
+    #     which are only detectable in the monthly logfile as it's the only
+    #     one that is moved to a proper storage location
     def verify_catalog_archive(date: current_date)
       Derivative::CatalogArchive.derivatives_for_date(date: date).each do |derivative|
         next unless verify_file(path: derivative.path)
@@ -43,12 +46,14 @@ module PostZephirProcessing
         next unless verify_file(path: bib_export_path)
 
         bib_export_linecount = gzip_linecount(path: bib_export_path)
-        if bib_export_linecount != archive_linecount
+        expected_delta = count_suppressed_records(derivative: derivative)
+        if bib_export_linecount != archive_linecount + expected_delta
           error(
             message: sprintf(
-              "catalog archive line count (%s = %s) != bib export line count (%s = %s)",
+              "catalog archive line count (%s = %s + %s) != bib export line count (%s = %s)",
               derivative.path,
               archive_linecount,
+              expected_delta,
               bib_export_path,
               bib_export_linecount
             )
@@ -189,6 +194,33 @@ module PostZephirProcessing
         contents_verifier.run
         @errors.append(contents_verifier.errors)
       end
+    end
+
+    # Count the number of suppressed records that will be a discrepancy between
+    # catalog prep file and zephir file line counts.
+    # Records with all HTID rights set to e.g. supp/* do not get included in certain
+    # downstream activities, e.g. hathifiles and catalog indexing.
+    # Only applies to monthly files.
+    def count_suppressed_records(derivative:)
+      if derivative.full?
+        if File.exist?(zephir_full_monthly_rpt_txt)
+          cmd = "grep -c no.unsuppressed.*not.written #{zephir_full_monthly_rpt_txt}"
+          stdout_str, stderr_str, status = Open3.capture3(cmd)
+          if status.success?
+            # With the -c option we should reliably just get a number from STDOUT
+            return stdout_str.chomp.to_i
+          else
+            error message: "count_suppressed_records: status #{status.exitstatus}, STDERR '#{stderr_str.chomp}' (#{cmd})"
+          end
+        end
+      end
+      0
+    end
+
+    # This is a non-datestamped file written by postZephir.pm and moved into position
+    # by run_zephir_full_monthly.sh` (around line 150)
+    def zephir_full_monthly_rpt_txt
+      @zephir_full_monthly_rpt_txt ||= File.join(ENV["ZEPHIR_DATA"], "full", "zephir_full_monthly_rpt.txt")
     end
   end
 end
