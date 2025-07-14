@@ -201,16 +201,17 @@ module PostZephirProcessing
     # Records with all HTID rights set to e.g. supp/* do not get included in certain
     # downstream activities, e.g. hathifiles and catalog indexing.
     # Only applies to monthly files.
+    GREP_ERR = 2
     def count_suppressed_records(derivative:)
       if derivative.full?
         if File.exist?(zephir_full_monthly_rpt_txt)
           cmd = "grep -c no.unsuppressed.*not.written #{zephir_full_monthly_rpt_txt}"
           stdout_str, stderr_str, status = Open3.capture3(cmd)
-          if status.success?
+          if status.exitstatus >= GREP_ERR
+            error message: "count_suppressed_records: status #{status.exitstatus}, STDERR '#{stderr_str.chomp}' (#{cmd})"
+          else
             # With the -c option we should reliably just get a number from STDOUT
             return stdout_str.chomp.to_i
-          else
-            error message: "count_suppressed_records: status #{status.exitstatus}, STDERR '#{stderr_str.chomp}' (#{cmd})"
           end
         end
       end
