@@ -19,9 +19,17 @@ services:
       mariadb: *healthy
       pushgateway: *healthy
     environment:
-      DATA_ROOT: "/usr/src/app/data"
-      POST_ZEPHIR_PROCESSING_LOGGER_LEVEL: "1"
-      PUSHGATEWAY: "http://pushgateway:9091"
+      - DATA_ROOT=/usr/src/app/data
+      - POST_ZEPHIR_PROCESSING_LOGGER_LEVEL=1
+      - PUSHGATEWAY=http://pushgateway:9091
+      - MARIADB_HT_RO_USERNAME=ht_rights
+      - MARIADB_HT_RO_PASSWORD=ht_rights
+      - MARIADB_HT_RO_HOST=mariadb
+      - MARIADB_HT_RO_DATABASE=ht
+      - MARIADB_RIGHTS_RW_USERNAME=ht_rights
+      - MARIADB_RIGHTS_RW_PASSWORD=ht_rights
+      - MARIADB_RIGHTS_RW_HOST=mariadb
+      - MARIADB_RIGHTS_RW_DATABASE=ht
     command:
       - /bin/bash
 
