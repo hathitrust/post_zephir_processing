@@ -1,7 +1,7 @@
 FROM ruby:3.4
 
-ENV ROOTDIR /usr/src/app
-ENV HOME /usr/src/app
+ENV ROOTDIR=/usr/src/app
+ENV HOME=/usr/src/app
 
 # Install Debian packages
 RUN apt-get update && apt-get install -y \
@@ -38,10 +38,9 @@ COPY . $ROOTDIR
 WORKDIR $ROOTDIR
 
 # Ruby setup
-ENV BUNDLE_PATH /gems
-ENV RUBYLIB /usr/src/app/lib
-RUN gem install bundler --version "~> 2.5.23"
+ENV BUNDLE_PATH=/gems
+ENV RUBYLIB=/usr/src/app/lib
 RUN bundle config --global silence_root_warning 1
 RUN bundle install
 
-CMD run_process_zephir_incremental.sh
+CMD ["run_process_zephir_incremental.sh"]
