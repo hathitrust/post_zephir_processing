@@ -183,3 +183,21 @@ For test coverage, replace the previous `docker compose run` with
 ```bash
 docker compose run --rm pz bash -c "perl -MDevel::Cover=-silent,1 t/*.t && cover -nosummary /usr/src/app/cover_db"
 ```
+
+## Changes `postZephir.pm` makes to bib records
+
+`postZephir.pm` does some cleanup on records coming from Zephir and adds rights data.
+
+* removes `PST`, `LOC`, `SBL` fields (We are not sure when this might happen)
+* removes `974` fields where the rights attribute is `supp` (suppressed)
+* removes tabs and newlines from the leader, tags (e.g. `100` or `245`), control field values, and subfield values
+* replaces non-breaking spaces (unicode `U+00A0`) in the leader, control field values, subfield values, and tags with a single blank space
+* replaces non-ASCII characters in control fields with spaces
+* replaces subfield codes other than alphanumeric, `%`, `*`, `?`, or `@` with `a`. (We are not sure in what context such subfields might appear, although the [MARC specifications](https://www.loc.gov/marc/specifications/specrecstruc.html) do say that non-alphanumeric values can be used as subfield codes for local purposes
+* removes `974` fields for duplicate "dollar barcode" items - if both `uc1.b123456` and `uc1.$b123456` are present, it will remove `uc1.$b123456` - all this cleanup was completed long ago, so this shouldn't happen any more
+* if leader character 5 (record status) is `d` (deleted), changes it to `c` (corrected) 
+* adds rights to the items (`974` fields)
+	* sets `974$y` to the date the rights algorithm determined, if it determined something other than 9999
+	* sets `974$r` to the rights attribute, `974$q` to the rights reason, and `974$t` to an explanation/summary of the reason for bib-determined rights
+	* If there is a change in bib-determined rights, sets `974$d` to the current date 
+* if there are no remaining `974` fields, don't output the record
