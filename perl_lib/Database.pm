@@ -1,5 +1,9 @@
 package Database;
 
+use strict;
+use warnings;
+use utf8;
+
 # Shared utility for read-only connection to Rights DB (via views in ht database)
 # or, for populate_rights_data.pl, read-write access to the Rights DB directly.
 

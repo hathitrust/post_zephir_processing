@@ -64,7 +64,7 @@ services:
     command: prove
 
   mariadb:
-    image: ghcr.io/hathitrust/db-image:latest
+    image: ghcr.io/hathitrust/db-image:updates_aug_2025
     volumes:
       - ./sql/ingest.sql:/docker-entrypoint-initdb.d/999-ingest.sql
       - ./sql/hathifiles.sql:/docker-entrypoint-initdb.d/999-hathifiles.sql
