@@ -14,10 +14,13 @@ use grin_gfv;
 
 my $dbh = Database::get_rights_rw_dbh;
 
+# These are used by `write_reversion_from_gfv` and `write_reversion_from_gfv` tests, as well as `load_test_fixtures`
+my $rights_current_sql = 'INSERT INTO rights_current (namespace, id, attr, reason, source, access_profile) VALUES (?, ?, ?, ?, 1, 1)';
+my $rights_current_sth = $dbh->prepare($rights_current_sql);
+
 sub load_test_fixtures {
   my $fixture_data = shift;
 
-  my $rights_current_sql = 'INSERT INTO rights_current (namespace, id, attr, reason, source, access_profile) VALUES (?, ?, ?, ?, 1, 1)';
   # For reversion, create a matching rights_log entry
   my $rights_log_sql = 'INSERT INTO rights_log (namespace, id, attr, reason, source, access_profile) VALUES (?, ?, ?, ?, 1, 1)';
   # Old rights to revert to and old VIEW_FULL cases to count
@@ -26,7 +29,6 @@ sub load_test_fixtures {
     VALUES (?, ?, ?, ?, 1, 1, ?)
   SQL
   my $feed_grin_sql = 'INSERT INTO ht.feed_grin (namespace, id, viewability, claimed) VALUES (?, ?, ?, ?)';
-  my $rights_current_sth = $dbh->prepare($rights_current_sql);
   my $rights_log_sth = $dbh->prepare($rights_log_sql);
   my $old_rights_log_sth = $dbh->prepare($old_rights_log_sql);
   my $feed_grin_sth = $dbh->prepare($feed_grin_sql);
@@ -108,6 +110,22 @@ subtest 'updates_to_gfv_report' => sub {
   is($report, $expected);
 };
 
+subtest 'write_update_to_gfv' => sub {
+  my $test_namespace = 'gfvtest';
+  my $test_id = 'write_update';
+  # Insert ic/bib (2/1) row for this id which we will then update.
+  $rights_current_sth->execute($test_namespace, $test_id, 2, 1);
+  my $grin_gfv = grin_gfv->new;
+  my $update = {
+    namespace => $test_namespace,
+    id => $test_id
+  };
+  $grin_gfv->write_update_to_gfv($update);
+  my $sql = 'SELECT attr, reason FROM rights_current WHERE namespace = ? AND id = ?';
+  my $row = $dbh->selectall_arrayref($sql, undef, $test_namespace, $test_id);
+  is($row->[0]->[0], $grin_gfv::GFV_ATTR_ID);
+  is($row->[0]->[1], $grin_gfv::GFV_REASON_ID);
+};
 
 # Qualifies if gfv and (not VIEW_FULL or claimed or keio)
 # old_logs is in addition to the rights we're reverting from so the result will be old_logs + 1 for gfv_count
@@ -175,7 +193,23 @@ subtest 'reversions_from_gfv_report' => sub {
   is($report, $expected);
 };
 
+subtest 'write_reversion_from_gfv' => sub {
+  my $test_namespace = 'gfvtest';
+  my $test_id = 'write_reversion';
+  # Insert pdus/gfv row for this id which we will then revert.
+  $rights_current_sth->execute($test_namespace, $test_id, $grin_gfv::GFV_ATTR_ID, $grin_gfv::GFV_REASON_ID);
+  my $grin_gfv = grin_gfv->new;
+  my $reversion = {
+    attr => 2,
+    reason => 1,
+    namespace => $test_namespace,
+    id => $test_id
+  };
+  $grin_gfv->write_reversion_from_gfv($reversion);
+  my $sql = 'SELECT attr, reason FROM rights_current WHERE namespace = ? AND id = ?';
+  my $row = $dbh->selectall_arrayref($sql, undef, $test_namespace, $test_id);
+  is($row->[0]->[0], 2);
+  is($row->[0]->[1], 1);
+};
+
 done_testing;
-
-__END__
-

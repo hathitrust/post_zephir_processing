@@ -11,8 +11,8 @@ our $REPORT_TIME_FORMAT = "%a %b %e %T %Y";
 
 my $UPDATE_USER   = 'libadm';
 # For rights_current update ($write_update_to_gfv_sql)
-my $GFV_ATTR_ID   = 9;  # pdus
-my $GFV_REASON_ID = 12; # gfv
+our $GFV_ATTR_ID   = 9;  # pdus
+our $GFV_REASON_ID = 12; # gfv
 # For rights_current reversion update
 my $REVERSION_NOTE = 'Revert to previous attr/reason; no longer VIEW_FULL';
 
