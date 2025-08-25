@@ -113,8 +113,8 @@ subtest 'updates_to_gfv_report' => sub {
 subtest 'write_update_to_gfv' => sub {
   my $test_namespace = 'gfvtest';
   my $test_id = 'write_update';
-  # Insert ic/bib (2/1) row for this id which we will then update.
-  $rights_current_sth->execute($test_namespace, $test_id, 2, 1);
+  # Insert icus/gatt (19/17) row for this id which we will then update.
+  $rights_current_sth->execute($test_namespace, $test_id, 19, 17);
   my $grin_gfv = grin_gfv->new;
   my $update = {
     namespace => $test_namespace,
@@ -122,9 +122,9 @@ subtest 'write_update_to_gfv' => sub {
   };
   $grin_gfv->write_update_to_gfv($update);
   my $sql = 'SELECT attr, reason FROM rights_current WHERE namespace = ? AND id = ?';
-  my $row = $dbh->selectall_arrayref($sql, undef, $test_namespace, $test_id);
-  is($row->[0]->[0], $grin_gfv::GFV_ATTR_ID);
-  is($row->[0]->[1], $grin_gfv::GFV_REASON_ID);
+  my ($attr, $reason) = $dbh->selectrow_array($sql, undef, $test_namespace, $test_id);
+  is($attr, $grin_gfv::GFV_ATTR_ID);
+  is($reason, $grin_gfv::GFV_REASON_ID);
 };
 
 # Qualifies if gfv and (not VIEW_FULL or claimed or keio)
@@ -196,20 +196,20 @@ subtest 'reversions_from_gfv_report' => sub {
 subtest 'write_reversion_from_gfv' => sub {
   my $test_namespace = 'gfvtest';
   my $test_id = 'write_reversion';
-  # Insert pdus/gfv row for this id which we will then revert.
+  # Insert pdus/gfv row for this id which we will then revert to icus/gatt.
   $rights_current_sth->execute($test_namespace, $test_id, $grin_gfv::GFV_ATTR_ID, $grin_gfv::GFV_REASON_ID);
   my $grin_gfv = grin_gfv->new;
   my $reversion = {
-    attr => 2,
-    reason => 1,
+    attr => 19,
+    reason => 17,
     namespace => $test_namespace,
     id => $test_id
   };
   $grin_gfv->write_reversion_from_gfv($reversion);
   my $sql = 'SELECT attr, reason FROM rights_current WHERE namespace = ? AND id = ?';
-  my $row = $dbh->selectall_arrayref($sql, undef, $test_namespace, $test_id);
-  is($row->[0]->[0], 2);
-  is($row->[0]->[1], 1);
+  my ($attr, $reason) = $dbh->selectrow_array($sql, undef, $test_namespace, $test_id);
+  is($attr, 19);
+  is($reason, 17);
 };
 
 done_testing;
