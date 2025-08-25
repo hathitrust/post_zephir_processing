@@ -62,7 +62,7 @@ foreach my $update (@$updates) {
 # Send first email
 unless ($noop) {
     $mailer = new_mailer("New ic/und but VIEW_FULL volumes");
-    print $mailer $grin_gfv->updates_to_gfv_report;
+    print $mailer $grin_gfv->updates_to_gfv_report($updates);
     $mailer->close() or warn("Couldn't send message: $!");
 }
 
@@ -91,7 +91,7 @@ close($fh);
 unless ($noop) {
     # Send the second email and we're done
     $mailer = new_mailer("Old pdus/gfv volumes no longer VIEW_FULL");
-    print $mailer $grin_gfv->reversions_from_gfv_report;
+    print $mailer $grin_gfv->reversions_from_gfv_report($reversions);
     $mailer->close() or warn("Couldn't send message: $!");
 }
 
