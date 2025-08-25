@@ -28,24 +28,16 @@ use ProgressTracker;
 use YAML::XS;
 
 use Database;
+use grin_gfv;
 
 my $noop         = undef; # set with --noop
 my $mailer       = undef;
-my $email_body   = ""; # holds the current email body
-my $volcount     = 0;
-
-# static values for queries
-my $force_attr   = "9";  # pdus
-my $force_reason = "12"; # gfv
-my $r_note       = 'Revert to previous attr/reason; no longer VIEW_FULL';
-my $user         = 'libadm';
 
 # config
 my $config_dir   = $ENV{CONFIG_DIR} || '/usr/src/app/config';
 my $config_yaml  = "$config_dir/rights.yml";
 my $config       = YAML::XS::LoadFile($config_yaml);
 my $rights_dir   = $config->{rights}->{rights_dir};
-my $dbh          = Database::get_rights_rw_dbh();
 
 GetOptions(
     # skip update queries, emails, log file & tracker
@@ -56,34 +48,13 @@ GetOptions(
 my $tracker = ProgressTracker->new();
 $tracker->start_stage("set_pdus_gfv") unless $noop;
 
-# This gets us the items to update in update_gfv.
-my $select_gfv_sql = join(
-    ' ',
-    "SELECT r.namespace, r.id, a.name",
-    "FROM rights_current     r",
-    "INNER JOIN attributes   a ON r.attr   = a.id",
-    "INNER JOIN reasons      e ON r.reason = e.id",
-    "INNER JOIN ht.feed_grin g ON r.id     = g.id AND r.namespace = g.namespace",
-    "WHERE g.viewability = 'VIEW_FULL' AND a.name IN ('ic', 'und') AND e.name = 'bib' AND g.claimed != 'true' AND r.namespace != 'keio'"
-);
-
-# Takes values for 2 bind-params, in the order: namespace, id.
-# user, attr & reason are static, so no bind-params for those.
-my $update_gfv_sql = join(
-    ' ',
-    "UPDATE rights_current",
-    "SET attr = '$force_attr', reason = '$force_reason', time = CURRENT_TIMESTAMP, user = '$user'",
-    "WHERE namespace = ? AND id = ?"
-);
-my $update_gfv_sth = $dbh->prepare($update_gfv_sql) || die "could not prepare query: $update_gfv_sql";
+my $grin_gfv = grin_gfv->new;
+my $updates = $grin_gfv->updates_to_gfv;
 
 # Loop over the relevant items and update their attr/reason
-foreach my $row (@{$dbh->selectall_arrayref($select_gfv_sql)}) {
-    my ($namespace, $id, $attrname) = @$row;
-    $email_body .= "$namespace.$id\t$attrname\n";
-    $volcount++;
+foreach my $update (@$updates) {
     unless ($noop) {
-        $update_gfv_sth->execute($namespace, $id);
+        $grin_gfv->write_update_to_gfv($update);
         $tracker->inc();
     }
 }
@@ -91,45 +62,12 @@ foreach my $row (@{$dbh->selectall_arrayref($select_gfv_sql)}) {
 # Send first email
 unless ($noop) {
     $mailer = new_mailer("New ic/und but VIEW_FULL volumes");
-    print $mailer "$volcount volumes set to pdus/gfv at " . CORE::localtime() . "\n";
-    print $mailer "$email_body";
+    print $mailer $grin_gfv->updates_to_gfv_report($updates);
     $mailer->close() or warn("Couldn't send message: $!");
 }
 
 #### Step 2: REVERT FORMERLY VIEW_FULL ITEMS ####
 $tracker->start_stage("revert_pdus_gfv") unless $noop;
-
-my $select_revert_sql = join(
-    ' ',
-    "SELECT r.namespace, r.id",
-    "FROM rights_current r",
-    "INNER JOIN ht.feed_grin g ON r.id = g.id AND r.namespace = g.namespace",
-    "WHERE r.reason='12' AND (g.viewability != 'VIEW_FULL' OR g.claimed = 'true' OR r.namespace = 'keio')"
-);
-
-# Takes values for 2 bind-params, in the order: id, namespace.
-my $select_old_sql = join(
-    ' ',
-    "SELECT attr, reason, source",
-    "FROM rights_log",
-    "WHERE id = ? AND namespace = ? AND reason != '12'",
-    "ORDER BY time DESC",
-    "LIMIT 1"
-);
-my $select_old_sth = $dbh->prepare($select_old_sql) || die "could not prepare query: $select_old_sql";
-
-# Takes values for 4 bind-params in the order: oldattr, oldreason, namespace, id.
-# user, note & time are static so not a bind-params for them.
-my $update_revert_sql = join(
-    ' ',
-    "UPDATE rights_current",
-    "SET attr = ?, reason = ?, user = '$user', time = CURRENT_TIMESTAMP, note = '$r_note'",
-    "WHERE namespace = ? AND id = ?"
-);
-my $update_revert_sth = $dbh->prepare($update_revert_sql) || die "could not prepare query: $update_revert_sql";
-
-# Start second email
-$email_body = "Reverting pdus/gfv volumes that are no longer VIEW_FULL\n";
 
 # Open file for which to record reverted barcodes
 my $barcode_log = sprintf(
@@ -139,22 +77,12 @@ my $barcode_log = sprintf(
 );
 open(my $fh, ">>", $barcode_log) or die("can't open $barcode_log: $!");
 
-# This loop does a couple of things...
-foreach my $row (@{$dbh->selectall_arrayref($select_revert_sql)}) {
-    # get the namespace and id for the item to update
-    my ($namespace, $id) = @$row;
-
-    # get the item's most recent non-gfv attr/reason
-    $select_old_sth->execute($id, $namespace);
-    my ($oldattr, $oldreason) = $select_old_sth->fetchrow_array();
-
+my $reversions = $grin_gfv->reversions_from_gfv;
+foreach my $reversion (@$reversions) {
     unless ($noop) {
-        # append item to email body and print barcode to log file
-        $email_body .= "\t$namespace.$id\n";
-        print $fh "$namespace.$id\n";
-
+        print $fh "$reversion->{namespace}.$reversion->{id}\n";
         # update item in rights_current with the old attr/reason
-        $update_revert_sth->execute($oldattr, $oldreason, $namespace, $id);
+        $grin_gfv->write_reversion_from_gfv($reversion);
         $tracker->inc();
     }
 }
@@ -163,12 +91,11 @@ close($fh);
 unless ($noop) {
     # Send the second email and we're done
     $mailer = new_mailer("Old pdus/gfv volumes no longer VIEW_FULL");
-    print $mailer "$email_body";
+    print $mailer $grin_gfv->reversions_from_gfv_report($reversions);
     $mailer->close() or warn("Couldn't send message: $!");
 }
 
 $tracker->finalize() unless $noop;
-$dbh->disconnect;
 
 # The 2 emails sent only differ in subject and body,
 # so we can do everything else using the same template.
