@@ -196,20 +196,21 @@ subtest 'reversions_from_gfv_report' => sub {
 subtest 'write_reversion_from_gfv' => sub {
   my $test_namespace = 'gfvtest';
   my $test_id = 'write_reversion';
-  # Insert pdus/gfv row for this id which we will then revert to icus/gatt.
+  my ($revert_to_attr, $revert_to_reason) = (2, 1); # ic/bib
+  # Insert pdus/gfv row for this id which we will then revert to ic/bib.
   $rights_current_sth->execute($test_namespace, $test_id, $grin_gfv::GFV_ATTR_ID, $grin_gfv::GFV_REASON_ID);
   my $grin_gfv = grin_gfv->new;
   my $reversion = {
-    attr => 19,
-    reason => 17,
+    attr => $revert_to_attr,
+    reason => $revert_to_reason,
     namespace => $test_namespace,
     id => $test_id
   };
   $grin_gfv->write_reversion_from_gfv($reversion);
   my $sql = 'SELECT attr, reason FROM rights_current WHERE namespace = ? AND id = ?';
   my ($attr, $reason) = $dbh->selectrow_array($sql, undef, $test_namespace, $test_id);
-  is($attr, 19);
-  is($reason, 17);
+  is($attr, $revert_to_attr);
+  is($reason, $revert_to_reason);
 };
 
 done_testing;
