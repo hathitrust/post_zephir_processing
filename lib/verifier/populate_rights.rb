@@ -64,7 +64,7 @@ module PostZephirProcessing
         .select(:namespace, :id)
         .where([:namespace, :id] => split_htids)
         .each do |record|
-        db_htids << record[:namespace] + "." + record[:id]
+          db_htids << record[:namespace] + "." + record[:id]
       end
       (htids - db_htids).each do |htid|
         error message: "missing rights_current for #{htid}"
