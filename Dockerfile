@@ -20,7 +20,9 @@ RUN apt-get update && apt-get install -y \
     libmarc-xml-perl \
     libmariadb-dev \
     libnet-ssleay-perl \
+    libtest-exception-perl \
     libtest-output-perl \
+    libtest-simple-perl \
     libwww-perl \
     libxml-libxml-perl \
     libyaml-libyaml-perl \
