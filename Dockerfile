@@ -1,4 +1,4 @@
-FROM ruby:3.4
+FROM ruby:4.0
 
 ENV ROOTDIR=/usr/src/app
 ENV HOME=/usr/src/app

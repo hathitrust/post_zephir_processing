@@ -1,3 +1,4 @@
+.cache
 def_local_env
 prof_library
 *_env
