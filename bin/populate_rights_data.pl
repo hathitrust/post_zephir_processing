@@ -49,7 +49,6 @@ my $attr_sth         = undef;
 my $reason_sth       = undef;
 my $source_sth       = undef;
 my $queue_update_sth = undef;
-my $no_wait          = undef;
 
 # Command line args
 my $data               = 0;
@@ -85,7 +84,6 @@ sub main {
     'rights_dir=s'    => \$rights_dir,
     'note=s'          => \$note,
     'force-override!' => \$force_override,
-    'no-wait!'        => \$no_wait,
     'mock-tracker!'   => \$mock_tracker,
   ) or pod2usage();
 
@@ -98,29 +96,6 @@ sub main {
     print "You must provide a note (with --note) with the --force-override option.\n";
     exit 1;
   }
-
-  # TODO - consider getting rid of this since we don't run this in interactive mode any more.
-  # Need to document current process for manual rights loading.
-  if ($force_override and !$no_wait) {
-    print <<~EOT ;
-
-    You have selected the --force-override option. This option will allow you to
-    override any rights with any other rights (for example, reverting a temporary
-    manual override to bib-determined rights). This option will export a "barcodes"
-
-    file so that Zephir will see these items as updated.
-
-    You have 10 seconds to abort (press Ctrl-C) before these rights are loaded.
-
-    EOT
-
-    for (my $i = 0; $i < 10; $i++) {
-      print STDERR '.';
-      sleep 1;
-    }
-    print STDERR "\n";
-  }
-
 
   # Build list of rights data files
   # Rights files had better be tab-delimited CSV files with no header lines or comments

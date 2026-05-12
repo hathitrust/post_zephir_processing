@@ -268,7 +268,7 @@ describe "populate_rights_data.pl" => sub {
       print $rights "prtest.override2\tpd\tbib\ttestuser\tia\n";
       close($rights);
     
-      my $res = qx(perl -w bin/populate_rights_data.pl --force-override --no-wait --note="override note" --data=$tempdir/testfile5.rights --archive=$tempdir/archive --rights_dir=$tempdir/rights 2>&1);
+      my $res = qx(perl -w bin/populate_rights_data.pl --force-override --note="override note" --data=$tempdir/testfile5.rights --archive=$tempdir/archive --rights_dir=$tempdir/rights 2>&1);
 
       # zero exit code (success)
       ok(!$?) or print STDERR $res;
