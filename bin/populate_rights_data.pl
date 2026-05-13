@@ -277,34 +277,8 @@ sub process_rights_line {
     # the default was set above
   }
 
-  my $source;
-  my $access_profile;
-
-  if (defined $new_source && $new_source !~ /\bnull\b/i) {
-    $new_source =~ s/\"//g;
-
-    # Make sure source is a valid value in the db
-    my $hr = $dbh->selectrow_arrayref("SELECT id, access_profile FROM sources WHERE name = '$new_source'");
-    if (! defined $$hr[0]) {
-      die("Invalid source: $new_source ($barcode)");
-    } else {
-      $source         = $$hr[0];
-      $access_profile = $$hr[1];
-    }
-  } else {
-    # Default source should be whatever the source value was
-    # in any previous rights db rows for this ID, or 'google'
-    my $hr = $dbh->selectrow_arrayref(
-      "SELECT source, access_profile FROM rights_current WHERE namespace = '$namespace' AND id = '$barcode'"
-    );
-
-    if (! defined $$hr[0]) {
-      die("Missing source (not already in rights) ($barcode)");
-    } else {
-      $source         = $$hr[0];
-      $access_profile = $$hr[1];
-    }
-  }
+  my $source = get_source($namespace, $barcode, $new_source);
+  my $access_profile = get_access_profile($namespace, $barcode, $source);
 
   if (defined $new_note && $new_note !~ /\bnull\b/i) {
     if (defined $note && $note && $note ne $new_note) {
@@ -377,6 +351,44 @@ sub process_rights_line {
     set_queue_done($namespace, $barcode);
     next;
   }
+}
+
+sub get_source {
+  my ($namespace, $barcode, $new_source) = @_;
+
+  if (defined $new_source && $new_source !~ /\bnull\b/i) {
+    $new_source =~ s/\"//g;
+
+    # Make sure source is a valid value in the db
+    my $hr = $dbh->selectrow_arrayref("SELECT id FROM sources WHERE name = '$new_source'");
+    if (! defined $$hr[0]) {
+      die("Invalid source: $new_source ($barcode)");
+    } else {
+      return $$hr[0];
+    }
+  } else {
+    # Default source should be whatever the source value was
+    # in any previous rights db rows for this ID
+    my $hr = $dbh->selectrow_arrayref(
+      "SELECT source FROM rights_current WHERE namespace = '$namespace' AND id = '$barcode'"
+    );
+
+    if (! defined $$hr[0]) {
+      die("Missing source (not already in rights) ($barcode)");
+    } else {
+      return $$hr[0];
+    }
+  }
+
+}
+
+sub get_access_profile {
+  my ($namespace, $barcode, $source) = @_;
+
+  my $hr = $dbh->selectrow_arrayref("SELECT access_profile FROM sources WHERE id = '$source'");
+
+  return $$hr[0];
+
 }
 
 sub get_old_rights {
