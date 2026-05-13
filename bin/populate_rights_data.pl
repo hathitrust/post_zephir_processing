@@ -140,7 +140,6 @@ sub main {
       process_file($file);
     }
 
-    $insert_sth->finish();
     $dbh->disconnect();
 
     # Print results
@@ -328,7 +327,6 @@ sub process_rights_line {
   # Make sure source is a valid value in the db
   $source_id_sth->execute($final_new_source);
   my $hr = $source_id_sth->fetchrow_arrayref;
-  $source_id_sth->finish;
   if (! defined $$hr[0]) {
     die("Invalid source: $final_new_source ($namespace.$barcode)");
   } else {
@@ -339,7 +337,6 @@ sub process_rights_line {
   # Make sure access_profile is a valid value in the db
   $access_profile_id_sth->execute($new_access_profile);
   $hr = $access_profile_id_sth->fetchrow_arrayref;
-  $access_profile_id_sth->finish;
   if (! defined $$hr[0]) {
     die("Invalid access profile: $new_access_profile ($namespace.$barcode)");
   } else {
@@ -438,7 +435,6 @@ sub harvard_access_profile {
 
   $scan_date_sth->execute($namespace, $barcode);
   my ($scan_date) = $scan_date_sth->fetchrow_array;
-  $scan_date_sth->finish;
 
   # FIXME should use date comparison, not string comparison
   if ($scan_date le HARVARD_CUTOFF_DATE) {
@@ -455,7 +451,6 @@ sub get_access_profile {
 
   $access_profile_for_source_sth->execute($source);
   my $hr = $access_profile_for_source_sth->fetchrow_arrayref();
-  $access_profile_for_source_sth->finish;
 
   return $$hr[0];
 
@@ -471,24 +466,20 @@ sub get_old_rights {
   $reason_sth->execute($namespace, $barcode);
   my $hr         = $reason_sth->fetchrow_hashref();
   my $old_reason = $$hr{'name'} || undef;
-  $reason_sth->finish();
 
   # Get attribute from most recent rights data:
   $attr_sth->execute($namespace, $barcode);
   $hr          = $attr_sth->fetchrow_hashref();
   my $old_attr = $$hr{'name'} || undef;
-  $attr_sth->finish();
 
   # Get source from most recent rights data:
   $source_sth->execute($namespace, $barcode);
   $hr            = $source_sth->fetchrow_hashref();
   my $old_source = $$hr{'name'} || undef;
-  $source_sth->finish();
 
   $access_profile_sth->execute($namespace, $barcode);
   $hr = $access_profile_sth->fetchrow_hashref();
   my $old_access_profile = $$hr{'name'} || undef;
-  $access_profile_sth->finish();
 
   return ($old_attr, $old_reason, $old_source, $old_access_profile);
 }
