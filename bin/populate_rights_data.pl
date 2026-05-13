@@ -21,6 +21,11 @@ my $PRIORITY_GFV       = 2;
 my $PRIORITY_COPYRIGHT = 3;
 my $PRIORITY_ACCESS    = 4;
 my $PRIORITY_MAN       = 5;
+
+use constant {
+  HARVARD_CUTOFF_DATE => '2025-03-24'
+};
+
 my $exit               = 0;
 
 my $priorities = {
@@ -48,11 +53,14 @@ my $insert_sth       = undef;
 my $attr_sth         = undef;
 my $reason_sth       = undef;
 my $source_sth       = undef;
+my $access_profile_sth = undef;
+my $access_profile_for_source_sth = undef;
 my $queue_update_sth = undef;
 my $attr_id_sth      = undef;
 my $reason_id_sth    = undef;
 my $source_id_sth    = undef;
-my $current_source_id_sth = undef;
+my $access_profile_id_sth = undef;
+my $scan_date_sth    = undef;
 
 # Command line args
 my $data               = 0;
@@ -77,6 +85,13 @@ chomp($user);
 
 # Structure to keep track of results - which records were created.
 my %results;
+
+### TODO
+#
+# * (now) preload attributes, reasons, sources, access profiles
+# * (now) wrapper for getting a single value from a select
+# * (maybe now) clean up some of the nested conditionals
+# * (later) object-orientify -- rights file, rights line
 
 sub main {
 
@@ -171,6 +186,10 @@ sub prepare_statements {
   my $source_sql = "SELECT name FROM sources WHERE id = (SELECT source FROM rights_current WHERE namespace = ? AND id = ?)";
   $source_sth    = $dbh->prepare($source_sql);
 
+  $access_profile_sth = $dbh->prepare("SELECT name FROM access_profiles WHERE id = (SELECT access_profile FROM rights_current WHERE namespace = ? AND id = ?)");
+
+  $access_profile_for_source_sth = $dbh->prepare("SELECT ap.name FROM sources s, access_profiles ap WHERE s.access_profile = ap.id AND s.name = ?");
+
   # To consider moving this to an event-based thing at some point, but for
   # now we reach our tendrils into somebody else's database table...
   my $queue_update_sql = "UPDATE ht.feed_queue SET status = 'done' WHERE
@@ -180,7 +199,8 @@ sub prepare_statements {
   $attr_id_sth = $dbh->prepare("SELECT id FROM attributes WHERE name = ?");
   $reason_id_sth =  $dbh->prepare("SELECT id FROM reasons WHERE name = ?");
   $source_id_sth = $dbh->prepare("SELECT id FROM sources WHERE name = ?");
-  $current_source_id_sth = $dbh->prepare("SELECT source FROM rights_current WHERE namespace = ? AND id = ?");
+  $access_profile_id_sth = $dbh->prepare("SELECT id FROM access_profiles WHERE name = ?");
+  $scan_date_sth = $dbh->prepare("SELECT DATE(scan_date) FROM feed_grin WHERE namespace = ? and id = ?");
 
 }
 
@@ -290,8 +310,6 @@ sub process_rights_line {
     # the default was set above
   }
 
-  my $source = get_source($namespace, $barcode, $new_source);
-  my $access_profile = get_access_profile($namespace, $barcode, $source);
 
   if (defined $new_note && $new_note !~ /\bnull\b/i) {
     if (defined $note && $note && $note ne $new_note) {
@@ -301,7 +319,33 @@ sub process_rights_line {
     $new_note = $note;
   }
 
-  my ($old_attr, $old_reason, $old_source) = get_old_rights($namespace, $barcode);
+  my ($old_attr, $old_reason, $old_source, $old_access_profile) = get_old_rights($namespace, $barcode);
+
+  my $final_new_source = final_new_source($namespace, $barcode, $old_source, $new_source);
+  my $new_access_profile = get_access_profile($namespace, $barcode, $final_new_source, $new_attr);
+
+  my $source;
+  # Make sure source is a valid value in the db
+  $source_id_sth->execute($final_new_source);
+  my $hr = $source_id_sth->fetchrow_arrayref;
+  $source_id_sth->finish;
+  if (! defined $$hr[0]) {
+    die("Invalid source: $final_new_source ($namespace.$barcode)");
+  } else {
+    $source = $$hr[0];
+  }
+
+  my $access_profile;
+  # Make sure access_profile is a valid value in the db
+  $access_profile_id_sth->execute($new_access_profile);
+  $hr = $access_profile_id_sth->fetchrow_arrayref;
+  $access_profile_id_sth->finish;
+  if (! defined $$hr[0]) {
+    die("Invalid access profile: $new_access_profile ($namespace.$barcode)");
+  } else {
+    $access_profile = $$hr[0];
+  }
+
   my $do_insert = 0;
 
   if (defined $old_reason && defined $old_attr) {
@@ -312,6 +356,7 @@ sub process_rights_line {
       # or if a note was provided
       if (
         (defined $new_source and $new_source ne 'null' and $new_source ne $old_source)
+          or ($new_access_profile ne $old_access_profile)
           or (defined $new_note and $new_note)
           or ($uniqname eq 'crms' or $uniqname eq 'crmsworld')
       ) {
@@ -366,39 +411,51 @@ sub process_rights_line {
   }
 }
 
-sub get_source {
-  my ($namespace, $barcode, $new_source) = @_;
+# Use the new source if given; otherwise the old source
+sub final_new_source {
+  my ($namespace, $barcode, $old_source, $new_source) = @_;
 
   if (defined $new_source && $new_source !~ /\bnull\b/i) {
     $new_source =~ s/\"//g;
 
-    # Make sure source is a valid value in the db
-    $source_id_sth->execute($new_source);
-    my $hr = $source_id_sth->fetchrow_arrayref;
-    if (! defined $$hr[0]) {
-      die("Invalid source: $new_source ($barcode)");
-    } else {
-      return $$hr[0];
-    }
+    return $new_source;
   } else {
-    # Default source should be whatever the source value was
-    # in any previous rights db rows for this ID
-    $current_source_id_sth->execute($namespace,$barcode);
-    my $hr = $current_source_id_sth->fetchrow_arrayref;
-
-    if (! defined $$hr[0]) {
-      die("Missing source (not already in rights) ($barcode)");
+    if (! defined $old_source) {
+      die("Missing source (not already in rights) ($namespace.$barcode)");
     } else {
-      return $$hr[0];
+      return $old_source;
     }
   }
+}
 
+# Use access profile 'open' for pd and pdus Harvard material scanned by Google
+# prior to 2025-03-24; access profile 'google' otherwise.
+
+sub harvard_access_profile {
+  my ($namespace, $barcode, $new_attr) = @_;
+
+  return 'google' unless ($new_attr eq 'pd' || $new_attr eq 'pdus');
+
+  $scan_date_sth->execute($namespace, $barcode);
+  my ($scan_date) = $scan_date_sth->fetchrow_array;
+  $scan_date_sth->finish;
+
+  # FIXME should use date comparison, not string comparison
+  if ($scan_date le HARVARD_CUTOFF_DATE) {
+    return 'open';
+  } else {
+    return 'google';
+  }
 }
 
 sub get_access_profile {
-  my ($namespace, $barcode, $source) = @_;
+  my ($namespace, $barcode, $source, $new_attr) = @_;
 
-  my $hr = $dbh->selectrow_arrayref("SELECT access_profile FROM sources WHERE id = ?",{},$source);
+  return harvard_access_profile($namespace, $barcode, $new_attr) if $namespace eq 'hvd' and $source eq 'google';
+
+  $access_profile_for_source_sth->execute($source);
+  my $hr = $access_profile_for_source_sth->fetchrow_arrayref();
+  $access_profile_for_source_sth->finish;
 
   return $$hr[0];
 
@@ -407,6 +464,8 @@ sub get_access_profile {
 sub get_old_rights {
   my ($namespace, $barcode) = @_;
 
+  # TODO get one row and use mapping tables
+  
   # Determine if a row already exists for this barcode.
   # Get reason from most recent rights data:
   $reason_sth->execute($namespace, $barcode);
@@ -426,7 +485,12 @@ sub get_old_rights {
   my $old_source = $$hr{'name'} || undef;
   $source_sth->finish();
 
-  return ($old_attr, $old_reason, $old_source);
+  $access_profile_sth->execute($namespace, $barcode);
+  $hr = $access_profile_sth->fetchrow_hashref();
+  my $old_access_profile = $$hr{'name'} || undef;
+  $access_profile_sth->finish();
+
+  return ($old_attr, $old_reason, $old_source, $old_access_profile);
 }
 
 sub should_update_rights {

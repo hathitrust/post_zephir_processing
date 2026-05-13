@@ -306,7 +306,7 @@ describe "populate_rights_data.pl" => sub {
     };
   };
 
-  describe "access profile for Google-scanned harvard material" => {skip => "not implemented"}, sub {
+  describe "access profile for Google-scanned harvard material" => sub {
 
     sub expect_access_profile {
       my $id = shift;
