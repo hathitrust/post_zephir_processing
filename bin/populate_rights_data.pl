@@ -49,6 +49,10 @@ my $attr_sth         = undef;
 my $reason_sth       = undef;
 my $source_sth       = undef;
 my $queue_update_sth = undef;
+my $attr_id_sth      = undef;
+my $reason_id_sth    = undef;
+my $source_id_sth    = undef;
+my $current_source_id_sth = undef;
 
 # Command line args
 my $data               = 0;
@@ -156,22 +160,28 @@ sub prepare_statements {
   $dbh ||= Database::get_rights_rw_dbh();
   # Prepare SQL statements
   my $replace_sql = "REPLACE INTO rights_current (namespace, id, attr, reason, source, access_profile, user, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-  $insert_sth     = $dbh->prepare($replace_sql) || die("$thisprog -ERR- Database error: " . $dbh->errstr());
+  $insert_sth     = $dbh->prepare($replace_sql);
 
   my $reason_sql = "SELECT name FROM reasons WHERE id = (SELECT reason FROM rights_current WHERE namespace = ? AND id = ?)";
-  $reason_sth    = $dbh->prepare($reason_sql) || die ("$thisprog -ERR- Database error: " . $dbh->errstr());
+  $reason_sth    = $dbh->prepare($reason_sql);
 
   my $attr_sql = "SELECT name FROM attributes WHERE id = (SELECT attr FROM rights_current WHERE namespace = ? AND id = ?)";
-  $attr_sth    = $dbh->prepare($attr_sql) || die("$thisprog -ERR- Database error: " . $dbh->errstr());
+  $attr_sth    = $dbh->prepare($attr_sql);
 
   my $source_sql = "SELECT name FROM sources WHERE id = (SELECT source FROM rights_current WHERE namespace = ? AND id = ?)";
-  $source_sth    = $dbh->prepare($source_sql) || die("$thisprog -ERR- Database error: " . $dbh->errstr());
+  $source_sth    = $dbh->prepare($source_sql);
 
   # To consider moving this to an event-based thing at some point, but for
   # now we reach our tendrils into somebody else's database table...
   my $queue_update_sql = "UPDATE ht.feed_queue SET status = 'done' WHERE
   namespace = ? and id = ? AND status = 'rights'";
-  $queue_update_sth    = $dbh->prepare($queue_update_sql) || die("$thisprog -ERR- Database error: " . $dbh->errstr());
+  $queue_update_sth    = $dbh->prepare($queue_update_sql);
+
+  $attr_id_sth = $dbh->prepare("SELECT id FROM attributes WHERE name = ?");
+  $reason_id_sth =  $dbh->prepare("SELECT id FROM reasons WHERE name = ?");
+  $source_id_sth = $dbh->prepare("SELECT id FROM sources WHERE name = ?");
+  $current_source_id_sth = $dbh->prepare("SELECT source FROM rights_current WHERE namespace = ? AND id = ?");
+
 }
 
 sub process_file {
@@ -237,7 +247,8 @@ sub process_rights_line {
     $new_attr =~ s/\"//g;
 
     # Make sure attribute is a valid attribute in the db
-    my $hr = $dbh->selectcol_arrayref("SELECT id FROM attributes WHERE name = '$new_attr'");
+    $attr_id_sth->execute($new_attr);
+    my $hr = $attr_id_sth->fetchrow_arrayref();
     if (! defined $$hr[0]) {
       die("Invalid attribute: $new_attr ($barcode)");
     } else {
@@ -252,7 +263,8 @@ sub process_rights_line {
     $new_reason =~ s/\"//g;
 
     # Make sure reason is a valid reason in the db
-    my $hr = $dbh->selectcol_arrayref("SELECT id FROM reasons WHERE name = '$new_reason'");
+    $reason_id_sth->execute($new_reason);
+    my $hr = $reason_id_sth->fetchrow_arrayref();
     if (! defined $$hr[0]) {
       die("Invalid reason: $new_reason ($barcode)");
     } else {
@@ -261,7 +273,8 @@ sub process_rights_line {
   } else {
     # default:
     $new_reason = 'bib';
-    my $hr      = $dbh->selectcol_arrayref("SELECT id FROM reasons WHERE name = '$new_reason'");
+    $reason_id_sth->execute($new_reason);
+    my $hr      = $reason_id_sth->fetchrow_arrayref();
     $reason     = $$hr[0];
   }
 
@@ -338,7 +351,7 @@ sub process_rights_line {
         $access_profile,
         $user,
         $new_note
-      ) or die("$thisprog -ERR- Database error: " . $dbh->errstr());
+      )
     };
     if ($@) {
       warn($@);
@@ -360,7 +373,8 @@ sub get_source {
     $new_source =~ s/\"//g;
 
     # Make sure source is a valid value in the db
-    my $hr = $dbh->selectrow_arrayref("SELECT id FROM sources WHERE name = '$new_source'");
+    $source_id_sth->execute($new_source);
+    my $hr = $source_id_sth->fetchrow_arrayref;
     if (! defined $$hr[0]) {
       die("Invalid source: $new_source ($barcode)");
     } else {
@@ -369,9 +383,8 @@ sub get_source {
   } else {
     # Default source should be whatever the source value was
     # in any previous rights db rows for this ID
-    my $hr = $dbh->selectrow_arrayref(
-      "SELECT source FROM rights_current WHERE namespace = '$namespace' AND id = '$barcode'"
-    );
+    $current_source_id_sth->execute($namespace,$barcode);
+    my $hr = $current_source_id_sth->fetchrow_arrayref;
 
     if (! defined $$hr[0]) {
       die("Missing source (not already in rights) ($barcode)");
@@ -385,7 +398,7 @@ sub get_source {
 sub get_access_profile {
   my ($namespace, $barcode, $source) = @_;
 
-  my $hr = $dbh->selectrow_arrayref("SELECT access_profile FROM sources WHERE id = '$source'");
+  my $hr = $dbh->selectrow_arrayref("SELECT access_profile FROM sources WHERE id = ?",{},$source);
 
   return $$hr[0];
 
@@ -396,19 +409,19 @@ sub get_old_rights {
 
   # Determine if a row already exists for this barcode.
   # Get reason from most recent rights data:
-  $reason_sth->execute($namespace, $barcode) || die("$thisprog -ERR- Database error: " . $dbh->errstr());
+  $reason_sth->execute($namespace, $barcode);
   my $hr         = $reason_sth->fetchrow_hashref();
   my $old_reason = $$hr{'name'} || undef;
   $reason_sth->finish();
 
   # Get attribute from most recent rights data:
-  $attr_sth->execute($namespace, $barcode) || die("$thisprog -ERR- Database error: " . $dbh->errstr());
+  $attr_sth->execute($namespace, $barcode);
   $hr          = $attr_sth->fetchrow_hashref();
   my $old_attr = $$hr{'name'} || undef;
   $attr_sth->finish();
 
   # Get source from most recent rights data:
-  $source_sth->execute($namespace, $barcode) || die("$thisprog -ERR- Database error: " . $dbh->errstr());
+  $source_sth->execute($namespace, $barcode);
   $hr            = $source_sth->fetchrow_hashref();
   my $old_source = $$hr{'name'} || undef;
   $source_sth->finish();
