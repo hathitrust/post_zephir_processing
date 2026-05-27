@@ -321,12 +321,12 @@ sub process_rights_line {
     # recent ones, ignore at this point.
     if ( ($new_reason eq $old_reason) && ($new_attr eq $old_attr) ) {
       # Update if the source is different, but the attribute and reason are the same
-      # or if a note was provided
+      # if a note was provided, or if the rights came from CRMS
       if (
         (defined $new_source and $new_source ne 'null' and $new_source ne $old_source)
           or ($new_access_profile ne $old_access_profile)
           or (defined $new_note and $new_note)
-          or ($uniqname eq 'crms' or $uniqname eq 'crmsworld')
+          or ($uniqname eq 'crms')
       ) {
         $do_insert = 1;
       } else {
