@@ -49,18 +49,21 @@ my $priorities = {
 
 # prepared statements
 my $dbh              = undef;
+my $rights_current_sth = undef;
 my $insert_sth       = undef;
-my $attr_sth         = undef;
-my $reason_sth       = undef;
-my $source_sth       = undef;
-my $access_profile_sth = undef;
 my $access_profile_for_source_sth = undef;
 my $queue_update_sth = undef;
-my $attr_id_sth      = undef;
-my $reason_id_sth    = undef;
-my $source_id_sth    = undef;
-my $access_profile_id_sth = undef;
 my $scan_date_sth    = undef;
+
+my $attribute_names = {};
+my $reason_names = {};
+my $source_names = {};
+my $access_profile_names = {};
+
+my $attribute_ids = {};
+my $reason_ids = {};
+my $source_ids = {};
+my $access_profile_ids = {};
 
 # Command line args
 my $data               = 0;
@@ -88,8 +91,6 @@ my %results;
 
 ### TODO
 #
-# * (now) preload attributes, reasons, sources, access profiles
-# * (now) wrapper for getting a single value from a select
 # * (maybe now) clean up some of the nested conditionals
 # * (later) object-orientify -- rights file, rights line
 
@@ -135,6 +136,7 @@ sub main {
   if (@rights_files) {
     $dbh = Database::get_rights_rw_dbh();
     prepare_statements();
+    load_tables();
 
     foreach my $file (@rights_files) {
       process_file($file);
@@ -170,22 +172,34 @@ sub main {
   $tracker->finalize;
 }
 
+sub load_table {
+  $dbh ||= Database::get_rights_rw_dbh();
+
+  my ($table, $names, $ids) = @_;
+
+  foreach my $row ( @{ $dbh->selectall_arrayref("select id, name from $table") } ) {
+    my ($id, $name) = @$row;
+    $names->{$id} = $name;
+    $ids->{$name} = $id;
+  }
+}
+
+sub load_tables {
+  $dbh ||= Database::get_rights_rw_dbh();
+
+  load_table('attributes',$attribute_names,$attribute_ids);
+  load_table('reasons',$reason_names,$reason_ids);
+  load_table('sources',$source_names,$source_ids);
+  load_table('access_profiles',$access_profile_names,$access_profile_ids);
+};
+
 sub prepare_statements {
   $dbh ||= Database::get_rights_rw_dbh();
   # Prepare SQL statements
   my $replace_sql = "REPLACE INTO rights_current (namespace, id, attr, reason, source, access_profile, user, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
   $insert_sth     = $dbh->prepare($replace_sql);
 
-  my $reason_sql = "SELECT name FROM reasons WHERE id = (SELECT reason FROM rights_current WHERE namespace = ? AND id = ?)";
-  $reason_sth    = $dbh->prepare($reason_sql);
-
-  my $attr_sql = "SELECT name FROM attributes WHERE id = (SELECT attr FROM rights_current WHERE namespace = ? AND id = ?)";
-  $attr_sth    = $dbh->prepare($attr_sql);
-
-  my $source_sql = "SELECT name FROM sources WHERE id = (SELECT source FROM rights_current WHERE namespace = ? AND id = ?)";
-  $source_sth    = $dbh->prepare($source_sql);
-
-  $access_profile_sth = $dbh->prepare("SELECT name FROM access_profiles WHERE id = (SELECT access_profile FROM rights_current WHERE namespace = ? AND id = ?)");
+  $rights_current_sth = $dbh->prepare("SELECT * FROM rights_current WHERE namespace = ? AND id = ?");
 
   $access_profile_for_source_sth = $dbh->prepare("SELECT ap.name FROM sources s, access_profiles ap WHERE s.access_profile = ap.id AND s.name = ?");
 
@@ -195,10 +209,6 @@ sub prepare_statements {
   namespace = ? and id = ? AND status = 'rights'";
   $queue_update_sth    = $dbh->prepare($queue_update_sql);
 
-  $attr_id_sth = $dbh->prepare("SELECT id FROM attributes WHERE name = ?");
-  $reason_id_sth =  $dbh->prepare("SELECT id FROM reasons WHERE name = ?");
-  $source_id_sth = $dbh->prepare("SELECT id FROM sources WHERE name = ?");
-  $access_profile_id_sth = $dbh->prepare("SELECT id FROM access_profiles WHERE name = ?");
   $scan_date_sth = $dbh->prepare("SELECT DATE(scan_date) FROM feed_grin WHERE namespace = ? and id = ?");
 
 }
@@ -261,41 +271,17 @@ sub process_rights_line {
   my $namespace = $1;
   my $barcode   = $2;
 
-  my $attribute;
-  if (defined $new_attr && $new_attr !~ /\bnull\b/i) {
-    $new_attr =~ s/\"//g;
+  # attribute is required
+  die("attribute missing from input") unless defined $new_attr && $new_attr !~ /\bnull\b/i;
+  $new_attr =~ s/\"//g;
+  my $attribute = $attribute_ids->{$new_attr};
+  die("Invalid attribute: $new_attr ($barcode)") unless defined $attribute;
 
-    # Make sure attribute is a valid attribute in the db
-    $attr_id_sth->execute($new_attr);
-    my $hr = $attr_id_sth->fetchrow_arrayref();
-    if (! defined $$hr[0]) {
-      die("Invalid attribute: $new_attr ($barcode)");
-    } else {
-      $attribute = $$hr[0];
-    }
-  } else {
-    die("attribute missing from input");
-  }
-
-  my $reason;
-  if (defined $new_reason && $new_reason !~ /\bnull\b/i) {
-    $new_reason =~ s/\"//g;
-
-    # Make sure reason is a valid reason in the db
-    $reason_id_sth->execute($new_reason);
-    my $hr = $reason_id_sth->fetchrow_arrayref();
-    if (! defined $$hr[0]) {
-      die("Invalid reason: $new_reason ($barcode)");
-    } else {
-      $reason = $$hr[0];
-    }
-  } else {
-    # default:
-    $new_reason = 'bib';
-    $reason_id_sth->execute($new_reason);
-    my $hr      = $reason_id_sth->fetchrow_arrayref();
-    $reason     = $$hr[0];
-  }
+  # reason has a default
+  $new_reason = 'bib' unless defined $new_reason && $new_reason !~ /\bnull\b/i;
+  $new_reason =~ s/\"//g;
+  my $reason = $reason_ids->{$new_reason};
+  die("Invalid reason: $new_reason ($barcode)") unless defined $reason;
 
   if (defined $uniqname && $uniqname !~ /\bnull\b/i) {
     $uniqname =~ s/\"//g;
@@ -323,25 +309,11 @@ sub process_rights_line {
   my $final_new_source = final_new_source($namespace, $barcode, $old_source, $new_source);
   my $new_access_profile = get_access_profile($namespace, $barcode, $final_new_source, $new_attr);
 
-  my $source;
-  # Make sure source is a valid value in the db
-  $source_id_sth->execute($final_new_source);
-  my $hr = $source_id_sth->fetchrow_arrayref;
-  if (! defined $$hr[0]) {
-    die("Invalid source: $final_new_source ($namespace.$barcode)");
-  } else {
-    $source = $$hr[0];
-  }
+  my $source = $source_ids->{$final_new_source};
+  die("Invalid source: $final_new_source ($namespace.$barcode)") if not defined $source;
 
-  my $access_profile;
-  # Make sure access_profile is a valid value in the db
-  $access_profile_id_sth->execute($new_access_profile);
-  $hr = $access_profile_id_sth->fetchrow_arrayref;
-  if (! defined $$hr[0]) {
-    die("Invalid access profile: $new_access_profile ($namespace.$barcode)");
-  } else {
-    $access_profile = $$hr[0];
-  }
+  my $access_profile = $access_profile_ids->{$new_access_profile};
+  die("Invalid access profile: $new_access_profile ($namespace.$barcode)") if not defined $access_profile;
 
   my $do_insert = 0;
 
@@ -460,26 +432,15 @@ sub get_old_rights {
   my ($namespace, $barcode) = @_;
 
   # TODO get one row and use mapping tables
+  $rights_current_sth->execute($namespace, $barcode);
+  my $rights = $rights_current_sth->fetchrow_hashref;
+
+  return undef unless $rights;
   
-  # Determine if a row already exists for this barcode.
-  # Get reason from most recent rights data:
-  $reason_sth->execute($namespace, $barcode);
-  my $hr         = $reason_sth->fetchrow_hashref();
-  my $old_reason = $$hr{'name'} || undef;
-
-  # Get attribute from most recent rights data:
-  $attr_sth->execute($namespace, $barcode);
-  $hr          = $attr_sth->fetchrow_hashref();
-  my $old_attr = $$hr{'name'} || undef;
-
-  # Get source from most recent rights data:
-  $source_sth->execute($namespace, $barcode);
-  $hr            = $source_sth->fetchrow_hashref();
-  my $old_source = $$hr{'name'} || undef;
-
-  $access_profile_sth->execute($namespace, $barcode);
-  $hr = $access_profile_sth->fetchrow_hashref();
-  my $old_access_profile = $$hr{'name'} || undef;
+  my $old_reason = $reason_names->{$rights->{reason}};
+  my $old_attr = $attribute_names->{$rights->{attr}};
+  my $old_source = $source_names->{$rights->{source}};
+  my $old_access_profile = $access_profile_names->{$rights->{access_profile}};
 
   return ($old_attr, $old_reason, $old_source, $old_access_profile);
 }

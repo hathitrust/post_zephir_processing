@@ -58,7 +58,10 @@ sub test_process_rights_line {
 
 describe "populate_rights_data.pl" => sub {
 
-  before_all "prepare statement" => sub { prepare_statements(); };
+  before_all "prepare statement" => sub { 
+    prepare_statements(); 
+    load_tables();
+  };
 
   before_each "clean up database" => sub {
     $dbh->do("DELETE FROM rights_current");
