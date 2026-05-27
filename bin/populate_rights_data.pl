@@ -90,9 +90,8 @@ chomp($user);
 my %results;
 
 ### TODO
-#
-# * (maybe now) clean up some of the nested conditionals
-# * (later) object-orientify -- rights file, rights line
+# * clean up the nested conditionals
+# * object-orientify -- rights file, rights line
 
 sub main {
 
@@ -398,7 +397,7 @@ sub final_new_source {
 }
 
 # Use access profile 'open' for pd and pdus Harvard material scanned by Google
-# prior to 2025-03-24; access profile 'google' otherwise.
+# on or before 2025-03-24; access profile 'google' otherwise.
 
 sub harvard_access_profile {
   my ($namespace, $barcode, $new_attr) = @_;
@@ -408,8 +407,9 @@ sub harvard_access_profile {
   $scan_date_sth->execute($namespace, $barcode);
   my ($scan_date) = $scan_date_sth->fetchrow_array;
 
-  # FIXME should use date comparison, not string comparison
-  if ($scan_date le HARVARD_CUTOFF_DATE) {
+  # Date_Cmp works like the <=> operator; we want to ensure $scan_date is less
+  # than or equal to the cutoff date.
+  if (Date_Cmp($scan_date,HARVARD_CUTOFF_DATE) < 1) {
     return 'open';
   } else {
     return 'google';
@@ -431,7 +431,6 @@ sub get_access_profile {
 sub get_old_rights {
   my ($namespace, $barcode) = @_;
 
-  # TODO get one row and use mapping tables
   $rights_current_sth->execute($namespace, $barcode);
   my $rights = $rights_current_sth->fetchrow_hashref;
 
