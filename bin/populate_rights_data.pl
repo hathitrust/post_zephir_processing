@@ -28,23 +28,79 @@ use constant {
 
 my $exit               = 0;
 
-my $priorities = {
-  $PRIORITY_BIB       => [qw(ic/bib und/bib pd/bib pdus/bib)],
-  $PRIORITY_GFV       => [qw(pdus/gfv)],
-  $PRIORITY_COPYRIGHT => [qw(ic/unp pd/ncn pdus/ncn pdus/crms pd/ren pdus/ren
-    ic/ren und/nfi pd/cdpp ic/cdpp pdus/cdpp ic/add pdus/add pd/add pd/exp
-    icus/gatt icus/ren op/ipma ic/ipma und/ipma und/ren ic/crms pd/crms
-    und/crms)],
-  $PRIORITY_ACCESS    => [qw(ic-world/con und-world/con nobody/pvt cc-by-3.0/con
-    cc-by-4.0/con cc-by-nd-3.0/con cc-by-nd-4.0/con orph/ddd orphcand/ddd
-    cc-by-nc-3.0/con cc-by-nc-4.0/con cc-by-sa-3.0/con cc-by-sa-4.0/con
-    cc-by-nc-nd-3.0/con cc-by-nc-nd-4.0/con cc-by-nc-sa-3.0/con
-    cc-by-nc-sa-4.0/con cc-zero/con pd/con)],
-  $PRIORITY_MAN       => [qw(pd/man pdus/man ic-world/man und-world/man ic/man
-    nobody/man nobody/del pd-pvt/pvt supp/supp cc-by-3.0/man cc-by-4.0/man
-    cc-by-nd-3.0/man cc-by-nd-4.0/man cc-by-nc-3.0/man cc-by-nc-4.0/man
-    cc-by-sa-3.0/man cc-by-sa-4.0/man cc-by-nc-nd-3.0/man cc-by-nc-nd-4.0/man
-    cc-by-nc-sa-3.0/man cc-by-nc-sa-4.0/man cc-zero/man)],
+my $attr_reason_priorities = {
+  'ic/bib'    => $PRIORITY_BIB,
+  'pd/bib'    => $PRIORITY_BIB,
+  'pdus/bib'  => $PRIORITY_BIB,
+  'und/bib'   => $PRIORITY_BIB,
+
+  'pdus/gfv'  => $PRIORITY_GFV,
+
+  'ic/add'    => $PRIORITY_COPYRIGHT,
+  'ic/cdpp'   => $PRIORITY_COPYRIGHT,
+  'ic/crms'   => $PRIORITY_COPYRIGHT,
+  'ic/ipma'   => $PRIORITY_COPYRIGHT,
+  'ic/ren'    => $PRIORITY_COPYRIGHT,
+  'ic/unp'    => $PRIORITY_COPYRIGHT,
+  'icus/gatt' => $PRIORITY_COPYRIGHT,
+  'icus/ren'  => $PRIORITY_COPYRIGHT,
+  'op/ipma'   => $PRIORITY_COPYRIGHT,
+  'pd/add'    => $PRIORITY_COPYRIGHT,
+  'pd/cdpp'   => $PRIORITY_COPYRIGHT,
+  'pd/crms'   => $PRIORITY_COPYRIGHT,
+  'pd/exp'    => $PRIORITY_COPYRIGHT,
+  'pd/ncn'    => $PRIORITY_COPYRIGHT,
+  'pd/ren'    => $PRIORITY_COPYRIGHT,
+  'pdus/add'  => $PRIORITY_COPYRIGHT,
+  'pdus/cdpp' => $PRIORITY_COPYRIGHT,
+  'pdus/crms' => $PRIORITY_COPYRIGHT,
+  'pdus/ncn'  => $PRIORITY_COPYRIGHT,
+  'pdus/ren'  => $PRIORITY_COPYRIGHT,
+  'und/crms'  => $PRIORITY_COPYRIGHT,
+  'und/ipma'  => $PRIORITY_COPYRIGHT,
+  'und/nfi'   => $PRIORITY_COPYRIGHT,
+  'und/ren'   => $PRIORITY_COPYRIGHT,
+  
+  'cc-by-3.0/con'       => $PRIORITY_ACCESS,
+  'cc-by-nd-3.0/con'    => $PRIORITY_ACCESS,
+  'cc-by-sa-3.0/con'    => $PRIORITY_ACCESS,
+  'cc-by-nc-3.0/con'    => $PRIORITY_ACCESS,
+  'cc-by-nc-nd-3.0/con' => $PRIORITY_ACCESS,
+  'cc-by-nc-sa-3.0/con' => $PRIORITY_ACCESS,
+  'cc-by-4.0/con'       => $PRIORITY_ACCESS,
+  'cc-by-nd-4.0/con'    => $PRIORITY_ACCESS,
+  'cc-by-sa-4.0/con'    => $PRIORITY_ACCESS,
+  'cc-by-nc-4.0/con'    => $PRIORITY_ACCESS,
+  'cc-by-nc-nd-4.0/con' => $PRIORITY_ACCESS,
+  'cc-by-nc-sa-4.0/con' => $PRIORITY_ACCESS,
+  'cc-zero/con'         => $PRIORITY_ACCESS,
+  'ic-world/con'        => $PRIORITY_ACCESS,
+  'nobody/pvt'          => $PRIORITY_ACCESS,
+  'pd/con'              => $PRIORITY_ACCESS,
+  'und-world/con'       => $PRIORITY_ACCESS,
+
+  'cc-by-3.0/man'       => $PRIORITY_MAN,
+  'cc-by-4.0/man'       => $PRIORITY_MAN,
+  'cc-by-nc-3.0/man'    => $PRIORITY_MAN,
+  'cc-by-nc-4.0/man'    => $PRIORITY_MAN,
+  'cc-by-nc-nd-3.0/man' => $PRIORITY_MAN,
+  'cc-by-nc-nd-4.0/man' => $PRIORITY_MAN,
+  'cc-by-nc-sa-3.0/man' => $PRIORITY_MAN,
+  'cc-by-nc-sa-4.0/man' => $PRIORITY_MAN,
+  'cc-by-nd-3.0/man'    => $PRIORITY_MAN,
+  'cc-by-nd-4.0/man'    => $PRIORITY_MAN,
+  'cc-by-sa-3.0/man'    => $PRIORITY_MAN,
+  'cc-by-sa-4.0/man'    => $PRIORITY_MAN,
+  'cc-zero/man'         => $PRIORITY_MAN,
+  'ic-world/man'        => $PRIORITY_MAN,
+  'ic/man'              => $PRIORITY_MAN,
+  'nobody/del'          => $PRIORITY_MAN,
+  'nobody/man'          => $PRIORITY_MAN,
+  'pd-pvt/pvt'          => $PRIORITY_MAN,
+  'pd/man'              => $PRIORITY_MAN,
+  'pdus/man'            => $PRIORITY_MAN,
+  'supp/supp'           => $PRIORITY_MAN,
+  'und-world/man'       => $PRIORITY_MAN,
 };
 
 # prepared statements
@@ -514,18 +570,10 @@ sub get_priority {
   my ($attr, $reason) = @_;
 
   my $code     = "$attr/$reason";
-  my $toreturn = undef;
-
-  while (my ($priority, $codes) = each %$priorities) {
-    if (grep {$_ eq $code} @$codes) {
-      warn("$attr/$reason has two priorities ($priority and $toreturn)??") if defined $toreturn;
-      $exit     = 1;
-      $toreturn = $priority
-    }
-  }
+  my $toreturn = $attr_reason_priorities->{$code};
 
   if (not defined $toreturn) {
-    warn("Unknown code $attr/$reason");
+    die("Unknown code $attr/$reason");
     $exit = 1;
   }
 
