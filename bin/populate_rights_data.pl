@@ -21,39 +21,109 @@ my $PRIORITY_GFV       = 2;
 my $PRIORITY_COPYRIGHT = 3;
 my $PRIORITY_ACCESS    = 4;
 my $PRIORITY_MAN       = 5;
+
+use constant {
+  HARVARD_CUTOFF_DATE => '2025-03-24'
+};
+
 my $exit               = 0;
 
-my $priorities = {
-    $PRIORITY_BIB       => [qw(ic/bib und/bib pd/bib pdus/bib)],
-    $PRIORITY_GFV       => [qw(pdus/gfv)],
-    $PRIORITY_COPYRIGHT => [qw(ic/unp pd/ncn pdus/ncn pdus/crms pd/ren pdus/ren
-                               ic/ren und/nfi pd/cdpp ic/cdpp pdus/cdpp ic/add pdus/add pd/add pd/exp
-                               icus/gatt icus/ren op/ipma ic/ipma und/ipma und/ren ic/crms pd/crms
-                               und/crms)],
-    $PRIORITY_ACCESS    => [qw(ic-world/con und-world/con nobody/pvt cc-by-3.0/con
-                               cc-by-4.0/con cc-by-nd-3.0/con cc-by-nd-4.0/con orph/ddd orphcand/ddd
-                               cc-by-nc-3.0/con cc-by-nc-4.0/con cc-by-sa-3.0/con cc-by-sa-4.0/con
-                               cc-by-nc-nd-3.0/con cc-by-nc-nd-4.0/con cc-by-nc-sa-3.0/con
-                               cc-by-nc-sa-4.0/con cc-zero/con pd/con)],
-    $PRIORITY_MAN       => [qw(pd/man pdus/man ic-world/man und-world/man ic/man
-                               nobody/man nobody/del pd-pvt/pvt supp/supp cc-by-3.0/man cc-by-4.0/man
-                               cc-by-nd-3.0/man cc-by-nd-4.0/man cc-by-nc-3.0/man cc-by-nc-4.0/man
-                               cc-by-sa-3.0/man cc-by-sa-4.0/man cc-by-nc-nd-3.0/man cc-by-nc-nd-4.0/man
-                               cc-by-nc-sa-3.0/man cc-by-nc-sa-4.0/man cc-zero/man)],
+my $attr_reason_priorities = {
+  'ic/bib'    => $PRIORITY_BIB,
+  'pd/bib'    => $PRIORITY_BIB,
+  'pdus/bib'  => $PRIORITY_BIB,
+  'und/bib'   => $PRIORITY_BIB,
+
+  'pdus/gfv'  => $PRIORITY_GFV,
+
+  'ic/add'    => $PRIORITY_COPYRIGHT,
+  'ic/cdpp'   => $PRIORITY_COPYRIGHT,
+  'ic/crms'   => $PRIORITY_COPYRIGHT,
+  'ic/ipma'   => $PRIORITY_COPYRIGHT,
+  'ic/ren'    => $PRIORITY_COPYRIGHT,
+  'ic/unp'    => $PRIORITY_COPYRIGHT,
+  'icus/gatt' => $PRIORITY_COPYRIGHT,
+  'icus/ren'  => $PRIORITY_COPYRIGHT,
+  'op/ipma'   => $PRIORITY_COPYRIGHT,
+  'pd/add'    => $PRIORITY_COPYRIGHT,
+  'pd/cdpp'   => $PRIORITY_COPYRIGHT,
+  'pd/crms'   => $PRIORITY_COPYRIGHT,
+  'pd/exp'    => $PRIORITY_COPYRIGHT,
+  'pd/ncn'    => $PRIORITY_COPYRIGHT,
+  'pd/ren'    => $PRIORITY_COPYRIGHT,
+  'pdus/add'  => $PRIORITY_COPYRIGHT,
+  'pdus/cdpp' => $PRIORITY_COPYRIGHT,
+  'pdus/crms' => $PRIORITY_COPYRIGHT,
+  'pdus/ncn'  => $PRIORITY_COPYRIGHT,
+  'pdus/ren'  => $PRIORITY_COPYRIGHT,
+  'und/crms'  => $PRIORITY_COPYRIGHT,
+  'und/ipma'  => $PRIORITY_COPYRIGHT,
+  'und/nfi'   => $PRIORITY_COPYRIGHT,
+  'und/ren'   => $PRIORITY_COPYRIGHT,
+  
+  'cc-by-3.0/con'       => $PRIORITY_ACCESS,
+  'cc-by-nd-3.0/con'    => $PRIORITY_ACCESS,
+  'cc-by-sa-3.0/con'    => $PRIORITY_ACCESS,
+  'cc-by-nc-3.0/con'    => $PRIORITY_ACCESS,
+  'cc-by-nc-nd-3.0/con' => $PRIORITY_ACCESS,
+  'cc-by-nc-sa-3.0/con' => $PRIORITY_ACCESS,
+  'cc-by-4.0/con'       => $PRIORITY_ACCESS,
+  'cc-by-nd-4.0/con'    => $PRIORITY_ACCESS,
+  'cc-by-sa-4.0/con'    => $PRIORITY_ACCESS,
+  'cc-by-nc-4.0/con'    => $PRIORITY_ACCESS,
+  'cc-by-nc-nd-4.0/con' => $PRIORITY_ACCESS,
+  'cc-by-nc-sa-4.0/con' => $PRIORITY_ACCESS,
+  'cc-zero/con'         => $PRIORITY_ACCESS,
+  'ic-world/con'        => $PRIORITY_ACCESS,
+  'nobody/pvt'          => $PRIORITY_ACCESS,
+  'pd/con'              => $PRIORITY_ACCESS,
+  'und-world/con'       => $PRIORITY_ACCESS,
+
+  'cc-by-3.0/man'       => $PRIORITY_MAN,
+  'cc-by-4.0/man'       => $PRIORITY_MAN,
+  'cc-by-nc-3.0/man'    => $PRIORITY_MAN,
+  'cc-by-nc-4.0/man'    => $PRIORITY_MAN,
+  'cc-by-nc-nd-3.0/man' => $PRIORITY_MAN,
+  'cc-by-nc-nd-4.0/man' => $PRIORITY_MAN,
+  'cc-by-nc-sa-3.0/man' => $PRIORITY_MAN,
+  'cc-by-nc-sa-4.0/man' => $PRIORITY_MAN,
+  'cc-by-nd-3.0/man'    => $PRIORITY_MAN,
+  'cc-by-nd-4.0/man'    => $PRIORITY_MAN,
+  'cc-by-sa-3.0/man'    => $PRIORITY_MAN,
+  'cc-by-sa-4.0/man'    => $PRIORITY_MAN,
+  'cc-zero/man'         => $PRIORITY_MAN,
+  'ic-world/man'        => $PRIORITY_MAN,
+  'ic/man'              => $PRIORITY_MAN,
+  'nobody/del'          => $PRIORITY_MAN,
+  'nobody/man'          => $PRIORITY_MAN,
+  'pd-pvt/pvt'          => $PRIORITY_MAN,
+  'pd/man'              => $PRIORITY_MAN,
+  'pdus/man'            => $PRIORITY_MAN,
+  'supp/supp'           => $PRIORITY_MAN,
+  'und-world/man'       => $PRIORITY_MAN,
 };
 
 # prepared statements
 my $dbh              = undef;
+my $rights_current_sth = undef;
 my $insert_sth       = undef;
-my $attr_sth         = undef;
-my $reason_sth       = undef;
-my $source_sth       = undef;
+my $access_profile_for_source_sth = undef;
 my $queue_update_sth = undef;
+my $scan_date_sth    = undef;
+
+my $attribute_names = {};
+my $reason_names = {};
+my $source_names = {};
+my $access_profile_names = {};
+
+my $attribute_ids = {};
+my $reason_ids = {};
+my $source_ids = {};
+my $access_profile_ids = {};
 
 # Command line args
 my $data               = 0;
 my $note               = undef;
-my $new_source_cmdline = 'null';
 my $force_override     = 0;
 my $mock_tracker       = 0;
 
@@ -64,47 +134,10 @@ my $config      = YAML::XS::LoadFile($config_yaml);
 my $archive     = $config->{rights}->{archive};
 my $rights_dir  = $config->{rights}->{rights_dir};
 
-# allow overriding some of the vars set by yaml config
-# with commandline options.
-GetOptions(
-    'data=s'          => \$data,
-    'archive=s'       => \$archive,
-    'rights_dir=s'    => \$rights_dir,
-    'note=s'          => \$note,
-    'source=s'        => \$new_source_cmdline,
-    'force-override!' => \$force_override,
-    'mock-tracker!'   => \$mock_tracker,
-) or pod2usage();
-
-# pass in --mock-tracker to disable ProgressTracker (for dev/test purposes).
-my $tracker = $mock_tracker ? MockTracker->new() : ProgressTracker->new(report_interval => '10000');
-
 my $thisprog = 'populate_rights_data';
-print "$thisprog -INFO- START: " . CORE::localtime() . "\n";
 
-if ($force_override and not defined $note) {
-    print "You must provide a note (with --note) with the --force-override option.\n";
-    exit 1;
-}
-
-if ($force_override) {
-    print <<EOT ;
-
-You have selected the --force-override option. This option will allow you to
-override any rights with any other rights (for example, reverting a temporary
-manual override to bib-determined rights). This option will export a "barcodes"
-file so that Zephir will see these items as updated.
-
-You have 10 seconds to abort (press Ctrl-C) before these rights are loaded.
-
-EOT
-
-    for (my $i = 0; $i < 10; $i++) {
-        print STDERR '.';
-        sleep 1;
-    }
-    print STDERR "\n";
-}
+# global state
+my $tracker = undef;
 
 my $user = `whoami`;
 chomp($user);
@@ -112,318 +145,253 @@ chomp($user);
 # Structure to keep track of results - which records were created.
 my %results;
 
-# Build list of rights data files
-# Rights files had better be tab-delimited CSV files with no header lines or comments
+### TODO
+# * clean up the nested conditionals
+# * object-orientify -- rights file, rights line
 
-if ($data && ! -e $data) {
+sub main {
+
+  # allow overriding some of the vars set by yaml config
+  # with commandline options.
+  GetOptions(
+    'data=s'          => \$data,
+    'archive=s'       => \$archive,
+    'rights_dir=s'    => \$rights_dir,
+    'note=s'          => \$note,
+    'force-override!' => \$force_override,
+    'mock-tracker!'   => \$mock_tracker,
+  ) or pod2usage();
+
+  # pass in --mock-tracker to disable ProgressTracker (for dev/test purposes).
+  $tracker = $mock_tracker ? MockTracker->new() : ProgressTracker->new(report_interval => '10000');
+
+  print "$thisprog -INFO- START: " . CORE::localtime() . "\n";
+
+  if ($force_override and not defined $note) {
+    print "You must provide a note (with --note) with the --force-override option.\n";
+    exit 1;
+  }
+
+  # Build list of rights data files
+  # Rights files had better be tab-delimited CSV files with no header lines or comments
+
+  if ($data && ! -e $data) {
     print "$thisprog -ERR- Could not find input file $data\n";
 
     exit(1);
-}
+  }
 
-my @rights_files = ();
-if (! $data) {
+  my @rights_files = ();
+  if (! $data) {
     @rights_files = glob("$rights_dir/*.rights");
-} else {
+  } else {
     push @rights_files, $data;
-}
+  }
 
-if (@rights_files) {
+  if (@rights_files) {
     $dbh = Database::get_rights_rw_dbh();
     prepare_statements();
+    load_tables();
 
     foreach my $file (@rights_files) {
-        process_file($file);
+      process_file($file);
     }
 
-    $insert_sth->finish();
     $dbh->disconnect();
 
     # Print results
     print "Results:\n";
     # TODO: Export these result metrics -- right now we only export a metric for lines processed
     if(defined $results{'inserted'}) {
-        print "  Rows inserted: " . @{$results{'inserted'}} . "\n";
+      print "  Rows inserted: " . @{$results{'inserted'}} . "\n";
     }
     if ($force_override) {
-        export_barcodes($results{'inserted'})
+      export_barcodes($results{'inserted'})
     }
     if (defined $results{'skipped'}) {
-        print "  Items skipped (manually set): " . @{$results{'skipped'}} . "\n";
-        foreach (@{$results{'skipped'}}) {
-            print "\t$_\n";
-        }
+      print "  Items skipped (manually set): " . @{$results{'skipped'}} . "\n";
+      foreach (@{$results{'skipped'}}) {
+        print "\t$_\n";
+      }
     }
     if (defined $results{'already_in_db'}) {
-        print "  Items skipped (already in database with same attribute and reason): " . @{$results{'already_in_db'}} . "\n";
-        foreach (@{$results{'already_in_db'}}) {
-            print "\t$_\n";
-        }
+      print "  Items skipped (already in database with same attribute and reason): " . @{$results{'already_in_db'}} . "\n";
+      foreach (@{$results{'already_in_db'}}) {
+        print "\t$_\n";
+      }
     }
     print "$thisprog -INFO- Done\n";
-} else {
+  } else {
     print "$thisprog -INFO- No rights files to process.\n";
+  }
+  $tracker->finalize;
 }
-$tracker->finalize;
+
+sub load_table {
+  $dbh ||= Database::get_rights_rw_dbh();
+
+  my ($table, $names, $ids) = @_;
+
+  foreach my $row ( @{ $dbh->selectall_arrayref("select id, name from $table") } ) {
+    my ($id, $name) = @$row;
+    $names->{$id} = $name;
+    $ids->{$name} = $id;
+  }
+}
+
+sub load_tables {
+  $dbh ||= Database::get_rights_rw_dbh();
+
+  load_table('attributes',$attribute_names,$attribute_ids);
+  load_table('reasons',$reason_names,$reason_ids);
+  load_table('sources',$source_names,$source_ids);
+  load_table('access_profiles',$access_profile_names,$access_profile_ids);
+};
 
 sub prepare_statements {
-    # Prepare SQL statements
-    my $replace_sql = "REPLACE INTO rights_current (namespace, id, attr, reason, source, access_profile, user, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-    $insert_sth     = $dbh->prepare($replace_sql) || die("$thisprog -ERR- Database error: " . $dbh->errstr());
+  $dbh ||= Database::get_rights_rw_dbh();
+  # Prepare SQL statements
+  my $replace_sql = "REPLACE INTO rights_current (namespace, id, attr, reason, source, access_profile, user, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+  $insert_sth     = $dbh->prepare($replace_sql);
 
-    my $reason_sql = "SELECT name FROM reasons WHERE id = (SELECT reason FROM rights_current WHERE namespace = ? AND id = ?)";
-    $reason_sth    = $dbh->prepare($reason_sql) || die ("$thisprog -ERR- Database error: " . $dbh->errstr());
+  $rights_current_sth = $dbh->prepare("SELECT * FROM rights_current WHERE namespace = ? AND id = ?");
 
-    my $attr_sql = "SELECT name FROM attributes WHERE id = (SELECT attr FROM rights_current WHERE namespace = ? AND id = ?)";
-    $attr_sth    = $dbh->prepare($attr_sql) || die("$thisprog -ERR- Database error: " . $dbh->errstr());
+  $access_profile_for_source_sth = $dbh->prepare("SELECT ap.name FROM sources s, access_profiles ap WHERE s.access_profile = ap.id AND s.name = ?");
 
-    my $source_sql = "SELECT name FROM sources WHERE id = (SELECT source FROM rights_current WHERE namespace = ? AND id = ?)";
-    $source_sth    = $dbh->prepare($source_sql) || die("$thisprog -ERR- Database error: " . $dbh->errstr());
+  # To consider moving this to an event-based thing at some point, but for
+  # now we reach our tendrils into somebody else's database table...
+  my $queue_update_sql = "UPDATE ht.feed_queue SET status = 'done' WHERE
+  namespace = ? and id = ? AND status = 'rights'";
+  $queue_update_sth    = $dbh->prepare($queue_update_sql);
 
-    # To consider moving this to an event-based thing at some point, but for
-    # now we reach our tendrils into somebody else's database table...
-    my $queue_update_sql = "UPDATE ht.feed_queue SET status = 'done' WHERE
-    namespace = ? and id = ? AND status = 'rights'";
-    $queue_update_sth    = $dbh->prepare($queue_update_sql) || die("$thisprog -ERR- Database error: " . $dbh->errstr());
+  $scan_date_sth = $dbh->prepare("SELECT DATE(scan_date) FROM feed_grin WHERE namespace = ? and id = ?");
+
 }
 
 sub process_file {
-    my $file = shift;
+  my $file = shift;
 
-    # Open input file, Loop through lines of input file
-    open(IN, '<:encoding(UTF-8)', $file) or die("$thisprog -ERR- Could not open $file for reading: $!");
-    while (my $line = <IN>) {
-        process_rights_line($line);
-        $tracker->inc();
+  # Open input file, Loop through lines of input file
+  open(IN, '<:encoding(UTF-8)', $file) or die("$thisprog -ERR- Could not open $file for reading: $!");
+  while (my $line = <IN>) {
+    process_rights_line($line);
+    $tracker->inc();
+  }
+  close(IN);
+
+  if ($archive) {
+    # After populating rights database from *.rights file(s),
+    # move file(s) to archive directory.
+
+    my $cmd = "cp $file $archive";
+    if (!$data) {
+      $cmd = "mv $file $archive";
     }
-    close(IN);
 
-    if ($archive) {
-        # After populating rights database from *.rights file(s),
-        # move file(s) to archive directory.
-
-        my $cmd = "cp $file $archive";
-        if (!$data) {
-            $cmd = "mv $file $archive";
-        }
-
-        if (my $res = `$cmd`) {
-            die("Error moving/copying rights file to archive: $res");
-        }
+    if (my $res = `$cmd`) {
+      die("Error moving/copying rights file to archive: $res");
     }
+  }
 }
 
 sub process_rights_line {
-    my $line = shift;
+  my $line = shift;
 
-    chomp($line);
+  chomp($line);
 
-    # get rid of trailing tab
-    $line =~ s/\t$//;
+  # get rid of trailing tab
+  $line =~ s/\t$//;
 
-    # Format of line had better be:
-    #
-    #   namespace.barcode attribute reason username source note
-    #
-    # ... where any of those fields can contain the string
-    # /null/i to default to default values.
-    # Also, the line could contain less than those fields,
-    # like just 'barcode attribute reason username',
-    # in which case 'source' will be the default value.
+  # Format of line had better be:
+  #
+  #   namespace.barcode attribute reason username source note
+  #
+  # ... where any of those fields can contain the string
+  # /null/i to default to default values.
+  # Also, the line could contain less than those fields,
+  # like just 'barcode attribute reason username',
+  # in which case 'source' will be the default value.
 
-    my ($namespace_and_barcode, $new_attr, $new_reason, $uniqname, $new_source, $new_note) = split("\t", $line);
+  my ($namespace_and_barcode, $new_attr, $new_reason, $uniqname, $new_source, $new_note) = split("\t", $line);
 
-    if (defined $namespace_and_barcode && $namespace_and_barcode !~ /\bnull\b/i) {
-        $namespace_and_barcode =~ s/\"//g;
-    } else {
-        die("namespace and barcode missing from input: $namespace_and_barcode");
+  if (defined $namespace_and_barcode && $namespace_and_barcode !~ /\bnull\b/i) {
+    $namespace_and_barcode =~ s/\"//g;
+  } else {
+    die("namespace and barcode missing from input: $namespace_and_barcode");
+  }
+
+  # The ? is needed right where it is in the regex below
+  # (greedy matching - so the namespace will be everything up to the first period).
+  $namespace_and_barcode =~ /(.+?)\.(.+)/ || die("Invalid namespace/barcode: $namespace_and_barcode");
+  my $namespace = $1;
+  my $barcode   = $2;
+
+  # attribute is required
+  die("attribute missing from input") unless defined $new_attr && $new_attr !~ /\bnull\b/i;
+  $new_attr =~ s/\"//g;
+  my $attribute = $attribute_ids->{$new_attr};
+  die("Invalid attribute: $new_attr ($barcode)") unless defined $attribute;
+
+  # reason has a default
+  $new_reason = 'bib' unless defined $new_reason && $new_reason !~ /\bnull\b/i;
+  $new_reason =~ s/\"//g;
+  my $reason = $reason_ids->{$new_reason};
+  die("Invalid reason: $new_reason ($barcode)") unless defined $reason;
+
+  if (defined $uniqname && $uniqname !~ /\bnull\b/i) {
+    $uniqname =~ s/\"//g;
+
+    if ($uniqname =~ /\W/) {
+      die("Invalid user: $uniqname for $namespace.$barcode");
     }
 
-    # The ? is needed right where it is in the regex below
-    # (greedy matching - so the namespace will be everything up to the first period).
-    $namespace_and_barcode =~ /(.+?)\.(.+)/ || die("Invalid namespace/barcode: $namespace_and_barcode");
-    my $namespace = $1;
-    my $barcode   = $2;
+    $user = $uniqname;
+  } else {
+    # the default was set above
+  }
 
-    my $attribute;
-    if (defined $new_attr && $new_attr !~ /\bnull\b/i) {
-        $new_attr =~ s/\"//g;
 
-        # Make sure attribute is a valid attribute in the db
-        my $hr = $dbh->selectcol_arrayref("SELECT id FROM attributes WHERE name = '$new_attr'");
-        if (! defined $$hr[0]) {
-            die("Invalid attribute: $attribute ($barcode)");
-        } else {
-            $attribute = $$hr[0];
-        }
-    } else {
-        die("attribute missing from input");
+  if (defined $new_note && $new_note !~ /\bnull\b/i) {
+    if (defined $note && $note && $note ne $new_note) {
+      die("Command-line note conflicts with .rights note ($barcode)");
     }
+  } else {
+    $new_note = $note;
+  }
 
-    my $reason;
-    if (defined $new_reason && $new_reason !~ /\bnull\b/i) {
-        $new_reason =~ s/\"//g;
+  my ($old_attr, $old_reason, $old_source, $old_access_profile) = get_old_rights($namespace, $barcode);
 
-        # Make sure reason is a valid reason in the db
-        my $hr = $dbh->selectcol_arrayref("SELECT id FROM reasons WHERE name = '$new_reason'");
-        if (! defined $$hr[0]) {
-            die("Invalid reason: $new_reason ($barcode)");
-        } else {
-            $reason = $$hr[0];
-        }
-    } else {
-        # default:
-        $new_reason = 'bib';
-        my $hr      = $dbh->selectcol_arrayref("SELECT id FROM reasons WHERE name = '$new_reason'");
-        $reason     = $$hr[0];
-    }
+  my $final_new_source = final_new_source($namespace, $barcode, $old_source, $new_source);
+  my $new_access_profile = get_access_profile($namespace, $barcode, $final_new_source, $new_attr);
 
-    if (defined $uniqname && $uniqname !~ /\bnull\b/i) {
-        $uniqname =~ s/\"//g;
+  my $source = $source_ids->{$final_new_source};
+  die("Invalid source: $final_new_source ($namespace.$barcode)") if not defined $source;
 
-        if ($uniqname =~ /\W/) {
-            die("Invalid user: $uniqname for $namespace.$barcode");
-        }
+  my $access_profile = $access_profile_ids->{$new_access_profile};
+  die("Invalid access profile: $new_access_profile ($namespace.$barcode)") if not defined $access_profile;
 
-        $user = $uniqname;
-    } else {
-        # the default was set above
-    }
+  my $do_insert = 0;
 
-    my $source;
-    my $access_profile;
-    if (defined $new_source_cmdline && $new_source_cmdline !~ /\bnull\b/i) {
-        # source on command line trumps source in input file
-        $new_source = $new_source_cmdline;
-    }
-
-    if (defined $new_source && $new_source !~ /\bnull\b/i) {
-        $new_source =~ s/\"//g;
-
-        # Make sure source is a valid value in the db
-        my $hr = $dbh->selectrow_arrayref("SELECT id, access_profile FROM sources WHERE name = '$new_source'");
-        if (! defined $$hr[0]) {
-            die("Invalid source: $new_source ($barcode)");
-        } else {
-            $source         = $$hr[0];
-            $access_profile = $$hr[1];
-        }
-    } else {
-        # Default source should be whatever the source value was
-        # in any previous rights db rows for this ID, or 'google'
-        my $hr = $dbh->selectrow_arrayref(
-            "SELECT source, access_profile FROM rights_current WHERE namespace = '$namespace' AND id = '$barcode'"
-        );
-
-        if (! defined $$hr[0]) {
-            $source         = 1; # 'google'
-            $access_profile = 2;
-        } else {
-            $source         = $$hr[0];
-            $access_profile = $$hr[1];
-        }
-    }
-
-    if (defined $new_note && $new_note !~ /\bnull\b/i) {
-        if (defined $note && $note && $note ne $new_note) {
-            die("Command-line note conflicts with .rights note ($barcode)");
-        }
-    } else {
-        $new_note = $note;
-    }
-
-    my ($old_attr, $old_reason, $old_source) = get_old_rights($namespace, $barcode);
-    my $do_insert = 0;
-
-    if (defined $old_reason && defined $old_attr) {
-        # If the new reason, attribute and source are the same as the most
-        # recent ones, ignore at this point.
-        if ( ($new_reason eq $old_reason) && ($new_attr eq $old_attr) ) {
-            # Update if the source is different, but the attribute and reason are the same
-            # or if a note was provided
-            if (
-                (defined $new_source and $new_source ne 'null' and $new_source ne $old_source)
-                or (defined $new_note and $new_note)
-                or ($uniqname eq 'crms' or $uniqname eq 'crmsworld')
-            ) {
-                $do_insert = 1;
-            } else {
-                set_queue_done($namespace, $barcode);
-                push @{$results{'already_in_db'}}, "$namespace.$barcode";
-                next;
-            }
-        } else {
-            $do_insert = should_update_rights(
-                $namespace,
-                $barcode,
-                $old_attr,
-                $old_reason,
-                $old_source,
-                $new_attr,
-                $new_reason,
-                $new_source,
-                $new_note
-            );
-        }
-    } else {
-        # No rights in the db yet for this barcode so just insert whatever we have here
+  if (defined $old_reason && defined $old_attr) {
+    # If the new reason, attribute and source are the same as the most
+    # recent ones, ignore at this point.
+    if ( ($new_reason eq $old_reason) && ($new_attr eq $old_attr) ) {
+      # Update if the source is different, but the attribute and reason are the same
+      # if a note was provided, or if the rights came from CRMS
+      if (
+        (defined $new_source and $new_source ne 'null' and $new_source ne $old_source)
+          or ($new_access_profile ne $old_access_profile)
+          or (defined $new_note and $new_note)
+          or ($uniqname eq 'crms')
+      ) {
         $do_insert = 1;
-    }
-
-    # Insert new row with most recent rights data
-    if ($do_insert) {
-        eval {
-            $insert_sth->execute(
-                $namespace,
-                $barcode,
-                $attribute,
-                $reason,
-                $source,
-                $access_profile,
-                $user,
-                $new_note
-            ) or die("$thisprog -ERR- Database error: " . $dbh->errstr());
-        };
-        if ($@) {
-            warn($@);
-        } else {
-            push @{$results{'inserted'}}, "$namespace.$barcode";
-            set_queue_done($namespace, $barcode);
-        }
-    } else {
-        push @{$results{'skipped'}}, "$namespace.$barcode";
+      } else {
         set_queue_done($namespace, $barcode);
-        next;
-    }
-}
-
-sub get_old_rights {
-    my ($namespace, $barcode) = @_;
-
-    # Determine if a row already exists for this barcode.
-    # Get reason from most recent rights data:
-    $reason_sth->execute($namespace, $barcode) || die("$thisprog -ERR- Database error: " . $dbh->errstr());
-    my $hr         = $reason_sth->fetchrow_hashref();
-    my $old_reason = $$hr{'name'} || undef;
-    $reason_sth->finish();
-
-    # Get attribute from most recent rights data:
-    $attr_sth->execute($namespace, $barcode) || die("$thisprog -ERR- Database error: " . $dbh->errstr());
-    $hr          = $attr_sth->fetchrow_hashref();
-    my $old_attr = $$hr{'name'} || undef;
-    $attr_sth->finish();
-
-    # Get source from most recent rights data:
-    $source_sth->execute($namespace, $barcode) || die("$thisprog -ERR- Database error: " . $dbh->errstr());
-    $hr            = $source_sth->fetchrow_hashref();
-    my $old_source = $$hr{'name'} || undef;
-    $source_sth->finish();
-
-    return ($old_attr, $old_reason, $old_source);
-}
-
-sub should_update_rights {
-    my (
+        push @{$results{'already_in_db'}}, "$namespace.$barcode";
+        return;
+      }
+    } else {
+      $do_insert = should_update_rights(
         $namespace,
         $barcode,
         $old_attr,
@@ -433,81 +401,183 @@ sub should_update_rights {
         $new_reason,
         $new_source,
         $new_note
-    ) = @_;
-
-    my $do_insert = 0;
-
-    # $old_reason -> Most recent reason
-    # $new_reason -> New reason
-
-    # Does the old one or the new one win?
-    my $old_priority = get_priority($old_attr, $old_reason);
-    my $new_priority = get_priority($new_attr, $new_reason);
-
-    # Make sure we were able to determine the priority
-    if (not defined $old_priority) {
-        warn("Unknown old rights $old_attr/$old_reason for $namespace.$barcode");
-        $exit      = 1;
-        $do_insert = 0;
+      );
     }
-    if (not defined $new_priority) {
-        warn("Unknown new rights $new_attr/$new_reason for $namespace.$barcode");
-        $exit      = 1;
-        $do_insert = 0;
-    }
-    if (defined $old_priority and defined $new_priority) {
-        if ($force_override) {
-            $do_insert = 1;
-        } elsif (
-            ($old_reason eq 'gfv' or $new_reason eq 'gfv') and
-            ($old_reason eq 'bib' or $new_reason eq 'bib')
-        ) {
-            # handle pdus/gfv precedence
-            ($exit, $do_insert) = gfv_overrides(
-                $namespace,
-                $barcode,
-                $old_attr,
-                $old_reason,
-                $new_attr,
-                $new_reason
-            );
-        } elsif ($new_priority >= $old_priority) {
-            $do_insert = 1;
-        } else {
-            # new priority is too low; ignore
-            $do_insert = 0;
-        }
+  } else {
+    # No rights in the db yet for this barcode so just insert whatever we have here
+    $do_insert = 1;
+  }
 
-        if ($new_priority == $PRIORITY_MAN && not defined $new_note) {
-            warn("$new_attr/$new_reason requested for $namespace.$barcode but note not provided");
-            $exit      = 1;
-            $do_insert = 0;
-        }
+  # Insert new row with most recent rights data
+  if ($do_insert) {
+    eval {
+      $insert_sth->execute(
+        $namespace,
+        $barcode,
+        $attribute,
+        $reason,
+        $source,
+        $access_profile,
+        $user,
+        $new_note
+      )
+    };
+    if ($@) {
+      warn($@);
+    } else {
+      push @{$results{'inserted'}}, "$namespace.$barcode";
+      set_queue_done($namespace, $barcode);
+    }
+  } else {
+    push @{$results{'skipped'}}, "$namespace.$barcode";
+    set_queue_done($namespace, $barcode);
+    next;
+  }
+}
+
+# Use the new source if given; otherwise the old source
+sub final_new_source {
+  my ($namespace, $barcode, $old_source, $new_source) = @_;
+
+  if (defined $new_source && $new_source !~ /\bnull\b/i) {
+    $new_source =~ s/\"//g;
+
+    return $new_source;
+  } else {
+    if (! defined $old_source) {
+      die("Missing source (not already in rights) ($namespace.$barcode)");
+    } else {
+      return $old_source;
+    }
+  }
+}
+
+# Use access profile 'open' for pd and pdus Harvard material scanned by Google
+# on or before 2025-03-24; access profile 'google' otherwise.
+
+sub harvard_access_profile {
+  my ($namespace, $barcode, $new_attr) = @_;
+
+  return 'google' unless ($new_attr eq 'pd' || $new_attr eq 'pdus');
+
+  $scan_date_sth->execute($namespace, $barcode);
+  my ($scan_date) = $scan_date_sth->fetchrow_array;
+
+  # Date_Cmp works like the <=> operator; we want to ensure $scan_date is less
+  # than or equal to the cutoff date.
+  if (Date_Cmp($scan_date,HARVARD_CUTOFF_DATE) < 1) {
+    return 'open';
+  } else {
+    return 'google';
+  }
+}
+
+sub get_access_profile {
+  my ($namespace, $barcode, $source, $new_attr) = @_;
+
+  return harvard_access_profile($namespace, $barcode, $new_attr) if $namespace eq 'hvd' and $source eq 'google';
+
+  $access_profile_for_source_sth->execute($source);
+  my $hr = $access_profile_for_source_sth->fetchrow_arrayref();
+
+  return $$hr[0];
+
+}
+
+sub get_old_rights {
+  my ($namespace, $barcode) = @_;
+
+  $rights_current_sth->execute($namespace, $barcode);
+  my $rights = $rights_current_sth->fetchrow_hashref;
+
+  return undef unless $rights;
+  
+  my $old_reason = $reason_names->{$rights->{reason}};
+  my $old_attr = $attribute_names->{$rights->{attr}};
+  my $old_source = $source_names->{$rights->{source}};
+  my $old_access_profile = $access_profile_names->{$rights->{access_profile}};
+
+  return ($old_attr, $old_reason, $old_source, $old_access_profile);
+}
+
+sub should_update_rights {
+  my (
+    $namespace,
+    $barcode,
+    $old_attr,
+    $old_reason,
+    $old_source,
+    $new_attr,
+    $new_reason,
+    $new_source,
+    $new_note
+  ) = @_;
+
+  my $do_insert = 0;
+
+  # $old_reason -> Most recent reason
+  # $new_reason -> New reason
+
+  # Does the old one or the new one win?
+  my $old_priority = get_priority($old_attr, $old_reason);
+  my $new_priority = get_priority($new_attr, $new_reason);
+
+  # Make sure we were able to determine the priority
+  if (not defined $old_priority) {
+    warn("Unknown old rights $old_attr/$old_reason for $namespace.$barcode");
+    $exit      = 1;
+    $do_insert = 0;
+  }
+  if (not defined $new_priority) {
+    warn("Unknown new rights $new_attr/$new_reason for $namespace.$barcode");
+    $exit      = 1;
+    $do_insert = 0;
+  }
+  if (defined $old_priority and defined $new_priority) {
+    if ($force_override) {
+      $do_insert = 1;
+    } elsif (
+      ($old_reason eq 'gfv' or $new_reason eq 'gfv') and
+      ($old_reason eq 'bib' or $new_reason eq 'bib')
+    ) {
+      # handle pdus/gfv precedence
+      ($exit, $do_insert) = gfv_overrides(
+        $namespace,
+        $barcode,
+        $old_attr,
+        $old_reason,
+        $new_attr,
+        $new_reason
+      );
+    } elsif ($new_priority >= $old_priority) {
+      $do_insert = 1;
+    } else {
+      # new priority is too low; ignore
+      $do_insert = 0;
     }
 
-    return $do_insert;
+    if ($new_priority == $PRIORITY_MAN && not defined $new_note) {
+      warn("$new_attr/$new_reason requested for $namespace.$barcode but note not provided");
+      $exit      = 1;
+      $do_insert = 0;
+    }
+  }
+
+  return $do_insert;
 }
 
 sub get_priority {
-    my ($attr, $reason) = @_;
+  my ($attr, $reason) = @_;
 
-    my $code     = "$attr/$reason";
-    my $toreturn = undef;
+  my $code     = "$attr/$reason";
+  my $toreturn = $attr_reason_priorities->{$code};
 
-    while (my ($priority, $codes) = each %$priorities) {
-        if (grep {$_ eq $code} @$codes) {
-            warn("$attr/$reason has two priorities ($priority and $toreturn)??") if defined $toreturn;
-            $exit     = 1;
-            $toreturn = $priority
-        }
-    }
+  if (not defined $toreturn) {
+    die("Unknown code $attr/$reason");
+    $exit = 1;
+  }
 
-    if (not defined $toreturn) {
-        warn("Unknown code $attr/$reason");
-        $exit = 1;
-    }
-
-    return $toreturn;
+  return $toreturn;
 }
 
 # returns $exit, $do_insert
@@ -516,64 +586,65 @@ sub get_priority {
 # pd/bib and pdus/bib should override pdus/gfv
 # all bibs should override each other
 sub gfv_overrides {
-    my (
-        $namespace,
-        $barcode,
-        $old_attr,
-        $old_reason,
-        $new_attr,
-        $new_reason
-    ) = @_;
+  my (
+    $namespace,
+    $barcode,
+    $old_attr,
+    $old_reason,
+    $new_attr,
+    $new_reason
+  ) = @_;
 
-    # pd/bib and pdus/bib override pdus/gfv
-    if ($old_attr eq 'pdus' and $old_reason eq 'gfv') {
-        if ($new_reason eq 'bib' and ($new_attr eq 'pd' or $new_attr eq 'pdus')) {
-            return (0, 1); # use new rights - pd/bib, pdus/bib overrides pdus/gfv
-        } elsif ($new_reason eq 'bib' and ($new_attr eq 'ic' or $new_attr eq 'und')) {
-            return (0, 0); # ignore new rights
-        } else {
-            warn("unknown new attr/reason: $old_attr/$old_reason, new: $new_attr/$new_reason for $namespace.$barcode");
-            return (1, 0);
-        }
-
-    } elsif ($new_attr eq 'pdus' and $new_reason = 'gfv') {
-        if ($old_reason eq 'bib' and ($old_attr eq 'ic' or $old_attr eq 'und')) {
-            return (0, 1); # use new rights - pdus/gfv overrides ic/bib and und/bib
-        } elsif ($old_reason eq 'bib' and ($old_attr eq 'pd' or $old_attr eq 'pdus')) {
-            return (0, 0); # ignore new rights
-        } else {
-            warn("unknown old attr/reason: $old_attr/$old_reason, new: $new_attr/$new_reason for $namespace.$barcode");
-            return (1, 0);
-        }
-
+  # pd/bib and pdus/bib override pdus/gfv
+  if ($old_attr eq 'pdus' and $old_reason eq 'gfv') {
+    if ($new_reason eq 'bib' and ($new_attr eq 'pd' or $new_attr eq 'pdus')) {
+      return (0, 1); # use new rights - pd/bib, pdus/bib overrides pdus/gfv
+    } elsif ($new_reason eq 'bib' and ($new_attr eq 'ic' or $new_attr eq 'und')) {
+      return (0, 0); # ignore new rights
     } else {
-        warn("gfv but not pdus?? old: $old_attr/$old_reason, new: $new_attr/$new_reason for $namespace.$barcode");
-        return (1, 0);
+      warn("unknown new attr/reason: $old_attr/$old_reason, new: $new_attr/$new_reason for $namespace.$barcode");
+      return (1, 0);
     }
+
+  } elsif ($new_attr eq 'pdus' and $new_reason = 'gfv') {
+    if ($old_reason eq 'bib' and ($old_attr eq 'ic' or $old_attr eq 'und')) {
+      return (0, 1); # use new rights - pdus/gfv overrides ic/bib and und/bib
+    } elsif ($old_reason eq 'bib' and ($old_attr eq 'pd' or $old_attr eq 'pdus')) {
+      return (0, 0); # ignore new rights
+    } else {
+      warn("unknown old attr/reason: $old_attr/$old_reason, new: $new_attr/$new_reason for $namespace.$barcode");
+      return (1, 0);
+    }
+
+  } else {
+    warn("gfv but not pdus?? old: $old_attr/$old_reason, new: $new_attr/$new_reason for $namespace.$barcode");
+    return (1, 0);
+  }
 }
 
 sub set_queue_done {
-    my $namespace = shift;
-    my $barcode   = shift;
+  my $namespace = shift;
+  my $barcode   = shift;
 
-    $queue_update_sth->execute($namespace, $barcode);
+  $queue_update_sth->execute($namespace, $barcode);
 }
 
 sub export_barcodes {
-    my $htids = shift;
+  my $htids = shift;
 
-    my $barcode_log = sprintf(
-        '%s/barcodes_%s_override_feed',
-        $rights_dir,
-        UnixDate(ParseDate("now"), '%Y-%m-%d_%H-%M-%S')
-    );
-    open(my $fh, ">>", $barcode_log) or die("can't open $barcode_log: $!");
+  my $barcode_log = sprintf(
+    '%s/barcodes_%s_override_feed',
+    $rights_dir,
+    UnixDate(ParseDate("now"), '%Y-%m-%d_%H-%M-%S')
+  );
+  open(my $fh, ">>", $barcode_log) or die("can't open $barcode_log: $!");
 
-    foreach my $htid (@$htids) {
-        print $fh $htid, "\n";
-    }
+  foreach my $htid (@$htids) {
+    print $fh $htid, "\n";
+  }
 }
 
+main unless caller;
 
 =head1 NAME
 
@@ -643,16 +714,16 @@ package MockTracker;
 
 
 sub new {
-    my $class = shift;
-    my $self  = {};
-    print "MockTracker->new\n";
-    bless($self, $class);
+  my $class = shift;
+  my $self  = {};
+  print "MockTracker->new\n";
+  bless($self, $class);
 }
 
 sub finalize {
-    print "MockTracker->finalize\n";
+  print "MockTracker->finalize\n";
 }
 
 sub inc {
-    print "MockTracker->inc\n";
+  print "MockTracker->inc\n";
 }
