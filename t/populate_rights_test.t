@@ -332,13 +332,22 @@ describe "populate_rights_data.pl" => sub {
       it "updates profile for item that was ic and is now pd" => sub {
         $feed_grin_sth->execute("hvd","testitem2","2010-01-01 00:00:00");
         $rights_current_sth->execute("hvd","testitem2",ATTR_IC, REASON_BIB, SOURCE_GOOGLE, ACCESS_PROFILE_GOOGLE);
+
         test_process_rights_line("hvd.testitem2","pd","bib","testuser","google");
 
         expect_access_profile("testitem2", ACCESS_PROFILE_OPEN);
       };
 
+      it "updates profile for item that was pd and is now ic" => sub {
+        $feed_grin_sth->execute("hvd","testitem2_1","2010-01-01 00:00:00");
+        $rights_current_sth->execute("hvd","testitem2_1",ATTR_PD, REASON_BIB, SOURCE_GOOGLE, ACCESS_PROFILE_OPEN);
+
+        test_process_rights_line("hvd.testitem2_1","ic","bib","testuser","google");
+
+        expect_access_profile("testitem2_1", ACCESS_PROFILE_GOOGLE);
+      };
+
       it "updates profile for pd item" => sub {
-        # load data: pd/bib/google/google
         $feed_grin_sth->execute("hvd","testitem3","2010-01-01 00:00:00");
         $rights_current_sth->execute("hvd","testitem3",ATTR_PD, REASON_BIB, SOURCE_GOOGLE, ACCESS_PROFILE_GOOGLE);
         test_process_rights_line("hvd.testitem3","pd","bib","testuser","google");
@@ -348,28 +357,56 @@ describe "populate_rights_data.pl" => sub {
 
       it "sets profile to open for pdus" => sub {
         $feed_grin_sth->execute("hvd","testitem4","2010-01-01 00:00:00");
+
         test_process_rights_line("hvd.testitem4","pdus","bib","testuser","google");
 
         expect_access_profile("testitem4", ACCESS_PROFILE_OPEN);
       };
 
-      # load data: pd/bib/google/open
       it "sets profile to google for ic" => sub {
+        $feed_grin_sth->execute("hvd","testitem5","2010-01-01 00:00:00");
+
         test_process_rights_line("hvd.testitem5","ic","bib","testuser","google");
 
-        $feed_grin_sth->execute("hvd","testitem5","2010-01-01 00:00:00");
         expect_access_profile("testitem5", ACCESS_PROFILE_GOOGLE);
+      };
+
+    };
+
+    describe "scan_date after 2025-03-24" => sub {
+      it "sets profile to google for pd" => sub {
+        $feed_grin_sth->execute("hvd","testitem6","2026-01-01 00:00:00");
+        $rights_current_sth->execute("hvd","testitem6",ATTR_PD, REASON_BIB, SOURCE_GOOGLE, ACCESS_PROFILE_OPEN);
+
+        test_process_rights_line("hvd.testitem6","pd","bib","testuser","google");
+
+        expect_access_profile("testitem6", ACCESS_PROFILE_GOOGLE);
+      };
+
+      it "sets profile to google for pdus" => sub {
+        $feed_grin_sth->execute("hvd","testitem7","2026-01-01 00:00:00");
+        $rights_current_sth->execute("hvd","testitem7",ATTR_PD, REASON_BIB, SOURCE_GOOGLE, ACCESS_PROFILE_OPEN);
+
+        test_process_rights_line("hvd.testitem7","pdus","bib","testuser","google");
+
+        expect_access_profile("testitem7", ACCESS_PROFILE_GOOGLE);
+      };
+
+      it "keeps profile google for ic" => sub {
+        $feed_grin_sth->execute("hvd","testitem8","2026-01-01 00:00:00");
+        $rights_current_sth->execute("hvd","testitem8",ATTR_IC, REASON_BIB, SOURCE_GOOGLE, ACCESS_PROFILE_GOOGLE);
+
+        test_process_rights_line("hvd.testitem8","ic","bib","testuser","google");
+
+        expect_access_profile("testitem8", ACCESS_PROFILE_GOOGLE);
       };
     };
 
-    #    describe "scan_date after 2025-03-24" => sub {
-    #      # load data: pd/bib/google/open
-    #      it "sets profile to google for pd";
-    #      it "sets profile to google for pdus";
-    #      it "sets profile to google for ic";
-    #    };
+    it "sets profile to google if item is not in feed_grin" => sub {
+      test_process_rights_line("hvd.testitem9","pd","bib","testuser","google");
 
-    # it "sets profile to google if item is not in feed_grin";
+      expect_access_profile("testitem9", ACCESS_PROFILE_GOOGLE);
+    }
 
   };
 

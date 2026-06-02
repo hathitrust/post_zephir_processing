@@ -431,7 +431,7 @@ sub process_rights_line {
   } else {
     push @{$results{'skipped'}}, "$namespace.$barcode";
     set_queue_done($namespace, $barcode);
-    next;
+    return;
   }
 }
 
@@ -465,7 +465,7 @@ sub harvard_access_profile {
 
   # Date_Cmp works like the <=> operator; we want to ensure $scan_date is less
   # than or equal to the cutoff date.
-  if (Date_Cmp($scan_date,HARVARD_CUTOFF_DATE) < 1) {
+  if (defined $scan_date and Date_Cmp($scan_date,HARVARD_CUTOFF_DATE) < 1) {
     return 'open';
   } else {
     return 'google';
