@@ -13,7 +13,7 @@ module PostZephirProcessing
 
     let(:with_no_dates) { described_class.new }
     let(:unsorted_dates) { [Date.today, Date.today + 1, Date.today - 100] }
-    let(:range_of_dates) { (Date.today..Date.today + 1) }
+    let(:range_of_dates) { Date.today..Date.today + 1 }
     let(:with_dates) { described_class.new(dates: unsorted_dates) }
     let(:with_range) { described_class.new(dates: range_of_dates) }
 
