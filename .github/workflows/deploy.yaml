@@ -25,4 +25,5 @@ jobs:
             image: ghcr.io/${{ github.repository }}:${{ inputs.branch_hash || github.sha}}
             file: environments/metadata_processing/${{inputs.environments}}/post-zephir-image.txt
             CONFIG_REPO_FULL_NAME: ${{ vars.CONFIG_REPO_FULL_NAME }}
+            CONFIG_REPO_RW_APP_ID: ${{ vars.CONFIG_REPO_RW_APP_ID }}
         secrets: inherit
